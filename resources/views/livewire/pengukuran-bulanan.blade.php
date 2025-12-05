@@ -1,0 +1,127 @@
+<div>
+    <x-slot:title>
+        Pengukuran Bulanan
+    </x-slot>
+
+    <x-slot:breadcrumb>
+        <a href="/" class="hover:text-blue-100 transition-colors">Dashboard</a>
+        <span class="mx-2">/</span>
+        <span class="font-medium text-white">Pengukuran Bulanan</span>
+    </x-slot>
+
+    <div class="space-y-6">
+        
+        <!-- CARD UTAMA -->
+        <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            
+            <!-- Header Card -->
+            <div class="px-6 py-5 border-b border-gray-100">
+                <h2 class="text-lg font-bold text-gray-800 flex items-center">
+                    Pengampu PK — <span class="ml-1 text-gray-600">DINAS KESEHATAN</span>
+                </h2>
+            </div>
+
+            <!-- Filter & Search -->
+            <div class="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+                <div class="flex items-center gap-2 text-sm text-gray-600">
+                    <span>Tampil</span>
+                    <select wire:model.live="perPage" class="border border-gray-300 rounded-md text-sm py-1.5 px-3 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer hover:bg-gray-50 transition-colors">
+                        <option value="10">10</option>
+                        <option value="25">25</option>
+                        <option value="50">50</option>
+                        <option value="100">100</option>
+                    </select>
+                </div>
+
+                <div class="flex items-center gap-2 w-full sm:w-auto">
+                    <span class="text-sm text-gray-600">Cari:</span>
+                    <input type="text" wire:model.live.debounce.300ms="search" class="w-full sm:w-64 border border-gray-300 rounded-md text-sm py-1.5 px-3 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-300 bg-gray-50 focus:bg-white transition-colors">
+                </div>
+            </div>
+
+            <!-- Tabel Utama -->
+            <div class="overflow-x-auto">
+                <table class="w-full text-left border-collapse">
+                    <thead class="bg-gray-50 text-xs uppercase text-gray-400 font-semibold tracking-wider">
+                        <tr>
+                            <th class="px-6 py-4 w-16 text-center">#</th>
+                            <th class="px-6 py-4">Jabatan</th>
+                            <th class="px-6 py-4">Penanggung Jawab</th>
+                            <th class="px-6 py-4 text-center">Status</th>
+                            <th class="px-6 py-4 text-center w-64">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="text-sm text-gray-600 divide-y divide-gray-50">
+                        @forelse ($jabatans as $index => $jabatan)
+                        <tr class="hover:bg-gray-50 transition-colors group">
+                            <td class="px-6 py-4 text-center font-medium text-gray-400">
+                                {{ $jabatans->firstItem() + $index }}
+                            </td>
+                            <td class="px-6 py-4 font-medium text-gray-800">
+                                {{ $jabatan->nama ?? 'Nama Jabatan' }}
+                            </td>
+                            <td class="px-6 py-4">
+                                @if($jabatan->pegawai)
+                                    <div class="flex items-center gap-3">
+                                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+                                            @if($jabatan->pegawai->foto)
+                                                <img src="{{ asset('storage/'.$jabatan->pegawai->foto) }}" class="h-full w-full object-cover">
+                                            @else
+                                                {{ substr($jabatan->pegawai->nama ?? 'U', 0, 2) }}
+                                            @endif
+                                        </div>
+                                        <div>
+                                            <div class="font-bold text-gray-900 text-sm">{{ $jabatan->pegawai->nama }}</div>
+                                            <div class="text-xs text-gray-400 mt-0.5 font-mono">NIP. {{ $jabatan->pegawai->nip }}</div>
+                                        </div>
+                                    </div>
+                                @else
+                                    <span class="text-gray-400 italic text-xs">- Belum ada pejabat -</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 text-center">
+                                @php
+                                    $status = $jabatan->status ?? 'Definitif';
+                                    $badgeColor = $status === 'Definitif' 
+                                        ? 'bg-green-50 text-green-600 border border-green-100' 
+                                        : 'bg-yellow-50 text-yellow-600 border border-yellow-100';
+                                @endphp
+                                <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $badgeColor }}">
+                                    {{ $status }}
+                                </span>
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="flex items-center justify-center gap-2">
+                                    <!-- LINK KE HALAMAN PENGATURAN KINERJA BARU -->
+                                    <a href="{{ route('pengukuran.atur', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 border border-red-100 rounded hover:bg-red-100 hover:text-red-600 transition-colors text-xs font-medium">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
+                                        Atur Kinerja
+                                    </a>
+
+                                    <a href="{{ route('pengukuran.detail', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-500 border border-blue-100 rounded hover:bg-blue-100 hover:text-blue-600 transition-colors text-xs font-medium">
+        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+        Pengukuran
+    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        @empty
+                        <tr>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-400 italic">
+                                <div class="flex flex-col items-center justify-center">
+                                    <svg class="w-12 h-12 text-gray-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    Tidak ada data jabatan ditemukan.
+                                </div>
+                            </td>
+                        </tr>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+                {{ $jabatans->links() }}
+            </div>
+        </div>
+    </div>
+</div>

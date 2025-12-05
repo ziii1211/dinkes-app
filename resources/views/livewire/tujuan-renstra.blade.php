@@ -1,0 +1,259 @@
+<div>
+    <!-- HEADER DIHAPUS SESUAI INSTRUKSI AGAR BERSIH -->
+    
+    <!-- KONTEN UTAMA (CARD & TABEL) -->
+    <!-- Saya tambahkan mt-8 agar ada jarak yang pas jika header layout di atasnya selesai -->
+    <div class="space-y-8 relative z-10 mt-8">
+        
+        <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
+            
+            <!-- Header Card & Tombol Tambah -->
+            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+                <h3 class="font-bold text-gray-800 text-lg">Daftar Tujuan Renstra</h3>
+                
+                <!-- Tombol Tambah (Memicu Modal Utama) -->
+                <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
+                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                    Tambah Tujuan
+                </button>
+            </div>
+
+            <div class="p-6">
+                <!-- Tabel -->
+                <div class="overflow-x-auto rounded-lg border border-gray-200 min-h-[400px]">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <!-- Baris Header 1 -->
+                            <tr class="bg-gray-50 text-gray-700 text-sm font-bold uppercase tracking-wider border-b border-gray-200">
+                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-64">Sasaran RPJMD</th>
+                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-64">Tujuan Renstra</th>
+                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-48">Indikator</th>
+                                <th colspan="6" class="p-2 border-b border-r border-gray-200 text-center align-middle">Target</th>
+                                <th rowspan="2" class="p-4 text-center align-middle w-32">Aksi</th>
+                            </tr>
+                            <!-- Baris Header 2 (Tahun) -->
+                            <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
+                                <th class="p-2 border-r border-gray-200 text-center w-16">2025</th>
+                                <th class="p-2 border-r border-gray-200 text-center w-16">2026</th>
+                                <th class="p-2 border-r border-gray-200 text-center w-16">2027</th>
+                                <th class="p-2 border-r border-gray-200 text-center w-16">2028</th>
+                                <th class="p-2 border-r border-gray-200 text-center w-16">2029</th>
+                                <th class="p-2 border-r border-gray-200 text-center w-16">2030</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 bg-white text-sm text-gray-600">
+                            @php
+                                $groupedTujuans = $tujuans->groupBy('sasaran_rpjmd');
+                            @endphp
+
+                            @forelse($groupedTujuans as $sasaran => $items)
+                                <!-- 1. BARIS INDUK: SASARAN RPJMD -->
+                                <tr class="bg-gray-50">
+                                    <td class="p-4 border-r border-gray-100 font-bold text-gray-800 align-top">
+                                        {{ $sasaran }}
+                                    </td>
+                                    <td class="p-4 border-r border-gray-100 text-center text-gray-300 align-middle">&mdash;</td>
+                                    <td class="p-4 border-r border-gray-100 text-center text-gray-300 align-middle">&mdash;</td>
+                                    <!-- Target Kosong -->
+                                    <td colspan="6" class="p-2 border-r text-center text-gray-300">&mdash;</td>
+                                    <td class="p-4 text-center"></td>
+                                </tr>
+
+                                <!-- 2. BARIS ANAK: TUJUAN RENSTRA -->
+                                @foreach($items as $tujuan)
+                                <tr class="hover:bg-blue-50 transition-colors group">
+                                    <td class="p-4 border-r border-gray-100"></td>
+                                    <td class="p-4 border-r border-gray-100 align-top">
+                                        <div class="text-gray-700 font-medium">{{ $tujuan->tujuan }}</div>
+                                        <!-- Label PJ jika ada -->
+                                        @if($tujuan->jabatan)
+                                            <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm">
+                                                <svg class="mr-1.5 h-3 w-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                PJ: {{ $tujuan->jabatan->nama }}
+                                            </div>
+                                        @endif
+                                    </td>
+                                    <td class="p-4 border-r text-center text-gray-400 align-middle">&mdash;</td>
+                                    
+                                    <!-- Target (Kosong di baris Tujuan) -->
+                                    <td colspan="6" class="p-2 border-r text-center text-gray-300">&mdash;</td>
+
+                                    <!-- MENU AKSI TUJUAN -->
+                                    <td class="p-4 text-center align-middle relative">
+                                        <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
+                                            <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-transparent px-3 py-1.5 bg-blue-100 text-sm font-medium text-blue-700 hover:bg-blue-200 focus:outline-none transition-colors">
+                                                Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                            </button>
+                                            <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100">
+                                                <div class="py-1">
+                                                    <button wire:click="pilihPenanggungJawab({{ $tujuan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-yellow-600 hover:bg-yellow-50 transition-colors"><svg class="mr-3 h-5 w-5 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>Penanggung Jawab</button>
+                                                    <button wire:click="tambahIndikator({{ $tujuan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors"><svg class="mr-3 h-5 w-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>Tambah Indikator</button>
+                                                </div>
+                                                <div class="py-1">
+                                                    <button wire:click="edit({{ $tujuan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-indigo-600 hover:bg-indigo-50 transition-colors"><svg class="mr-3 h-5 w-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Edit Tujuan</button>
+                                                    <button wire:click="delete({{ $tujuan->id }})" wire:confirm="Yakin hapus?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors"><svg class="mr-3 h-5 w-5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Hapus Tujuan</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+
+                                <!-- 3. BARIS INDIKATOR (LOOPING DI BAWAH TUJUAN) -->
+                                @foreach($tujuan->indikators as $indikator)
+                                <tr class="hover:bg-gray-50 transition-colors bg-white border-l-4 border-blue-500">
+                                    <td class="p-4 border-r border-gray-100"></td>
+                                    <td class="p-4 border-r border-gray-100"></td>
+                                    
+                                    <!-- Data Indikator -->
+                                    <td class="p-4 border-r border-gray-100 text-sm text-gray-700 align-top">
+                                        <div class="font-medium">{{ $indikator->keterangan }}</div>
+                                    </td>
+                                    
+                                    <!-- Data Target -->
+                                    <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2025 ? $indikator->target_2025 . ' ' . $indikator->satuan : '-' }}</td>
+                                    <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2026 ? $indikator->target_2026 . ' ' . $indikator->satuan : '-' }}</td>
+                                    <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2027 ? $indikator->target_2027 . ' ' . $indikator->satuan : '-' }}</td>
+                                    <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2028 ? $indikator->target_2028 . ' ' . $indikator->satuan : '-' }}</td>
+                                    <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2029 ? $indikator->target_2029 . ' ' . $indikator->satuan : '-' }}</td>
+                                    <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2030 ? $indikator->target_2030 . ' ' . $indikator->satuan : '-' }}</td>
+
+                                    <!-- MENU INDIKATOR -->
+                                    <td class="p-4 text-center align-middle relative">
+                                        <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
+                                            <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none shadow-sm">
+                                                Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                            </button>
+                                            <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100">
+                                                <div class="py-1">
+                                                    <button wire:click="editIndikator({{ $indikator->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50"><svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>Edit Indikator</button>
+                                                    <button wire:click="aturTarget({{ $indikator->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-purple-600 hover:bg-purple-50"><svg class="mr-3 h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>Atur Target</button>
+                                                    <button wire:click="deleteIndikator({{ $indikator->id }})" wire:confirm="Hapus indikator ini?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"><svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Hapus Indikator</button>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </td>
+                                </tr>
+                                @endforeach
+
+                                @endforeach
+                            @empty
+                                <tr>
+                                    <td colspan="11" class="p-10 text-center text-gray-400 italic bg-gray-50">
+                                        <div class="flex flex-col items-center justify-center">
+                                            <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                                            <p>Data Tujuan Renstra belum tersedia.</p>
+                                            <p class="text-xs mt-1">Silakan klik tombol <strong>+ Tambah Tujuan</strong> di pojok kanan atas.</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL 1: FORM TUJUAN -->
+    @if($isOpen)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
+            <h3 class="text-xl font-bold mb-4">{{ $isEditMode ? 'Edit Tujuan' : 'Tambah Tujuan' }}</h3>
+            <div class="space-y-4">
+                <div>
+                    <label class="block text-sm mb-1">Sasaran</label>
+                    <select wire:model="sasaran_rpjmd" class="w-full border rounded px-3 py-2">
+                        <option value="">Pilih Sasaran</option>
+                        @foreach($opsi_sasaran as $s) <option value="{{ $s }}">{{ $s }}</option> @endforeach
+                    </select>
+                    @error('sasaran_rpjmd') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+                <div>
+                    <label class="block text-sm mb-1">Tujuan</label>
+                    <textarea wire:model="tujuan" class="w-full border rounded px-3 py-2" rows="3"></textarea>
+                    @error('tujuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-2">
+                <button wire:click="closeModal" class="px-4 py-2 bg-gray-200 rounded">Batal</button>
+                <button wire:click="store" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- MODAL 2: PENANGGUNG JAWAB -->
+    @if($isOpenPJ)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+            <h3 class="text-xl font-bold mb-4">Penanggung Jawab</h3>
+            <div class="space-y-4">
+                <div class="bg-gray-50 p-3 rounded text-sm italic">"{{ $pj_tujuan_text }}"</div>
+                <div>
+                    <label class="block text-sm mb-1">Jabatan</label>
+                    <select wire:model="pj_jabatan_id" class="w-full border rounded px-3 py-2">
+                        <option value="">Pilih Jabatan</option>
+                        @foreach($jabatans as $j) <option value="{{ $j->id }}">{{ $j->nama }}</option> @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="mt-6 flex justify-end gap-2">
+                <button wire:click="closeModal" class="px-4 py-2 bg-gray-200 rounded">Batal</button>
+                <button wire:click="simpanPenanggungJawab" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    <!-- MODAL 3: INDIKATOR -->
+    @if($isOpenIndikator)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform transition-all scale-100">
+            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-100">
+                <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Indikator' : 'Form Indikator Tujuan' }}</h3>
+                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-8 space-y-6">
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label><textarea wire:model="ind_keterangan" rows="3" class="w-full border rounded px-3 py-2"></textarea></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label><select wire:model="ind_satuan" class="w-full border rounded px-3 py-2"><option value="">Pilih Satuan</option><option>Dokumen</option><option>Persen</option><option>Orang</option><option>Kegiatan</option><option>Barang</option><option>Indeks</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Arah</label><select wire:model="ind_arah" class="w-full border rounded px-3 py-2"><option value="">Pilih Arah</option><option>Meningkat</option><option>Menurun</option><option>Tetap</option></select></div>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl"><button wire:click="closeModal" class="px-6 py-2 bg-gray-100 rounded">Batal</button><button wire:click="storeIndikator" class="px-6 py-2 bg-blue-600 text-white rounded">Simpan</button></div>
+        </div>
+    </div>
+    @endif
+
+    <!-- MODAL 4: ATUR TARGET (LABEL DINAMIS) -->
+    @if($isOpenTarget)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all scale-100">
+            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-100">
+                <h3 class="text-xl font-bold text-gray-800">Form Target Indikator</h3>
+                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            <div class="p-8 space-y-4">
+                @foreach([2025, 2026, 2027, 2028, 2029, 2030] as $year)
+                <div class="grid grid-cols-12 gap-4 items-center">
+                    <div class="col-span-3">
+                        <label class="text-sm font-medium text-gray-700">Target {{ $year }}</label>
+                    </div>
+                    <div class="col-span-9 relative">
+                        <input type="text" wire:model="target_{{ $year }}" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
+                        <!-- LABEL SATUAN DINAMIS (Variable dari Backend) -->
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none bg-gray-50 border-l border-gray-300 rounded-r-lg text-sm text-gray-500">
+                            {{ $target_satuan ?? 'Angka' }}
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+                <button wire:click="closeModal" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Batal</button>
+                <button wire:click="simpanTarget" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
+            </div>
+        </div>
+    </div>
+    @endif
+</div>
