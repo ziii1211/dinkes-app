@@ -18,5 +18,6 @@ class RealisasiKinerja extends Model
         'realisasi',
         'capaian',
         'catatan',
+        'tanggapan',
     ];
 }

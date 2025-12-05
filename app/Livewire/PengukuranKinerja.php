@@ -9,6 +9,7 @@ use App\Models\RencanaAksi;
 use App\Models\RealisasiKinerja;
 use App\Models\RealisasiRencanaAksi;
 use Illuminate\Support\Facades\DB; 
+use Illuminate\Support\Facades\Auth; // Tambahkan ini untuk cek user login
 
 class PengukuranKinerja extends Component
 {
@@ -43,6 +44,10 @@ class PengukuranKinerja extends Component
     public $formAksiNama;
     public $formAksiTarget;
     public $formAksiSatuan;
+
+    // --- MODAL TANGGAPAN PIMPINAN (FITUR BARU) ---
+    public $isOpenTanggapan = false;
+    public $tanggapanInput;
     
     public function mount($jabatanId)
     {
@@ -85,9 +90,13 @@ class PengukuranKinerja extends Component
             foreach ($this->pk->sasarans as $sasaran) {
                 foreach ($sasaran->indikators as $indikator) {
                     $indikator->target_tahunan = $indikator->$colTarget ?? $indikator->target;
+                    
                     $data = $realisasiMap->get($indikator->id);
                     $indikator->realisasi_bulan = $data ? $data->realisasi : null;
                     $indikator->catatan_bulan = $data ? $data->catatan : null;
+                    
+                    // --- UPDATE BARU: Load Data Tanggapan ---
+                    $indikator->tanggapan_bulan = $data ? $data->tanggapan : null; 
 
                     if ($indikator->realisasi_bulan !== null && $indikator->target_tahunan > 0) {
                         $capaian = ($indikator->realisasi_bulan / $indikator->target_tahunan) * 100;
@@ -218,6 +227,58 @@ class PengukuranKinerja extends Component
         $this->closeRealisasiAksi();
         $this->loadData(); 
         session()->flash('message', 'Realisasi Rencana Aksi berhasil disimpan.');
+    }
+
+    // =========================================================
+    //  METHOD BARU: TANGGAPAN PIMPINAN
+    // =========================================================
+
+    public function openTanggapan($indikatorId, $nama)
+    {
+        $this->indikatorId = $indikatorId;
+        $this->indikatorNama = $nama;
+        
+        // Ambil data existing
+        $data = RealisasiKinerja::where('indikator_id', $indikatorId)
+            ->where('bulan', $this->selectedMonth)
+            ->where('tahun', $this->tahun)
+            ->first();
+
+        // Isi input dengan data yang sudah ada (jika ada)
+        $this->tanggapanInput = $data ? $data->tanggapan : '';
+        $this->isOpenTanggapan = true;
+    }
+
+    public function closeTanggapan()
+    {
+        $this->isOpenTanggapan = false;
+        $this->reset('tanggapanInput');
+    }
+
+    public function simpanTanggapan()
+    {
+        // Pengecekan keamanan: Hanya pimpinan yang boleh simpan
+        // Pastikan User model Anda memiliki kolom/method 'role'
+        // Jika belum ada sistem role, baris ini bisa di-comment dulu
+        if (Auth::check() && Auth::user()->role !== 'pimpinan') {
+            session()->flash('message', 'Hanya Pimpinan yang dapat memberi tanggapan.');
+            return;
+        }
+
+        RealisasiKinerja::updateOrCreate(
+            [
+                'indikator_id' => $this->indikatorId, 
+                'bulan' => $this->selectedMonth, 
+                'tahun' => $this->tahun
+            ],
+            [
+                'tanggapan' => $this->tanggapanInput
+            ]
+        );
+
+        $this->closeTanggapan();
+        $this->loadData();
+        session()->flash('message', 'Tanggapan berhasil disimpan.');
     }
 
     public function render()
