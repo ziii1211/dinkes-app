@@ -57,30 +57,54 @@
                 </div>
             </div>
 
-            <div class="mb-4">
-                <label class="text-sm font-bold text-gray-700 block mb-2">Pilih Bulan Pengisian:</label>
-                <div class="flex flex-wrap gap-2">
-                    @foreach($months as $index => $name)
-                        <button wire:click="selectMonth({{ $index }})" class="px-4 py-1.5 text-xs font-medium rounded-full border transition-all shadow-sm {{ $selectedMonth == $index ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600' }}">{{ $name }}</button>
-                    @endforeach
+            <div class="mb-4 flex flex-col md:flex-row justify-between items-start md:items-end gap-4">
+                <div>
+                    <label class="text-sm font-bold text-gray-700 block mb-2">Pilih Bulan Pengisian:</label>
+                    <div class="flex flex-wrap gap-2">
+                        @foreach($months as $index => $name)
+                            <button wire:click="selectMonth({{ $index }})" class="px-4 py-1.5 text-xs font-medium rounded-full border transition-all shadow-sm {{ $selectedMonth == $index ? 'bg-blue-600 text-white border-blue-600 ring-2 ring-blue-200' : 'bg-white text-gray-600 border-gray-200 hover:border-blue-400 hover:text-blue-600' }}">{{ $name }}</button>
+                        @endforeach
+                    </div>
                 </div>
+                
+                @if(auth()->check() && auth()->user()->role === 'admin')
+                    <button wire:click="openAturJadwal" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2 transition-colors">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        Atur Tenggat Waktu
+                    </button>
+                @endif
             </div>
 
-            @php $currentMonthIndex = (int) date('n'); $isScheduleOpen = ($selectedMonth == $currentMonthIndex); $monthName = $months[$selectedMonth]; @endphp
             @if($isScheduleOpen)
                 <div class="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start gap-3 animate-fade-in-down">
-                    <svg class="w-5 h-5 text-green-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div class="p-2 bg-green-100 rounded-full text-green-600 mt-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    </div>
                     <div>
-                        <h4 class="text-sm font-bold text-green-700">Jadwal Penginputan Terbuka</h4>
-                        <p class="text-xs text-green-600 mt-1">Pengukuran kinerja untuk <span class="font-bold">{{ $monthName }} {{ $tahun }}</span> sedang <span class="font-bold">dibuka</span>.</p>
+                        <h4 class="text-sm font-bold text-green-700 uppercase tracking-wide">Jadwal Pengisian Terbuka</h4>
+                        
+                        <p class="text-xl font-extrabold text-green-800 mt-1">{{ $scheduleMessage }}</p>
+                        
+                        @if(isset($deadlineDate))
+                            <p class="text-xs font-bold text-green-700 mt-2 bg-green-100 w-fit px-2 py-1 rounded-md border border-green-200">
+                                Batas Waktu: {{ $deadlineDate }} WITA
+                            </p>
+                        @endif
                     </div>
                 </div>
             @else
-                <div class="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start gap-3 animate-fade-in-down">
-                    <svg class="w-5 h-5 text-yellow-500 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                <div class="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start gap-3 animate-fade-in-down">
+                    <div class="p-2 bg-red-100 rounded-full text-red-600 mt-1">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                    </div>
                     <div>
-                        <h4 class="text-sm font-bold text-yellow-700">Bukan Jadwal Penginputan</h4>
-                        <p class="text-xs text-yellow-600 mt-1">Pengukuran kinerja untuk <span class="font-bold">{{ $monthName }} {{ $tahun }}</span> saat ini <span class="font-bold">tidak dibuka</span>.</p>
+                        <h4 class="text-sm font-bold text-red-700 uppercase tracking-wide">Pengisian Terkunci</h4>
+                        <p class="text-sm text-red-700 mt-1 font-semibold">{{ $scheduleMessage ?? 'Jadwal pengisian untuk bulan ini telah ditutup.' }}</p>
+                        @if(auth()->user()->role === 'admin')
+                            <p class="text-xs font-bold text-purple-600 mt-2 cursor-pointer hover:underline" wire:click="openAturJadwal">Klik tombol "Atur Tenggat Waktu" untuk membuka kembali jadwal.</p>
+                        @else
+                            <p class="text-xs text-red-500 italic mt-2">Hubungi admin jika Anda memerlukan perpanjangan waktu.</p>
+                        @endif
                     </div>
                 </div>
             @endif
@@ -119,16 +143,11 @@
                                             <div class="text-xs text-gray-700 mb-2 font-medium {{ $ind->tanggapan_bulan ? 'block' : 'hidden' }}">
                                                 {{ $ind->tanggapan_bulan ?? '-' }}
                                             </div>
-                                            
                                             <div class="{{ !$ind->tanggapan_bulan ? 'block' : 'hidden' }} text-gray-400 text-xs mb-2">-</div>
-                                            
-                                            {{-- Tombol Edit hanya untuk Pimpinan --}}
                                             @if(auth()->check() && auth()->user()->role === 'pimpinan')
                                                 <button wire:click="openTanggapan({{ $ind->id }}, '{{ addslashes($ind->nama_indikator) }}')" 
                                                         class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center justify-center gap-1 mx-auto transition-colors">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path>
-                                                    </svg>
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                     {{ $ind->tanggapan_bulan ? 'Edit' : 'Beri Tanggapan' }}
                                                 </button>
                                             @endif
@@ -157,27 +176,24 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h3 class="text-lg font-bold text-gray-800">Rencana Aksi</h3>
-                
                 <div class="flex gap-2">
                     @if(auth()->check() && auth()->user()->role !== 'pimpinan')
-                        <button wire:click="openTambahAksi" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                            Tambah Manual
-                        </button>
+                        @if($isScheduleOpen)
+                            <button wire:click="openTambahAksi" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Manual
+                            </button>
+                        @else
+                            <button disabled class="px-4 py-2 bg-gray-100 text-gray-400 text-xs font-bold rounded-lg flex items-center gap-2 cursor-not-allowed border border-gray-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> Terkunci
+                            </button>
+                        @endif
                     @endif
-                    
                     <button class="px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                        Sinkron Dari E-Dialog
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg> Sinkron Dari E-Dialog
                     </button>
                 </div>
             </div>
-            
             <div class="p-6">
-                <div class="bg-red-50 border border-red-100 rounded-lg p-3 mb-6 flex items-start gap-3">
-                    <div class="text-xs text-red-600"><span class="font-bold">Mode Sinkron:</span> Gunakan tombol "Sinkron Dari E-Dialog" untuk menarik Rencana Aksi. Atau gunakan "Tambah Manual" jika diperlukan.</div>
-                </div>
-
                 <div class="overflow-x-auto">
                     <table class="w-full text-left text-sm">
                         <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
@@ -202,7 +218,6 @@
                                             <span class="px-2 py-1 rounded text-xs font-bold text-white bg-green-500">{{ $aksi->capaian_bulan }}%</span>
                                         @else - @endif
                                     </td>
-                                    
                                     <td class="px-4 py-4 text-center align-middle">
                                         @if(auth()->check() && auth()->user()->role !== 'pimpinan')
                                             @if($isScheduleOpen)
@@ -211,7 +226,10 @@
                                                     {{ $aksi->realisasi_bulan ? 'Edit' : 'Isi Realisasi' }}
                                                 </button>
                                             @else
-                                                <button disabled class="px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded flex items-center justify-center gap-1 mx-auto cursor-not-allowed border border-gray-200"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> Terkunci</button>
+                                                <button disabled class="px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded flex items-center justify-center gap-1 mx-auto cursor-not-allowed border border-gray-200">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 
+                                                    Terkunci
+                                                </button>
                                             @endif
                                         @endif
                                     </td>
@@ -225,6 +243,34 @@
             </div>
         </div>
     </div>
+
+    @if($isOpenAturJadwal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" x-data>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                <h3 class="text-lg font-bold text-gray-800">Atur Jadwal Pengisian</h3>
+                <button wire:click="closeAturJadwal" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div class="bg-purple-50 p-3 rounded-lg border border-purple-100">
+                    <p class="text-sm text-purple-700 font-medium">Anda sedang mengatur jadwal untuk bulan <span class="font-bold">{{ $months[$selectedMonth] }} {{ $tahun }}</span>.</p>
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
+                    <input type="date" wire:model="formJadwalMulai" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Batas Akhir (Tenggat)</label>
+                    <input type="date" wire:model="formJadwalSelesai" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button wire:click="closeAturJadwal" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">Batal</button>
+                <button wire:click="simpanJadwal" class="px-5 py-2.5 bg-purple-600 hover:bg-purple-700 text-white text-sm font-medium rounded-lg shadow-sm">Simpan Jadwal</button>
+            </div>
+        </div>
+    </div>
+    @endif
 
     @if($isOpenTambahAksi)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" x-data>
