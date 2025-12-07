@@ -19,7 +19,6 @@
         .text-center { text-align: center; }
         .program-code { font-weight: bold; display: block; font-size: 8pt; margin-bottom: 2px; }
         .program-name { display: block; text-transform: uppercase; font-size: 8pt; }
-        .text-xs { font-size: 7pt; }
     </style>
 </head>
 <body>
@@ -52,9 +51,9 @@
                 <td class="font-bold">{{ $tujuan->tujuan ?? $tujuan->sasaran_rpjmd }}</td>
                 <td></td><td></td><td></td>
                 <td>
-                    @if(isset($tujuan->indikators_pohon) && $tujuan->indikators_pohon->count() > 0)
+                    @if(isset($tujuan->indikators_from_pohon) && $tujuan->indikators_from_pohon->count() > 0)
                         <ul>
-                            @foreach($tujuan->indikators_pohon as $ind) 
+                            @foreach($tujuan->indikators_from_pohon as $ind) 
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
@@ -70,9 +69,9 @@
                 <td class="font-bold">{{ $sasaran->sasaran }}</td>
                 <td></td><td></td>
                 <td>
-                    @if(isset($sasaran->indikators_pohon) && $sasaran->indikators_pohon->count() > 0)
+                    @if(isset($sasaran->indikators_from_pohon) && $sasaran->indikators_from_pohon->count() > 0)
                         <ul>
-                            @foreach($sasaran->indikators_pohon as $ind) 
+                            @foreach($sasaran->indikators_from_pohon as $ind) 
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
@@ -88,9 +87,9 @@
                 <td class="font-bold">{{ $outcome->outcome }}</td>
                 <td></td>
                 <td>
-                    @if(isset($outcome->indikators_pohon) && $outcome->indikators_pohon->count() > 0)
+                    @if(isset($outcome->indikators_from_pohon) && $outcome->indikators_from_pohon->count() > 0)
                         <ul>
-                            @foreach($outcome->indikators_pohon as $ind) 
+                            @foreach($outcome->indikators_from_pohon as $ind) 
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
@@ -108,9 +107,9 @@
                 <td></td><td></td><td></td>
                 <td class="font-bold">{{ $kegiatan->output }}</td>
                 <td>
-                    @if(isset($kegiatan->indikators_pohon) && $kegiatan->indikators_pohon->count() > 0)
+                    @if(isset($kegiatan->indikators_from_pohon) && $kegiatan->indikators_from_pohon->count() > 0)
                         <ul>
-                            @foreach($kegiatan->indikators_pohon as $ind) 
+                            @foreach($kegiatan->indikators_from_pohon as $ind) 
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
@@ -128,18 +127,18 @@
                 <td></td><td></td><td></td>
                 <td>{{ $sub->output ?? '-' }}</td>
                 <td>
-                    {{-- PRIORITAS 1: DATA INPUT MANUAL (DARI SUB KEGIATAN) --}}
+                    {{-- PRIORITAS 1: DATA INPUT MANUAL --}}
                     @if($sub->indikators->isNotEmpty())
-                        <ul style="font-weight: bold;">
+                        <ul style="font-weight: bold; color: #000;">
                             @foreach($sub->indikators as $ind) 
                                 <li>{{ $ind->keterangan }}</li> 
                             @endforeach
                         </ul>
                     
-                    {{-- PRIORITAS 2: DATA DARI POHON KINERJA (JIKA MANUAL KOSONG) --}}
-                    @elseif(isset($sub->indikators_pohon) && $sub->indikators_pohon->count() > 0)
+                    {{-- PRIORITAS 2: DATA DARI POHON KINERJA --}}
+                    @elseif(isset($sub->indikators_from_pohon) && $sub->indikators_from_pohon->count() > 0)
                         <ul>
-                            @foreach($sub->indikators_pohon as $ind) 
+                            @foreach($sub->indikators_from_pohon as $ind) 
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
