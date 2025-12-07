@@ -58,7 +58,6 @@ class DokumenRenstra extends Component
             } elseif ($type === 'kegiatan') {
                 $targetTexts[] = $cleaner($item->nama);
             } elseif ($type === 'sub_kegiatan') {
-                // PERBAIKAN: Tambahkan pencarian untuk Sub Kegiatan
                 $targetTexts[] = $cleaner($item->nama);
             }
             $targetTexts = array_filter($targetTexts);
@@ -133,9 +132,9 @@ class DokumenRenstra extends Component
         }); 
 
         // E. SUB KEGIATAN (DIPERBAIKI)
-        // Kita ambil indikatornya dari Pohon Kinerja (jika ada yang cocok)
-        // Dan kita BIARKAN field output apa adanya (tidak di-null-kan)
-        $sub_kegiatans = SubKegiatan::all()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
+        // PERUBAHAN DISINI: Tambahkan with('indikators') untuk mengambil data inputan manual
+        $sub_kegiatans = SubKegiatan::with('indikators')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
+            // Logika pencarian pohon tetap dijalankan sebagai fallback (opsional)
             $node = $findPohonNode($item, 'sub_kegiatan');
             $item->indikators_from_pohon = $node ? $getIndicatorsForNode($node) : collect([]);
             return $item;

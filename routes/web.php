@@ -42,6 +42,7 @@ use App\Models\Sasaran;
 use App\Models\Outcome;
 use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
+use App\Models\PohonKinerja as PohonModel; // Import Model Pohon Kinerja untuk PDF
 use App\Exports\DokumenRenstraExport;
 
 // --- 4. FACADES ---
@@ -85,13 +86,71 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/dokumen', DokumenRenstra::class)->name('matrik.dokumen');
         
-        // Export PDF Dokumen Renstra
+        // Export PDF Dokumen Renstra (PERBAIKAN LOGIKA)
         Route::get('/dokumen/cetak', function () {
-            $tujuans = Tujuan::with('indikators')->get();
-            $sasarans = Sasaran::with('indikators')->get();
-            $outcomes = Outcome::with(['indikators', 'program'])->get();
-            $kegiatans = Kegiatan::whereNotNull('output')->get(); 
-            $sub_kegiatans = SubKegiatan::with('indikators')->get();
+            
+            // 1. AMBIL DATA POHON KINERJA (SUMBER INDIKATOR OTOMATIS)
+            $all_pohons = PohonModel::with('indikators')->get();
+
+            // Helper untuk mengambil indikator dari node pohon
+            $getIndicatorsForNode = fn($node) => $node->indikators ?? collect([]);
+
+            // Helper untuk mencocokkan Item Renstra dengan Node Pohon Kinerja
+            $findPohonNode = function($item, $type) use ($all_pohons) {
+                // Bersihkan string agar pencocokan lebih akurat (lowercase, alphanumeric only)
+                $cleaner = fn($str) => strtolower(trim(preg_replace('/[^a-zA-Z0-9 ]/', ' ', $str)));
+                
+                $targetName = $cleaner($type == 'tujuan' ? ($item->tujuan ?? $item->sasaran_rpjmd) : 
+                             ($type == 'sasaran' ? $item->sasaran : 
+                             ($type == 'outcome' ? $item->outcome : $item->nama)));
+
+                foreach ($all_pohons as $pohon) {
+                    $pohonName = $cleaner($pohon->nama_pohon);
+                    // Cek kesamaan nama (contains)
+                    if ($pohonName === $targetName || str_contains($pohonName, $targetName)) {
+                        return $pohon;
+                    }
+                }
+                return null;
+            };
+
+            // 2. MAPPING DATA (INJECT INDIKATOR POHON KE SETIAP ITEM)
+            
+            // Tujuan
+            $tujuans = Tujuan::all()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
+                $node = $findPohonNode($item, 'tujuan');
+                $item->indikators_pohon = $node ? $getIndicatorsForNode($node) : collect([]);
+                return $item;
+            });
+
+            // Sasaran
+            $sasarans = Sasaran::all()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
+                $node = $findPohonNode($item, 'sasaran');
+                $item->indikators_pohon = $node ? $getIndicatorsForNode($node) : collect([]);
+                return $item;
+            });
+
+            // Outcome
+            $outcomes = Outcome::with(['program'])->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
+                $node = $findPohonNode($item, 'outcome');
+                $item->indikators_pohon = $node ? $getIndicatorsForNode($node) : collect([]);
+                return $item;
+            });
+
+            // Kegiatan (Output)
+            $kegiatans = Kegiatan::whereNotNull('output')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
+                $node = $findPohonNode($item, 'kegiatan');
+                $item->indikators_pohon = $node ? $getIndicatorsForNode($node) : collect([]);
+                return $item;
+            }); 
+
+            // Sub Kegiatan (Load Indikator Manual + Pohon)
+            $sub_kegiatans = SubKegiatan::with('indikators')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
+                // Cari node pohon yang cocok (sebagai fallback jika indikator manual kosong)
+                $node = $findPohonNode($item, 'sub_kegiatan');
+                $item->indikators_pohon = $node ? $getIndicatorsForNode($node) : collect([]);
+                return $item;
+            });
 
             $header = [
                 'unit_kerja' => 'DINAS KESEHATAN',

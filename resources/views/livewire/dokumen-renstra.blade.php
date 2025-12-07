@@ -11,10 +11,8 @@
 
     <div class="space-y-6">
         
-        <!-- CARD UTAMA -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             
-            <!-- Header Card & Tombol Aksi -->
             <div class="px-8 py-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 class="text-xl font-bold text-gray-800 text-blue-900">
                     Matriks RENSTRA
@@ -35,7 +33,6 @@
                 </div>
             </div>
 
-            <!-- Informasi Dokumen -->
             <div class="px-8 py-6">
                 <table class="w-full md:w-1/2 text-sm text-gray-700">
                     <tbody>
@@ -63,7 +60,6 @@
                 </table>
             </div>
 
-            <!-- Tabel Matriks -->
             <div class="border-t border-gray-200">
                 <div class="overflow-x-auto">
                     <table class="w-full text-left border-collapse">
@@ -79,13 +75,11 @@
                         </thead>
                         <tbody class="text-sm text-gray-600 divide-y divide-gray-100">
                             
-                            <!-- BAGIAN 1: TUJUAN -->
                             @foreach($tujuans as $tujuan)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4 font-medium text-gray-800">{{ $tujuan->tujuan ?? $tujuan->sasaran_rpjmd }}</td>
                                 <td class="p-4"></td><td class="p-4"></td><td class="p-4"></td>
                                 
-                                <!-- Kolom Indikator (DARI POHON KINERJA) -->
                                 <td class="p-4">
                                     @if(isset($tujuan->indikators_from_pohon) && $tujuan->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
@@ -102,14 +96,12 @@
                             </tr>
                             @endforeach
 
-                            <!-- BAGIAN 2: SASARAN -->
                             @foreach($sasarans as $sasaran)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td>
                                 <td class="p-4 font-medium text-gray-800">{{ $sasaran->sasaran }}</td>
                                 <td class="p-4"></td><td class="p-4"></td>
                                 
-                                <!-- Kolom Indikator -->
                                 <td class="p-4">
                                     @if(isset($sasaran->indikators_from_pohon) && $sasaran->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
@@ -126,14 +118,12 @@
                             </tr>
                             @endforeach
 
-                            <!-- BAGIAN 3: OUTCOME -->
                             @foreach($outcomes as $outcome)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td><td class="p-4"></td>
                                 <td class="p-4 font-medium text-gray-800">{{ $outcome->outcome }}</td>
                                 <td class="p-4"></td>
                                 
-                                <!-- Kolom Indikator -->
                                 <td class="p-4">
                                     @if(isset($outcome->indikators_from_pohon) && $outcome->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
@@ -153,13 +143,11 @@
                             </tr>
                             @endforeach
 
-                            <!-- BAGIAN 4: OUTPUT (KEGIATAN) -->
                             @foreach($kegiatans as $kegiatan)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td><td class="p-4"></td><td class="p-4"></td>
                                 <td class="p-4 font-medium text-gray-800">{{ $kegiatan->output }}</td>
                                 
-                                <!-- Kolom Indikator -->
                                 <td class="p-4">
                                     @if(isset($kegiatan->indikators_from_pohon) && $kegiatan->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
@@ -179,17 +167,20 @@
                             </tr>
                             @endforeach
 
-                            <!-- BAGIAN 5: SUB KEGIATAN (RESTORED) -->
                             @foreach($sub_kegiatans as $sub)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td><td class="p-4"></td><td class="p-4"></td>
                                 
-                                <!-- Restore: Tampilkan Output Sub Kegiatan -->
                                 <td class="p-4 font-medium text-gray-800">{{ $sub->output ?? '-' }}</td>
                                 
-                                <!-- Kolom Indikator (Sekarang sudah di-load dari controller) -->
                                 <td class="p-4">
-                                    @if(isset($sub->indikators_from_pohon) && $sub->indikators_from_pohon->isNotEmpty())
+                                    @if($sub->indikators->isNotEmpty())
+                                        <ul class="list-disc list-inside space-y-1 text-gray-700 font-medium">
+                                            @foreach($sub->indikators as $ind)
+                                                <li>{{ $ind->keterangan }}</li>
+                                            @endforeach
+                                        </ul>
+                                    @elseif(isset($sub->indikators_from_pohon) && $sub->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
                                             @foreach($sub->indikators_from_pohon as $ind)
                                                 <li>{{ $ind->nama_indikator }}</li>
@@ -215,7 +206,6 @@
         </div>
     </div>
 
-    <!-- MODAL EDIT DATA RENSTRA -->
     @if($isOpenEdit)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform transition-all">
