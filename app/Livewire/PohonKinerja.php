@@ -3,7 +3,7 @@
 namespace App\Livewire;
 
 use Livewire\Component;
-use Livewire\WithPagination; // Tambahkan ini jika ingin pagination di tabel
+use Livewire\WithPagination;
 use App\Models\Tujuan;
 use App\Models\PohonKinerja as ModelPohon;
 use App\Models\IndikatorPohonKinerja;
@@ -41,38 +41,49 @@ class PohonKinerja extends Component
     public $indikator_satuan;
     public $indikator_list = []; 
 
-    // --- PROPERTIES CROSSCUTTING (Updated) ---
-    public $cross_sumber_id;    // Kinerja Sumber (Dari tabel Pohon Kinerja)
-    public $cross_skpd_id;      // SKPD Tujuan
-    public $cross_tujuan_id;    // Kinerja Tujuan (Dari tabel Pohon Kinerja)
+    // --- PROPERTIES CROSSCUTTING ---
+    public $cross_sumber_id;    
+    public $cross_skpd_id;      
+    public $cross_tujuan_id;    
 
     public function render()
     {
         // 1. Ambil Struktur Pohon (Induk -> Anak -> Cucu)
         $treeData = $this->getFlatTree();
 
-        // 2. Ambil Opsi untuk Dropdown Crosscutting
-        // Mengambil semua data pohon kinerja untuk opsi 'Sumber' dan 'Tujuan'
-        $opsiPohon = ModelPohon::orderBy('nama_pohon', 'asc')->get();
-        // Mengambil data SKPD
+        // 2. PERBAIKAN UTAMA: Filter Opsi Dropdown
+        // Hanya ambil data yang 'jenis'-nya KOSONG (Manual) atau BUKAN visualisasi/crosscutting
+        // Ini akan mencegah duplikat di dropdown 'Pilih Kinerja Sumber' & 'Referensi'
+        $masterPohons = ModelPohon::where(function($query) {
+                                    $query->whereNull('jenis')
+                                          ->orWhereNotIn('jenis', ['visualisasi', 'crosscutting', 'hide']);
+                                })
+                                ->orderBy('nama_pohon', 'asc')
+                                ->get();
+
+        // 3. Ambil Opsi SKPD
         $opsiSkpd = SkpdTujuan::orderBy('nama_skpd', 'asc')->get();
 
-        // 3. Ambil Data Tabel Crosscutting (dengan Pagination)
+        // 4. Ambil Data Tabel Crosscutting
         $crosscuttings = CrosscuttingKinerja::with(['pohonSumber', 'skpdTujuan', 'pohonTujuan'])
                                             ->latest()
-                                            ->paginate(5); // Ubah angka 5 sesuai kebutuhan
+                                            ->paginate(5);
 
         return view('livewire.pohon-kinerja', [
             'pohons' => $treeData,
             'sasaran_rpjmds' => Tujuan::select('id', 'sasaran_rpjmd')->get(),
             'skpds' => SkpdTujuan::all(),
-            'all_pohons' => ModelPohon::all(),
+            'all_pohons' => ModelPohon::all(), // Data mentah jika dibutuhkan view lain
             
-            // Data untuk Modal Crosscutting
-            'opsiPohon' => $opsiPohon,
+            // GUNAKAN VARIABEL INI UNTUK DROPDOWN AGAR TIDAK DUPLIKAT
+            'opsiMasterPohon' => $masterPohons, 
             'opsiSkpd' => $opsiSkpd,
             
-            // Data untuk Tabel Crosscutting
+            // Variabel khusus agar sesuai dengan View yang sudah kita perbaiki sebelumnya
+            // Kita override $opsiPohon dan $all_pohons (yang dipakai di dropdown) dengan data master
+            'opsiPohon' => $masterPohons, 
+            'all_pohons' => $masterPohons, 
+
             'crosscuttings' => $crosscuttings
         ]);
     }
@@ -80,7 +91,6 @@ class PohonKinerja extends Component
     // --- LOGIKA UTAMA POHON (FLAT TREE) ---
     private function getFlatTree()
     {
-        // Load relasi nested children dan indikatornya
         $allNodes = ModelPohon::with([
                         'tujuan', 
                         'indikators', 
@@ -166,6 +176,7 @@ class PohonKinerja extends Component
     // --- FUNGSI SIMPAN POHON KINERJA ---
     public function store() {
         if ($this->modeKinerjaUtama) {
+            // LOGIC VISUALISASI
             $this->validate([
                 'unit_kerja_id' => 'required',
                 'kinerja_utama_id' => 'required'
@@ -195,12 +206,14 @@ class PohonKinerja extends Component
             }
 
         } elseif ($this->isEditMode) { 
+            // LOGIC EDIT
             $this->validate(['nama_pohon' => 'required']);
             ModelPohon::find($this->pohon_id)->update([
                 'tujuan_id' => $this->tujuan_id, 
                 'nama_pohon' => $this->nama_pohon
             ]); 
         } else { 
+            // LOGIC SIMPAN MANUAL (JENIS = NULL)
             $rules = ['nama_pohon' => 'required'];
             if (!$this->isChild) { $rules['tujuan_id'] = 'required'; } 
             $this->validate($rules);
@@ -209,6 +222,7 @@ class PohonKinerja extends Component
                 'tujuan_id' => $this->tujuan_id, 
                 'nama_pohon' => $this->nama_pohon, 
                 'parent_id' => $this->parent_id 
+                // 'jenis' dibiarkan NULL, menandakan ini DATA MASTER
             ]); 
         }
         $this->closeModal();
@@ -286,14 +300,11 @@ class PohonKinerja extends Component
         }
     }
 
-    // --- CROSSCUTTING FUNCTIONS (UPDATED) ---
+    // --- CROSSCUTTING FUNCTIONS ---
 
     public function openCrosscuttingModal($pohonId = null) { 
-        // Reset inputan form modal
         $this->reset(['cross_sumber_id', 'cross_skpd_id', 'cross_tujuan_id', 'active_pohon_id']); 
         
-        // Jika dibuka dari tombol "Tambah" di tabel bawah, $pohonId null (Mode Global)
-        // Jika dibuka dari node pohon tertentu, $pohonId terisi
         if($pohonId) {
             $this->active_pohon_id = $pohonId;
             $this->cross_sumber_id = $pohonId; 
@@ -314,29 +325,27 @@ class PohonKinerja extends Component
             'cross_tujuan_id' => 'required'
         ]);
 
-        // 1. Simpan ke Tabel CrosscuttingKinerja (Record Relasi)
+        // 1. Simpan Data Relasi
         CrosscuttingKinerja::create([
             'pohon_sumber_id' => $this->cross_sumber_id, 
             'skpd_tujuan_id' => $this->cross_skpd_id, 
             'pohon_tujuan_id' => $this->cross_tujuan_id
         ]);
 
-        // 2. LOGIC VISUALISASI (Opsional): 
-        // Jika User membuka modal dari Node Pohon (active_pohon_id ada),
-        // Kita buat visualisasi anak di bawah node tersebut.
+        // 2. Logic Visualisasi (Jika dibuka dari diagram)
         if ($this->active_pohon_id) {
             $targetPohon = ModelPohon::with('indikators')->find($this->cross_tujuan_id);
             
             if($targetPohon) {
-                // Buat Node Baru sebagai CHILD dari active_pohon_id
+                // Buat Node Visualisasi Anak
                 $childNode = ModelPohon::create([
                     'parent_id' => $this->active_pohon_id, 
                     'tujuan_id' => $targetPohon->tujuan_id,
                     'nama_pohon' => $targetPohon->nama_pohon, 
-                    'jenis' => 'crosscutting' // Penanda tipe visualisasi
+                    'jenis' => 'crosscutting' // Penanda jenis visualisasi
                 ]);
 
-                // Salin Indikator agar kotak anak memiliki isi
+                // Salin Indikator
                 if ($targetPohon->indikators->count() > 0) {
                     foreach($targetPohon->indikators as $ind) {
                         IndikatorPohonKinerja::create([
