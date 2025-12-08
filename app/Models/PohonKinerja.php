@@ -15,6 +15,7 @@ class PohonKinerja extends Model
         'jenis',
         'parent_id'
     ];
+
     // Relasi ke Sasaran RPJMD (Tabel Tujuans)
     public function tujuan()
     {
@@ -36,5 +37,11 @@ class PohonKinerja extends Model
     public function indikators()
     {
         return $this->hasMany(IndikatorPohonKinerja::class, 'pohon_kinerja_id');
+    }
+
+    // TAMBAHAN: Relasi untuk mengambil data Crosscutting dimana pohon ini sebagai Sumbernya
+    public function crosscuttings()
+    {
+        return $this->hasMany(CrosscuttingKinerja::class, 'pohon_sumber_id');
     }
 }
