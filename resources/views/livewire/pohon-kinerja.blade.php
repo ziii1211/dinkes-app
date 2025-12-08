@@ -1,24 +1,6 @@
 <div>
     <x-slot:title>Pohon Kinerja</x-slot>
 
-    {{-- CSS KHUSUS ORG CHART --}}
-    <style>
-        .tree ul { padding-top: 20px; position: relative; transition: all 0.5s; display: flex; justify-content: center; }
-        .tree li { float: left; text-align: center; list-style-type: none; position: relative; padding: 20px 5px 0 5px; transition: all 0.5s; }
-        .tree li::before, .tree li::after { content: ''; position: absolute; top: 0; right: 50%; border-top: 2px solid #ccc; width: 50%; height: 20px; }
-        .tree li::after { right: auto; left: 50%; border-left: 2px solid #ccc; }
-        .tree li:only-child::after, .tree li:only-child::before { display: none; }
-        .tree li:only-child { padding-top: 0; }
-        .tree li:first-child::before, .tree li:last-child::after { border: 0 none; }
-        .tree li:last-child::before{ border-right: 2px solid #ccc; border-radius: 0 5px 0 0; }
-        .tree li:first-child::after{ border-radius: 5px 0 0 0; }
-        .tree ul ul::before{ content: ''; position: absolute; top: 0; left: 50%; border-left: 2px solid #ccc; width: 0; height: 20px; }
-        
-        .tree-card { display: inline-block; background: white; border: 1px solid #e2e8f0; border-radius: 0.5rem; min-width: 300px; max-width: 350px; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); transition: all 0.3s; z-index: 10; position: relative; }
-        .tree-card:hover { box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.2); border-color: #3b82f6; }
-        .tree-header { background-color: #4f46e5; color: white; padding: 8px; border-top-left-radius: 0.5rem; border-top-right-radius: 0.5rem; font-size: 0.75rem; font-weight: bold; text-transform: uppercase; }
-    </style>
-
     <x-slot:breadcrumb>
         <a href="/" class="hover:text-white transition-colors">Dashboard</a>
         <span class="mx-2">/</span>
@@ -29,7 +11,7 @@
 
     <div class="space-y-6">
         
-        {{-- BAGIAN 1: INFO & TABEL DATA POHON KINERJA (ASLI) --}}
+        {{-- BAGIAN 1: INFO & TABEL DATA POHON KINERJA --}}
         <div class="bg-white border border-gray-200 rounded-xl p-6 shadow-sm flex gap-4 items-start">
             <div class="text-blue-600 mt-1 flex-shrink-0">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -80,7 +62,9 @@
                                     <td class="py-4 align-top text-gray-700">
                                         @if($pohon->indikators->count() > 0)
                                             <ol class="list-decimal list-inside space-y-1">
-                                                @foreach($pohon->indikators as $ind) <li>{{ $ind->nama_indikator }}</li> @endforeach
+                                                @foreach($pohon->indikators as $ind) 
+                                                    <li>{{ $ind->nama_indikator }}</li> 
+                                                @endforeach
                                             </ol>
                                         @else <span class="text-gray-400 italic">-</span> @endif
                                     </td>
@@ -102,7 +86,7 @@
             </div>
         </div>
 
-        {{-- BAGIAN 2: TABEL CROSSCUTTING (ASLI) --}}
+        {{-- BAGIAN 2: TABEL CROSSCUTTING --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Crosscutting Pohon Kinerja</h3>
@@ -139,132 +123,130 @@
             </div>
         </div>
 
-        {{-- BAGIAN 3: VISUALISASI POHON (ORG CHART) & TOMBOL UTAMA --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative mt-8">
-            
-            {{-- HEADER: JUDUL & TOMBOL (DIGABUNG DI SINI) --}}
+        {{-- BAGIAN 3: VISUALISASI POHON KINERJA --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8 pb-10">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center">
-                <div>
-                    <h3 class="font-bold text-gray-800 text-lg">Visualisasi Pohon Kinerja</h3>
-                    <p class="text-xs text-gray-500">Representasi grafis akan muncul otomatis setelah data diinput.</p>
-                </div>
+                <h3 class="font-bold text-gray-800 text-lg">Visualisasi Pohon Kinerja</h3>
                 
-                {{-- TOMBOL KINERJA UTAMA --}}
-                <button wire:click="openModalKinerjaUtama" class="inline-flex items-center justify-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-lg shadow hover:shadow-md transition-all gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
-                    </svg>
-                     Tambah Kinerja Utama
+                <button wire:click="openModalKinerjaUtama" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-6 rounded shadow flex items-center gap-2 transform transition hover:scale-105">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                    Tambah Kinerja Utama
                 </button>
             </div>
-            
-            <div class="p-6 overflow-x-auto" style="min-height: 500px;">
-                <div class="tree min-w-max">
-                    <ul>
-                        {{-- HANYA LOOPING DATA ASLI (Tidak ada Dummy) --}}
-                        {{-- Jika data kosong, ul ini kosong dan tidak menampilkan apa-apa --}}
-                        @foreach($pohons->where('parent_id', null) as $root)
-                        <li>
-                            <div class="tree-card">
-                                <div class="tree-header bg-indigo-600">
-                                    {{ $root->tujuan->sasaran_rpjmd ?? 'SASARAN RPJMD' }}
-                                </div>
-                                <div class="p-3 text-left">
-                                    <div class="text-xs font-bold text-gray-800 mb-2 border-b pb-2">{{ $root->nama_pohon }}</div>
-                                    @if($root->indikators->count() > 0)
-                                        <div class="text-[10px] text-gray-600 bg-gray-50 p-2 rounded">
-                                            <strong>Indikator:</strong>
-                                            <ul class="list-disc list-inside mt-1">
-                                                @foreach($root->indikators as $ind) <li>{{ $ind->nama_indikator }}</li> @endforeach
-                                            </ul>
-                                        </div>
-                                    @endif
-                                </div>
-                            </div>
 
-                            {{-- LEVEL 2 --}}
-                            @php $children2 = $pohons->where('parent_id', $root->id); @endphp
-                            @if($children2->count() > 0)
-                            <ul>
-                                @foreach($children2 as $child2)
-                                <li>
-                                    <div class="tree-card">
-                                        <div class="tree-header bg-purple-600">KINERJA TURUNAN</div>
-                                        <div class="p-3 text-left">
-                                            <div class="text-xs font-bold text-gray-800 mb-2 border-b pb-2">{{ $child2->nama_pohon }}</div>
-                                            @if($child2->indikators->count() > 0)
-                                                <div class="text-[10px] text-gray-600 mb-2">
-                                                    @foreach($child2->indikators as $ind) • {{ $ind->nama_indikator }}<br> @endforeach
-                                                </div>
-                                            @endif
-                                        </div>
-                                    </div>
-                                    
-                                    {{-- LEVEL 3 --}}
-                                    @php $children3 = $pohons->where('parent_id', $child2->id); @endphp
-                                    @if($children3->count() > 0)
-                                    <ul>
-                                        @foreach($children3 as $child3)
-                                        <li>
-                                            <div class="tree-card">
-                                                <div class="tree-header bg-blue-500">LEVEL 3</div>
-                                                <div class="p-3 text-left">
-                                                    <div class="text-xs font-bold text-gray-800">{{ $child3->nama_pohon }}</div>
-                                                </div>
-                                            </div>
-                                            
-                                            {{-- LEVEL 4 --}}
-                                            @php $children4 = $pohons->where('parent_id', $child3->id); @endphp
-                                            @if($children4->count() > 0)
-                                            <ul>
-                                                @foreach($children4 as $child4)
-                                                <li>
-                                                     <div class="tree-card">
-                                                        <div class="tree-header bg-green-500">LEVEL 4</div>
-                                                        <div class="p-3 text-left">
-                                                            <div class="text-xs font-bold text-gray-800">{{ $child4->nama_pohon }}</div>
-                                                        </div>
-                                                    </div>
-                                                </li>
-                                                @endforeach
-                                            </ul>
-                                            @endif
+            <div class="p-6 bg-gray-100 min-h-[300px]">
+                
+                @forelse($pohons->where('parent_id', null) as $root)
+                
+                {{-- KARTU VISUALISASI --}}
+                <div class="bg-white border border-gray-300 shadow-md max-w-3xl mx-auto p-4 mb-8 rounded-sm">
+                    
+                    <div class="border border-gray-200 p-2 mb-4 text-center shadow-sm bg-white">
+                        <h2 class="font-bold text-gray-800 text-base uppercase tracking-wide">DINAS KESEHATAN</h2> 
+                    </div>
 
-                                        </li>
-                                        @endforeach
-                                    </ul>
-                                    @endif
-                                </li>
-                                @endforeach
-                            </ul>
-                            @endif
-                        </li>
-                        @endforeach
-                    </ul>
+                    <div class="overflow-hidden border border-gray-300">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr>
+                                    <th rowspan="2" class="bg-purple-700 text-white font-semibold text-center text-sm p-2 border-r border-purple-500 w-1/3 align-middle">
+                                        Kinerja Utama
+                                    </th>
+                                    <th rowspan="2" class="bg-purple-700 text-white font-semibold text-center text-sm p-2 border-r border-purple-500 w-1/3 align-middle">
+                                        Indikator
+                                    </th>
+                                    <th colspan="2" class="bg-purple-700 text-white font-semibold text-center text-sm p-2 border-b border-purple-500">
+                                        Target
+                                    </th>
+                                </tr>
+                                <tr>
+                                    <th class="bg-purple-700 text-white font-semibold text-center text-sm p-2 border-r border-purple-500 w-24">
+                                        Nilai
+                                    </th>
+                                    <th class="bg-purple-700 text-white font-semibold text-center text-sm p-2">
+                                        Satuan
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="text-gray-700 text-sm bg-white">
+                                @if($root->indikators->count() > 0)
+                                    @foreach($root->indikators as $index => $ind)
+                                    <tr class="border-b border-gray-200 hover:bg-gray-50">
+                                        @if($index === 0)
+                                            <td rowspan="{{ $root->indikators->count() }}" class="p-3 border-r border-gray-200 align-top bg-white font-medium text-gray-800">
+                                                {{ $root->nama_pohon }}
+                                            </td>
+                                        @endif
+                                        
+                                        <td class="p-2 border-r border-gray-200">{{ $ind->nama_indikator }}</td>
+                                        <td class="p-2 border-r border-gray-200 text-center">{{ $ind->target ?? '-' }}</td>
+                                        <td class="p-2 text-center">{{ $ind->satuan ?? '-' }}</td>
+                                    </tr>
+                                    @endforeach
+                                @else
+                                    <tr class="border-b border-gray-200">
+                                        <td class="p-3 border-r border-gray-200 align-top font-medium">{{ $root->nama_pohon }}</td>
+                                        <td class="p-2 border-r border-gray-200 italic text-gray-400">Belum ada indikator</td>
+                                        <td class="p-2 border-r border-gray-200 text-center">-</td>
+                                        <td class="p-2 text-center">-</td>
+                                    </tr>
+                                @endif
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="mt-4 space-y-3">
+                        <div class="flex justify-center">
+                             <button wire:click="openIndikator({{ $root->id }})" class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-1.5 rounded text-sm font-medium flex items-center transition-colors shadow-sm">
+                                <span class="mr-2 text-lg font-bold">+</span> Tambah Indikator
+                            </button>
+                        </div>
+
+                        {{-- PERUBAHAN UTAMA: TOMBOL HAPUS SEKARANG MENGHAPUS KINERJA UTAMA (BOX) --}}
+                        <div class="flex flex-col gap-2 pt-2 border-t border-gray-100">
+                            
+                            {{-- Tombol Hapus (Atas) - Menghapus Kinerja Utama / Box --}}
+                            <button wire:click="delete({{ $root->id }})" wire:confirm="Yakin ingin menghapus Kinerja Utama ini? Seluruh indikator dan data turunan akan ikut terhapus." class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-xs font-medium flex justify-center items-center shadow-sm uppercase tracking-wide transition-colors">
+                                Hapus Kinerja Utama
+                            </button>
+                            
+                            {{-- Tombol Tambah (Bawah) --}}
+                            <button wire:click="openCrosscuttingModal" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-xs font-medium flex justify-center items-center shadow-sm uppercase tracking-wide transition-colors">
+                                Tambah Crosscutting Perangkat Daerah
+                            </button>
+                        </div>
+                    </div>
                 </div>
+                
+                @empty
+                    <div class="flex flex-col items-center justify-center h-48 text-gray-400">
+                        <svg class="w-16 h-16 mb-4 opacity-20" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16m-7 6h7"></path></svg>
+                        <p class="text-sm">Belum ada Visualisasi.</p>
+                        <p class="text-xs">Klik tombol "Tambah Kinerja Utama" di atas untuk memulai.</p>
+                    </div>
+                @endforelse
             </div>
         </div>
-
     </div>
 
-    {{-- MODAL UTAMA (Form Dinamis) --}}
+    {{-- MODAL 1: FORM POHON UTAMA --}}
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden transform transition-all scale-100">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="text-lg font-bold text-gray-800">
-                    {{ $isEditMode ? 'Edit Data' : ($modeKinerjaUtama ? 'Tambah Kinerja Utama (Pilih Referensi)' : ($isChild ? 'Tambah Kondisi' : 'Buat Pohon Baru')) }}
+                    {{ $isEditMode ? 'Edit Data' : ($modeKinerjaUtama ? 'Tambah Kinerja Utama' : ($isChild ? 'Tambah Kondisi' : 'Buat Pohon Baru')) }}
                 </h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
             <div class="p-6 space-y-6">
                 @if($modeKinerjaUtama)
-                    {{-- FORM KHUSUS TOMBOL BESAR --}}
                     <div class="bg-blue-50 p-4 rounded-lg border border-blue-100 mb-4">
                         <p class="text-xs text-blue-700">Fitur ini menghubungkan Unit Kerja dengan Kinerja yang sudah ada.</p>
                     </div>
-
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Unit Kerja (SKPD) <span class="text-red-500">*</span></label>
                         <select wire:model="unit_kerja_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-blue-500 outline-none bg-white">
@@ -273,7 +255,6 @@
                         </select>
                         @error('unit_kerja_id') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
-
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Kinerja (Referensi) <span class="text-red-500">*</span></label>
                         <select wire:model="kinerja_utama_id" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-blue-500 outline-none bg-white">
@@ -283,7 +264,6 @@
                         @error('kinerja_utama_id') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                     </div>
                 @else
-                    {{-- FORM INPUT MANUAL BIASA --}}
                     @if(!$isChild || $isEditMode)
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Sasaran RPJMD <span class="text-red-500">*</span></label>
@@ -310,39 +290,76 @@
     </div>
     @endif
 
-    {{-- MODAL LAIN (INDIKATOR & CROSSCUTTING) --}}
+    {{-- MODAL 2: INDIKATOR --}}
     @if($isOpenIndikator)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-                <div><h3 class="text-lg font-bold text-gray-800">Indikator</h3></div>
+                <h3 class="text-lg font-bold text-gray-800">Kelola Indikator</h3>
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="p-6 space-y-6">
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Indikator</label>
-                    <textarea wire:model="indikator_input" rows="2" class="w-full border border-gray-300 rounded px-3 py-2 text-sm"></textarea>
-                    @error('indikator_input') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                <div class="bg-gray-50 p-4 rounded-lg border border-gray-200">
+                    <div class="grid grid-cols-12 gap-4 items-end">
+                        <div class="col-span-12 md:col-span-5">
+                            <label class="text-xs font-bold text-gray-700 block mb-1">Nama Indikator</label>
+                            <input type="text" wire:model="indikator_input" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500">
+                        </div>
+                        <div class="col-span-6 md:col-span-2">
+                            <label class="text-xs font-bold text-gray-700 block mb-1">Nilai</label>
+                            <input type="number" wire:model="indikator_nilai" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="0">
+                        </div>
+                        <div class="col-span-6 md:col-span-2">
+                            <label class="text-xs font-bold text-gray-700 block mb-1">Satuan</label>
+                            <input type="text" wire:model="indikator_satuan" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:outline-none focus:border-blue-500" placeholder="%">
+                        </div>
+                        <div class="col-span-12 md:col-span-3">
+                            <button wire:click="addIndikatorToList" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded text-sm font-medium">Tambahkan</button>
+                        </div>
+                    </div>
+                    <div class="mt-2">
+                         @error('indikator_input') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
+                         @error('indikator_nilai') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
+                         @error('indikator_satuan') <span class="text-red-500 text-xs block">{{ $message }}</span> @enderror
+                    </div>
                 </div>
-                <button wire:click="addIndikatorToList" class="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded">Tambah ke Daftar</button>
-                <div class="border rounded overflow-hidden">
-                    <table class="w-full text-left text-sm"><thead class="bg-gray-50"><tr><th class="p-2">Indikator</th><th class="p-2 w-16">Aksi</th></tr></thead>
-                        <tbody class="divide-y">
-                            @foreach($indikator_list as $index => $ind)
-                                <tr><td class="p-2">{{ $ind['nama'] }}</td><td class="p-2"><button wire:click="removeIndikatorFromList({{ $index }})" class="text-red-500 text-xs">Hapus</button></td></tr>
-                            @endforeach
+
+                <div class="border rounded-lg overflow-hidden">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-100 border-b border-gray-200">
+                            <tr>
+                                <th class="p-3 font-semibold text-gray-700">Indikator</th>
+                                <th class="p-3 w-24 text-center font-semibold text-gray-700">Nilai</th>
+                                <th class="p-3 w-32 text-center font-semibold text-gray-700">Satuan</th>
+                                <th class="p-3 w-20 text-center font-semibold text-gray-700">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100">
+                            @forelse($indikator_list as $index => $ind)
+                                <tr class="hover:bg-gray-50">
+                                    <td class="p-3 text-gray-800">{{ $ind['nama'] }}</td>
+                                    <td class="p-3 text-center text-gray-800 font-medium">{{ $ind['nilai'] }}</td>
+                                    <td class="p-3 text-center text-gray-600">{{ $ind['satuan'] }}</td>
+                                    <td class="p-3 text-center">
+                                        <button wire:click="removeIndikatorFromList({{ $index }})" class="text-red-500 hover:text-red-700 text-xs font-bold">Hapus</button>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="4" class="p-6 text-center text-gray-400 italic">Belum ada indikator.</td></tr>
+                            @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
-            <div class="px-6 py-4 bg-gray-50 border-t flex justify-end gap-2">
-                <button wire:click="closeModal" class="px-4 py-2 border rounded">Tutup</button>
-                <button wire:click="saveIndikators" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button wire:click="closeModal" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50">Tutup</button>
+                <button wire:click="saveIndikators" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 shadow-sm">Simpan</button>
             </div>
         </div>
     </div>
     @endif
-    
+
+    {{-- MODAL 3: CROSSCUTTING --}}
     @if($isOpenCrosscutting)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform transition-all">

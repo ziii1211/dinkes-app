@@ -16,9 +16,9 @@ return new class extends Migration
             // Nama Indikator
             $table->text('nama_indikator');
             
-            // Target & Satuan (Opsional jika ingin ditambahkan nanti)
-            // $table->string('target')->nullable();
-            // $table->string('satuan')->nullable();
+            // Target (Nilai) & Satuan -> SAYA BUKA KOMENTARNYA AGAR AKTIF
+            $table->string('target')->nullable(); // Untuk Nilai
+            $table->string('satuan')->nullable(); // Untuk Satuan
             
             $table->timestamps();
         });

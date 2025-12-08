@@ -12,6 +12,8 @@ class IndikatorPohonKinerja extends Model
     protected $fillable = [
         'pohon_kinerja_id',
         'nama_indikator',
+        'target', // Tambahkan ini agar bisa simpan Nilai
+        'satuan', // Tambahkan ini agar bisa simpan Satuan
     ];
 
     public function pohonKinerja()

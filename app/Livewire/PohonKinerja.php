@@ -15,28 +15,26 @@ class PohonKinerja extends Component
     public $isOpen = false; 
     public $isOpenIndikator = false; 
     public $isOpenCrosscutting = false;
+    public $isOpenManageCrosscutting = false; // BARU: State untuk modal hapus crosscutting
     
     public $isChild = false;
     public $isEditMode = false;
     public $modeKinerjaUtama = false; 
 
-    // --- FORM PROPERTIES (DATA POHON) ---
+    // --- FORM PROPERTIES ---
     public $pohon_id; 
     public $tujuan_id; 
     public $nama_pohon;
     public $parent_id;
 
-    // --- PROPERTIES KHUSUS TOMBOL "TAMBAH KINERJA UTAMA" ---
     public $unit_kerja_id; 
     public $kinerja_utama_id; 
 
-    // --- FORM PROPERTIES INDIKATOR (UPDATED: Tambah Nilai & Satuan) ---
     public $indikator_input; 
-    public $indikator_nilai;  // Baru
-    public $indikator_satuan; // Baru
+    public $indikator_nilai;
+    public $indikator_satuan;
     public $indikator_list = []; 
 
-    // --- FORM PROPERTIES CROSSCUTTING ---
     public $cross_sumber_id;
     public $cross_skpd_id;
     public $cross_tujuan_id;
@@ -123,6 +121,7 @@ class PohonKinerja extends Component
         $this->isOpen = false; 
         $this->isOpenIndikator = false; 
         $this->isOpenCrosscutting = false;
+        $this->isOpenManageCrosscutting = false; // Reset modal manage
         $this->resetValidation();
     }
 
@@ -134,7 +133,6 @@ class PohonKinerja extends Component
             ]);
             $ref = ModelPohon::find($this->kinerja_utama_id);
             $namaBaru = $ref ? $ref->nama_pohon : '-';
-
             ModelPohon::create([
                 'tujuan_id' => $ref->tujuan_id ?? null,
                 'nama_pohon' => $namaBaru,
@@ -150,7 +148,6 @@ class PohonKinerja extends Component
             $rules = ['nama_pohon' => 'required'];
             if (!$this->isChild) { $rules['tujuan_id'] = 'required'; } 
             $this->validate($rules);
-
             ModelPohon::create([
                 'tujuan_id' => $this->tujuan_id, 
                 'nama_pohon' => $this->nama_pohon, 
@@ -160,15 +157,12 @@ class PohonKinerja extends Component
         $this->closeModal();
     }
 
-    // --- MANAJEMEN INDIKATOR (UPDATED) ---
+    // --- INDIKATOR ---
     public function openIndikator($pohonId) {
         $this->pohon_id = $pohonId; 
         $this->reset(['indikator_input', 'indikator_nilai', 'indikator_satuan', 'indikator_list']);
-        
         $existing = IndikatorPohonKinerja::where('pohon_kinerja_id', $pohonId)->get();
         foreach($existing as $ind) { 
-            // Pastikan model IndikatorPohonKinerja Anda memiliki kolom 'target' dan 'satuan'
-            // Jika belum ada di database, ini akan error atau null.
             $this->indikator_list[] = [
                 'id' => $ind->id, 
                 'nama' => $ind->nama_indikator,
@@ -185,7 +179,6 @@ class PohonKinerja extends Component
             'indikator_nilai' => 'required',
             'indikator_satuan' => 'required',
         ]);
-
         $this->indikator_list[] = [
             'id' => 'temp_' . uniqid(), 
             'nama' => $this->indikator_input,
@@ -202,13 +195,12 @@ class PohonKinerja extends Component
 
     public function saveIndikators() {
         IndikatorPohonKinerja::where('pohon_kinerja_id', $this->pohon_id)->delete();
-        
         foreach($this->indikator_list as $ind) { 
             IndikatorPohonKinerja::create([
                 'pohon_kinerja_id' => $this->pohon_id, 
                 'nama_indikator' => $ind['nama'],
-                'target' => $ind['nilai'],   // Pastikan kolom ini ada di DB
-                'satuan' => $ind['satuan']   // Pastikan kolom ini ada di DB
+                'target' => $ind['nilai'],   
+                'satuan' => $ind['satuan']   
             ]); 
         }
         $this->closeModal();
@@ -219,10 +211,16 @@ class PohonKinerja extends Component
         if($pohon) { $pohon->delete(); } 
     }
 
-    // --- MANAJEMEN CROSSCUTTING ---
+    // --- CROSSCUTTING ---
     public function openCrosscuttingModal() { 
         $this->reset(['cross_sumber_id', 'cross_skpd_id', 'cross_tujuan_id']); 
         $this->isOpenCrosscutting = true; 
+    }
+
+    // BARU: Fungsi untuk membuka modal LIST crosscutting agar bisa dihapus
+    public function openManageCrosscutting($pohonId) {
+        $this->pohon_id = $pohonId; // Simpan ID pohon yg sedang dikelola
+        $this->isOpenManageCrosscutting = true;
     }
 
     public function storeCrosscutting() {
@@ -231,13 +229,11 @@ class PohonKinerja extends Component
             'cross_skpd_id' => 'required', 
             'cross_tujuan_id' => 'required'
         ]);
-        
         CrosscuttingKinerja::create([
             'pohon_sumber_id' => $this->cross_sumber_id, 
             'skpd_tujuan_id' => $this->cross_skpd_id, 
             'pohon_tujuan_id' => $this->cross_tujuan_id
         ]);
-        
         $this->closeModal();
     }
 
