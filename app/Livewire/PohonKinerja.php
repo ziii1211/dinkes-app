@@ -51,14 +51,15 @@ class PohonKinerja extends Component
         // 1. Ambil Struktur Pohon (Induk -> Anak -> Cucu)
         $treeData = $this->getFlatTree();
 
-        // 2. PERBAIKAN UTAMA: Filter Opsi Dropdown
-        // Hanya ambil data yang 'jenis'-nya KOSONG (Manual) atau BUKAN visualisasi/crosscutting
-        // Ini akan mencegah duplikat di dropdown 'Pilih Kinerja Sumber' & 'Referensi'
-        $masterPohons = ModelPohon::where(function($query) {
+        // 2. Filter Opsi Dropdown & Load Relasi Tujuan
+        // Menambahkan with('tujuan') agar teks "Meningkatnya Derajat Kesehatan..." bisa diambil
+        // Mengambil data yang 'jenis'-nya KOSONG (Manual) atau BUKAN visualisasi/crosscutting
+        $masterPohons = ModelPohon::with('tujuan')
+                                ->where(function($query) {
                                     $query->whereNull('jenis')
                                           ->orWhereNotIn('jenis', ['visualisasi', 'crosscutting', 'hide']);
                                 })
-                                ->orderBy('nama_pohon', 'asc')
+                                ->orderBy('id', 'asc') // Urutkan ID agar Induk biasanya di atas
                                 ->get();
 
         // 3. Ambil Opsi SKPD
@@ -72,17 +73,14 @@ class PohonKinerja extends Component
         return view('livewire.pohon-kinerja', [
             'pohons' => $treeData,
             'sasaran_rpjmds' => Tujuan::select('id', 'sasaran_rpjmd')->get(),
-            'skpds' => SkpdTujuan::all(),
-            'all_pohons' => ModelPohon::all(), // Data mentah jika dibutuhkan view lain
+            'skpds' => SkpdTujuan::all(), // Ini untuk modal utama
             
-            // GUNAKAN VARIABEL INI UNTUK DROPDOWN AGAR TIDAK DUPLIKAT
-            'opsiMasterPohon' => $masterPohons, 
-            'opsiSkpd' => $opsiSkpd,
+            // PERBAIKAN DI SINI: Menambahkan opsiSkpd ke view
+            'opsiSkpd' => $opsiSkpd, 
             
-            // Variabel khusus agar sesuai dengan View yang sudah kita perbaiki sebelumnya
-            // Kita override $opsiPohon dan $all_pohons (yang dipakai di dropdown) dengan data master
+            // Variabel ini digunakan untuk Dropdown Sumber, Tujuan, dan Referensi
             'opsiPohon' => $masterPohons, 
-            'all_pohons' => $masterPohons, 
+            'all_pohons' => $masterPohons, // Override all_pohons agar konsisten filternya
 
             'crosscuttings' => $crosscuttings
         ]);
