@@ -211,6 +211,16 @@ class PohonKinerja extends Component
         if($pohon) { $pohon->delete(); } 
     }
 
+    // --- FUNGSI BARU: Hapus Kinerja Utama (Hanya Hide) ---
+    // Fungsi ini mengubah kolom 'jenis' menjadi 'hide' agar tidak muncul di visualisasi
+    // namun data tetap ada di tabel utama.
+    public function deleteKinerjaUtama($id) {
+        $pohon = ModelPohon::find($id);
+        if($pohon) {
+            $pohon->update(['jenis' => 'hide']); 
+        }
+    }
+
     // --- CROSSCUTTING ---
     public function openCrosscuttingModal() { 
         $this->reset(['cross_sumber_id', 'cross_skpd_id', 'cross_tujuan_id']); 

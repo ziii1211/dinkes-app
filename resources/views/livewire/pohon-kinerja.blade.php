@@ -136,7 +136,8 @@
 
             <div class="p-6 bg-gray-100 min-h-[300px]">
                 
-                @forelse($pohons->where('parent_id', null) as $root)
+                {{-- PERUBAHAN 1: Filter agar yang berjenis 'hide' tidak muncul --}}
+                @forelse($pohons->where('parent_id', null)->where('jenis', '!=', 'hide') as $root)
                 
                 {{-- KARTU VISUALISASI --}}
                 <div class="bg-white border border-gray-300 shadow-md max-w-3xl mx-auto p-4 mb-8 rounded-sm">
@@ -202,15 +203,13 @@
                             </button>
                         </div>
 
-                        {{-- PERUBAHAN UTAMA: TOMBOL HAPUS SEKARANG MENGHAPUS KINERJA UTAMA (BOX) --}}
                         <div class="flex flex-col gap-2 pt-2 border-t border-gray-100">
                             
-                            {{-- Tombol Hapus (Atas) - Menghapus Kinerja Utama / Box --}}
-                            <button wire:click="delete({{ $root->id }})" wire:confirm="Yakin ingin menghapus Kinerja Utama ini? Seluruh indikator dan data turunan akan ikut terhapus." class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-xs font-medium flex justify-center items-center shadow-sm uppercase tracking-wide transition-colors">
+                            {{-- PERUBAHAN 2: Tombol Hapus memanggil fungsi deleteKinerjaUtama --}}
+                            <button wire:click="deleteKinerjaUtama({{ $root->id }})" wire:confirm="Hapus visualisasi Kinerja Utama ini? Data pada tabel tidak akan terhapus." class="w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded text-xs font-medium flex justify-center items-center shadow-sm uppercase tracking-wide transition-colors">
                                 Hapus Kinerja Utama
                             </button>
                             
-                            {{-- Tombol Tambah (Bawah) --}}
                             <button wire:click="openCrosscuttingModal" class="w-full bg-blue-500 hover:bg-blue-600 text-white py-2 rounded text-xs font-medium flex justify-center items-center shadow-sm uppercase tracking-wide transition-colors">
                                 Tambah Crosscutting Perangkat Daerah
                             </button>
