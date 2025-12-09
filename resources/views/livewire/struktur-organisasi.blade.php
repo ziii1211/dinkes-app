@@ -1,13 +1,16 @@
 <div>
-    <!-- HEADER HALAMAN -->
     <div class="relative -mt-20 mb-8 z-20">
         <h2 class="text-3xl font-bold text-white tracking-wide">Struktur Organisasi</h2>
-        <p class="text-blue-100 text-sm mt-1">Master Data / Struktur Organisasi</p>
+        
+        <div class="flex items-center text-blue-100 text-sm mt-1 font-medium">
+            <a href="/" wire:navigate class="hover:text-white transition-colors">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-white">Struktur Organisasi</span>
+        </div>
     </div>
 
     <div class="space-y-8 relative z-10">
         
-        <!-- CARD 1: INFORMASI UNIT KERJA -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center bg-white">
                 <svg class="w-5 h-5 text-gray-700 mr-2" fill="currentColor" viewBox="0 0 24 24">
@@ -27,7 +30,6 @@
             </div>
         </div>
 
-        <!-- CARD 2: DAFTAR JABATAN -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
                 <div class="flex items-center">
@@ -36,7 +38,6 @@
                     </svg>
                     <h3 class="font-bold text-gray-800 text-lg">Daftar Jabatan</h3>
                 </div>
-                <!-- TOMBOL TAMBAH JABATAN -->
                 <button wire:click="createJabatan" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah
@@ -68,7 +69,6 @@
                                     </td>
                                     <td class="p-4 text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            <!-- Tombol Edit & Hapus Jabatan -->
                                             <button wire:click="editJabatan({{ $jabatan->id }})" class="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded shadow-sm transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                             </button>
@@ -88,7 +88,6 @@
             </div>
         </div>
 
-        <!-- CARD 3: DAFTAR PEGAWAI -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
                 <div class="flex items-center">
@@ -97,7 +96,6 @@
                     </svg>
                     <h3 class="font-bold text-gray-800 text-lg">Daftar Pegawai</h3>
                 </div>
-                <!-- TOMBOL TAMBAH PEGAWAI -->
                 <button wire:click="createPegawai" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah
@@ -105,7 +103,6 @@
             </div>
 
             <div class="p-6">
-                <!-- Show & Search Pegawai -->
                 <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
                     <div class="flex items-center text-sm text-gray-600">
                         Show <select class="mx-2 border border-gray-300 rounded px-2 py-1 text-sm focus:ring-blue-500"><option>10</option><option>25</option></select> entries
@@ -134,26 +131,42 @@
                                 <tr class="hover:bg-blue-50 transition-colors">
                                     <td class="p-4 text-sm text-gray-600 text-center font-medium">{{ $index + 1 }}</td>
                                     <td class="p-4 text-center">
-                                        <!-- Logic Foto: Jika ada di DB pakai storage, jika tidak pakai avatar generator -->
                                         <img src="{{ $pegawai->foto ? asset('storage/'.$pegawai->foto) : 'https://ui-avatars.com/api/?name='.urlencode($pegawai->nama).'&background=0D8ABC&color=fff&size=128' }}" 
                                              class="w-10 h-10 rounded-full object-cover mx-auto border border-gray-200 shadow-sm">
                                     </td>
                                     <td class="p-4">
                                         <div class="flex flex-col">
                                             <span class="text-sm font-bold text-gray-800">{{ $pegawai->nama }}</span>
-                                            <!-- Nama Jabatan dari Relasi -->
                                             <span class="text-xs text-gray-500 mt-0.5">{{ $pegawai->jabatan ? $pegawai->jabatan->nama : '-' }}</span>
                                         </div>
                                     </td>
                                     <td class="p-4 text-sm text-gray-600">{{ $pegawai->nip }}</td>
                                     <td class="p-4 text-center">
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                                            <span class="w-2 h-2 bg-green-500 rounded-full mr-1.5"></span>{{ $pegawai->status }}
+                                        
+                                        @php
+                                            $statusClass = 'bg-gray-100 text-gray-800 border-gray-200'; // Default
+                                            $dotClass = 'bg-gray-500';
+
+                                            if ($pegawai->status == 'Definitif') {
+                                                $statusClass = 'bg-green-100 text-green-800 border-green-200';
+                                                $dotClass = 'bg-green-500';
+                                            } elseif ($pegawai->status == 'Plt') {
+                                                $statusClass = 'bg-yellow-100 text-yellow-800 border-yellow-200';
+                                                $dotClass = 'bg-yellow-500';
+                                            } elseif ($pegawai->status == 'Pj' || $pegawai->status == 'Pjs') {
+                                                $statusClass = 'bg-blue-100 text-blue-800 border-blue-200';
+                                                $dotClass = 'bg-blue-500';
+                                            }
+                                        @endphp
+
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold border {{ $statusClass }}">
+                                            <span class="w-2 h-2 rounded-full mr-1.5 {{ $dotClass }}"></span>
+                                            {{ $pegawai->status }}
                                         </span>
+
                                     </td>
                                     <td class="p-4 text-center">
                                         <div class="flex items-center justify-center gap-2">
-                                            <!-- Tombol Edit & Hapus Pegawai -->
                                             <button wire:click="editPegawai({{ $pegawai->id }})" class="bg-yellow-400 hover:bg-yellow-500 text-white p-2 rounded shadow-sm transition-colors">
                                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                             </button>
@@ -174,7 +187,6 @@
         </div>
     </div>
 
-    <!-- MODAL JABATAN -->
     @if($modalJabatanOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all scale-100">
@@ -208,7 +220,6 @@
     </div>
     @endif
 
-    <!-- MODAL PEGAWAI (TERPISAH DARI JABATAN) -->
     @if($modalPegawaiOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center overflow-auto bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all scale-100">
@@ -220,7 +231,6 @@
             </div>
             <div class="p-8 space-y-4 max-h-[70vh] overflow-y-auto">
                 
-                <!-- Input Foto dengan Preview -->
                 <div class="flex items-center gap-4">
                     @if ($peg_foto)
                         <img src="{{ $peg_foto->temporaryUrl() }}" class="w-16 h-16 rounded-full object-cover border">
@@ -238,14 +248,12 @@
                     </div>
                 </div>
 
-                <!-- Input Nama -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">Nama Lengkap</label>
                     <input type="text" wire:model="peg_nama" placeholder="Gelar dan Nama Lengkap" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 outline-none">
                     @error('peg_nama') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- Input NIP -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-1">NIP</label>
                     <input type="text" wire:model="peg_nip" placeholder="Nomor Induk Pegawai" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 outline-none">
@@ -253,7 +261,6 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-4">
-                    <!-- Input Jabatan -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Jabatan</label>
                         <select wire:model="peg_jabatan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 outline-none bg-white">
@@ -263,7 +270,6 @@
                             @endforeach
                         </select>
                     </div>
-                    <!-- Input Status -->
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-1">Status</label>
                         <select wire:model="peg_status" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 outline-none bg-white">

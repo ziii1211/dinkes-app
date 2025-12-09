@@ -37,7 +37,7 @@
                     Preview
                 </a>
                 
-                @if($pk->status_verifikasi == 'draft' && in_array(auth()->user()->role, ['pegawai', 'admin']))
+                @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                 <button wire:click="deletePk" wire:confirm="Hapus seluruh dokumen PK ini?" class="inline-flex items-center px-5 py-2.5 bg-[#f93154] hover:bg-[#d92644] text-white text-sm font-bold rounded-lg shadow-sm transition-all hover:shadow-md">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                     Hapus
@@ -48,7 +48,6 @@
 
         <div class="bg-gray-50/50 border border-gray-200 rounded-xl p-6 xl:p-8">
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
-                
                 <div class="xl:col-span-6 space-y-3">
                     <div class="grid grid-cols-[120px_1fr] gap-2 text-sm">
                         <span class="text-gray-400 font-medium">PD:</span>
@@ -102,14 +101,14 @@
             </div>
         </div>
 
-        @if($pk->status_verifikasi == 'draft' && in_array(auth()->user()->role, ['pegawai', 'admin']))
+        @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
         <div class="flex flex-wrap items-center gap-4 py-2">
             <button wire:click="openModalKinerjaUtama" class="px-5 py-2.5 bg-[#0d6efd] hover:bg-blue-700 text-white text-sm font-bold rounded rounded-md shadow-sm flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Tambah Kinerja Utama
             </button>
             
-            <button wire:click="ajukan" wire:confirm="Data yang sudah dipublikasikan tidak dapat diubah lagi. Lanjutkan?" class="px-5 py-2.5 bg-[#f93154] hover:bg-[#d92644] text-white text-sm font-bold rounded rounded-md shadow-sm flex items-center transition-all">
+            <button wire:click="ajukan" wire:confirm="Simpan dan Publikasikan data ini?" class="px-5 py-2.5 bg-[#f93154] hover:bg-[#d92644] text-white text-sm font-bold rounded rounded-md shadow-sm flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Simpan & Publikasikan
             </button>
@@ -132,7 +131,7 @@
                             <p class="text-xs text-gray-400 font-bold mb-1">Kinerja Utama <span class="text-red-500">*</span></p>
                             <p class="text-gray-900 font-bold text-base">{{ $sasaran->sasaran }}</p>
                         </div>
-                        @if($pk->status_verifikasi == 'draft' && in_array(auth()->user()->role, ['pegawai', 'admin']))
+                        @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                         <button wire:click="deleteKinerjaUtama({{ $sasaran->id }})" wire:confirm="Hapus Kinerja Utama?" class="bg-[#f93154] hover:bg-[#d92644] text-white text-xs font-bold px-3 py-2 rounded shadow-sm flex items-center shrink-0">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             Hapus Kinerja Utama
@@ -148,9 +147,7 @@
                                     <th class="px-4 py-3 font-bold text-gray-700 w-2/12 border-l border-gray-200 text-center">Satuan</th>
                                     <th class="px-4 py-3 font-bold text-gray-700 w-2/12 border-l border-gray-200 text-center">Target</th>
                                     <th class="px-4 py-3 font-bold text-gray-700 w-1/12 border-l border-gray-200 text-center">Arah</th>
-                                    <th class="px-4 py-3 font-bold text-gray-700 w-2/12 border-l border-gray-200 text-center">
-                                        {{ $pk->status_verifikasi == 'draft' ? 'Aksi' : '' }}
-                                    </th>
+                                    <th class="px-4 py-3 font-bold text-gray-700 w-2/12 border-l border-gray-200 text-center">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
@@ -169,7 +166,6 @@
                                                 <button wire:click="cancelEdit" class="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded">Batal</button>
                                             </div>
                                         </td>
-                                    
                                     @else
                                         <td class="px-4 py-3 text-gray-700">{{ $ind->nama_indikator }}</td>
                                         <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->satuan }}</td>
@@ -178,7 +174,7 @@
                                         </td>
                                         <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->arah }}</td>
                                         <td class="px-4 py-3 text-center border-l border-gray-100">
-                                            @if($pk->status_verifikasi == 'draft' && in_array(auth()->user()->role, ['pegawai', 'admin']))
+                                            @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                                             <div class="flex justify-center gap-2">
                                                 <button wire:click="startEdit({{ $ind->id }})" class="inline-flex items-center px-2 py-1 bg-[#f3f0ff] text-[#6f42c1] text-xs font-bold rounded hover:bg-purple-100">
                                                     <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> Atur Target
@@ -207,7 +203,7 @@
         <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden mt-8">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
                 <h3 class="font-bold text-gray-900 text-lg">Anggaran</h3>
-                @if($pk->status_verifikasi == 'draft' && in_array(auth()->user()->role, ['pegawai', 'admin']))
+                @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                 <button wire:click="openModalAnggaran" class="bg-[#0d6efd] hover:bg-blue-700 text-white px-4 py-2 rounded text-sm font-bold flex items-center shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah
@@ -222,9 +218,7 @@
                             <th class="px-6 py-3 w-16 text-center">No</th>
                             <th class="px-6 py-3">Program / Kegiatan / Sub Kegiatan</th>
                             <th class="px-6 py-3 text-right w-48">Anggaran</th>
-                            <th class="px-6 py-3 w-24 text-center">
-                                {{ $pk->status_verifikasi == 'draft' ? 'Aksi' : '' }}
-                            </th>
+                            <th class="px-6 py-3 w-24 text-center">Aksi</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 bg-white">
@@ -243,7 +237,7 @@
                                 Rp {{ number_format($ang->anggaran, 0, ',', '.') }}
                             </td>
                             <td class="px-6 py-4 text-center">
-                                 @if($pk->status_verifikasi == 'draft' && in_array(auth()->user()->role, ['pegawai', 'admin']))
+                                 @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                                 <button wire:click="deleteAnggaran({{ $ang->id }})" wire:confirm="Hapus Anggaran?" class="text-red-500 hover:text-red-700 font-bold text-xs bg-red-50 px-2 py-1 rounded">
                                     Hapus
                                 </button>
