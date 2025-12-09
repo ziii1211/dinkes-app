@@ -13,7 +13,7 @@ class PerjanjianKinerjaDetail extends Component
     use WithPagination;
 
     public $jabatan;
-    public $pegawai; // Pihak 1 (Pejabat saat ini)
+    public $pegawai; 
     public $search = '';
 
     // --- MODAL PROPERTIES ---
@@ -21,15 +21,15 @@ class PerjanjianKinerjaDetail extends Component
     public $tahun;
     public $keterangan;
     
-    // Data Display di Modal (Untuk Pihak 2)
-    public $atasan_pegawai; // Pihak 2 (Pejabat Atasan)
-    public $atasan_jabatan; // Jabatan Atasan
+    // Data Display di Modal
+    public $atasan_pegawai;
+    public $atasan_jabatan;
     
-    // Properti baru untuk Pihak 2 Khusus (Gubernur)
+    // Properti Pihak 2 Khusus (Gubernur)
     public $is_kepala_dinas = false;
     public $gubernur_nama = 'H. MUHIDIN';
     public $gubernur_jabatan = 'GUBERNUR KALIMANTAN SELATAN';
-    public $gubernur_foto = 'muhidin (1).png'; // Pastikan file ini ada di public/storage
+    public $gubernur_foto = 'muhidin (1).png'; 
 
     public function mount($id)
     {
@@ -37,8 +37,6 @@ class PerjanjianKinerjaDetail extends Component
         $this->pegawai = Pegawai::where('jabatan_id', $id)->latest()->first();
         $this->tahun = date('Y') + 1;
 
-        // Cek apakah ini jabatan tertinggi (Kepala Dinas)
-        // Asumsi: Kepala Dinas tidak punya parent_id
         $this->is_kepala_dinas = is_null($this->jabatan->parent_id);
     }
 
@@ -51,9 +49,18 @@ class PerjanjianKinerjaDetail extends Component
             ->orderBy('tahun', 'desc')
             ->paginate(10);
 
+        // --- PERBAIKAN LOGIKA STATISTIK ---
         $totalPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)->count();
-        $draftPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)->where('status', 'draft')->count();
-        $finalPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)->where('status', 'final')->count();
+        
+        // Hitung Draft (status_verifikasi = draft)
+        $draftPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
+            ->where('status_verifikasi', 'draft')
+            ->count();
+            
+        // Hitung Final (status_verifikasi = disetujui)
+        $finalPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
+            ->where('status_verifikasi', 'disetujui')
+            ->count();
 
         return view('livewire.perjanjian-kinerja-detail', [
             'pks' => $pks,
@@ -62,8 +69,6 @@ class PerjanjianKinerjaDetail extends Component
             'finalPk' => $finalPk
         ]);
     }
-
-    // --- ACTIONS ---
 
     public function openModal()
     {
@@ -74,11 +79,9 @@ class PerjanjianKinerjaDetail extends Component
         $this->atasan_pegawai = null;
         $this->atasan_jabatan = null;
 
-        // LOGIKA CARI ATASAN (PIHAK 2)
         if ($this->is_kepala_dinas) {
-            // Jika Kepala Dinas, Pihak 2 adalah Gubernur (Data statis sudah diset di properti)
+            // Gubernur
         } elseif ($this->jabatan->parent_id) {
-            // Jika bukan Kepala Dinas, cari atasan dari database
             $parentJabatan = Jabatan::find($this->jabatan->parent_id);
             if ($parentJabatan) {
                 $this->atasan_jabatan = $parentJabatan;
@@ -101,34 +104,18 @@ class PerjanjianKinerjaDetail extends Component
             'keterangan' => 'required',
         ]);
 
-        // Tentukan siapa Pihak 2 untuk disimpan di database
-        // Catatan: Anda mungkin perlu menyesuaikan struktur tabel 'perjanjian_kinerjas' 
-        // jika ingin menyimpan data pihak 2 yang statis (Gubernur) ini secara permanen.
-        // Untuk saat ini, saya asumsikan jika pegawai_id_atasan null, berarti itu Gubernur.
-        
-        $pegawaiIdAtasan = null;
-        if (!$this->is_kepala_dinas && $this->atasan_pegawai) {
-            $pegawaiIdAtasan = $this->atasan_pegawai->id;
-        }
-
         PerjanjianKinerja::create([
             'jabatan_id' => $this->jabatan->id,
-            'pegawai_id' => $this->pegawai ? $this->pegawai->id : null, // Pihak 1
-            // 'pegawai_id_atasan' => $pegawaiIdAtasan, // Hapus komentar jika sudah ada kolomnya
+            'pegawai_id' => $this->pegawai ? $this->pegawai->id : null,
             'tahun' => $this->tahun,
             'keterangan' => $this->keterangan,
             'status' => 'draft',
+            
+            // --- PERBAIKAN: Set status_verifikasi awal ---
+            'status_verifikasi' => 'draft', 
             'tanggal_penetapan' => now()
         ]);
 
         $this->closeModal();
-    }
-
-    public function publish($id)
-    {
-        $pk = PerjanjianKinerja::find($id);
-        if ($pk) {
-            $pk->update(['status' => 'final']);
-        }
     }
 }

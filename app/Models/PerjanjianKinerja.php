@@ -14,8 +14,13 @@ class PerjanjianKinerja extends Model
         'pegawai_id',
         'tahun',
         'keterangan',
-        'status',
-        'tanggal_penetapan'
+        'status',             // Status umum (jika masih dipakai)
+        'tanggal_penetapan',
+        
+        // --- TAMBAHAN PENTING ---
+        'status_verifikasi',  // Wajib ada agar bisa update status ke 'disetujui'
+        'tanggal_verifikasi', // Wajib ada untuk mencatat tanggal publikasi
+        'catatan_pimpinan'    // Tambahkan juga jaga-jaga untuk catatan revisi
     ];
 
     public function pegawai()
@@ -33,7 +38,6 @@ class PerjanjianKinerja extends Model
         return $this->hasMany(PkSasaran::class, 'perjanjian_kinerja_id');
     }
 
-    // RELASI BARU
     public function anggarans()
     {
         return $this->hasMany(PkAnggaran::class, 'perjanjian_kinerja_id');

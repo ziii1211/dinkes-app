@@ -50,7 +50,7 @@
         </form>
 
         <div class="mt-10 text-center">
-            <p class="text-xs text-gray-400 font-medium">&copy; 2025</p>
+            <p class="text-xs text-gray-400 font-medium">&copy; 2026</p>
         </div>
     </div>
 </div>

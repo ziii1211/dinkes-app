@@ -17,7 +17,6 @@
 
     <div class="space-y-8">
         
-        <!-- CARD 1: INFORMASI JABATAN & PENGAMPU -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-base flex items-center">
@@ -32,32 +31,23 @@
             
             <div class="p-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
-                    <!-- KIRI: DATA TEKS (UPDATED LAYOUT) -->
                     <div class="space-y-4">
-                        <!-- Unit Kerja -->
                         <div class="grid grid-cols-12 gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-4 text-sm text-gray-500">Unit Kerja</div>
                             <div class="col-span-8 text-sm font-bold text-gray-800 uppercase">DINAS KESEHATAN</div>
                         </div>
-                        
-                        <!-- Kode SKPD -->
                         <div class="grid grid-cols-12 gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-4 text-sm text-gray-500">Kode SKPD</div>
                             <div class="col-span-8 text-sm font-bold text-gray-800">1.02.0.00.0.00.01.0000</div>
                         </div>
-                        
-                        <!-- Jabatan -->
                         <div class="grid grid-cols-12 gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-4 text-sm text-gray-500">Jabatan</div>
                             <div class="col-span-8 text-sm font-bold text-blue-600">{{ $jabatan->nama }}</div>
                         </div>
-                        
-                        <!-- Pengampu -->
                         <div class="grid grid-cols-12 gap-4 pt-2 items-center">
                             <div class="col-span-4 text-sm text-gray-500 self-start pt-2">Pengampu Sekarang</div>
                             <div class="col-span-8">
                                 <div class="flex items-center gap-4">
-                                    <!-- Foto -->
                                     <div class="h-14 w-14 rounded-full bg-blue-100 border-2 border-white shadow-md overflow-hidden flex-shrink-0">
                                         @if($pegawai && $pegawai->foto)
                                             <img src="{{ asset('storage/'.$pegawai->foto) }}" class="h-full w-full object-cover">
@@ -65,7 +55,6 @@
                                             <img src="{{ asset('user-icon.png') }}" class="h-full w-full object-cover">
                                         @endif
                                     </div>
-                                    <!-- Detail -->
                                     <div>
                                         @if($pegawai)
                                             <p class="text-sm font-bold text-gray-800 uppercase">{{ $pegawai->nama }}</p>
@@ -84,7 +73,6 @@
                         </div>
                     </div>
 
-                    <!-- KANAN: STATISTIK & ACTION -->
                     <div class="bg-gray-50 rounded-xl p-6 border border-gray-100 flex flex-col justify-between">
                         <div class="space-y-3 mb-6">
                             <div class="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex justify-between items-center">
@@ -107,7 +95,6 @@
                             </div>
                         </div>
 
-                        <!-- TOMBOL BUAT PK (TRIGGER MODAL) -->
                         <button wire:click="openModal" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-transform transform active:scale-95 flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             Buat PK
@@ -117,7 +104,6 @@
             </div>
         </div>
 
-        <!-- CARD 2: DAFTAR PERJANJIAN KINERJA -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-gray-100 bg-white">
                 <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
@@ -160,7 +146,6 @@
                                 <td class="px-6 py-4 font-medium text-gray-800">{{ $pk->keterangan }}</td>
                                 <td class="px-6 py-4">
                                     @if($pk->pegawai)
-                                        <!-- REVISI 1: Warna Teks Nama jadi Hitam (text-gray-800) -->
                                         <div class="text-sm font-bold text-gray-800">{{ $pk->pegawai->nama }}</div>
                                         <div class="text-xs text-gray-400 mt-0.5">NIP: {{ $pk->pegawai->nip }}</div>
                                     @else
@@ -168,23 +153,26 @@
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold {{ $pk->status == 'final' ? 'bg-green-100 text-green-600' : 'bg-yellow-100 text-yellow-600' }} uppercase">
-                                        {{ $pk->status }}
-                                    </span>
+                                    @if($pk->status_verifikasi == 'disetujui')
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-600 uppercase">
+                                            FINAL
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 uppercase">
+                                            DRAFT
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
-                                        <!-- Tombol Lihat -->
                                         <a href="{{ route('perjanjian.kinerja.lihat', $pk->id) }}" wire:navigate class="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium transition-colors">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             Lihat
                                         </a>
-
-                                        <!-- Tombol Cetak -->
                                         <a href="{{ route('perjanjian.kinerja.print', $pk->id) }}" target="_blank" class="flex items-center px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-600 rounded text-xs font-medium transition-colors">
-        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-        Cetak
-    </a>
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                                            Cetak
+                                        </a>
                                     </div>
                                 </td>
                             </tr>
@@ -203,7 +191,6 @@
         </div>
     </div>
 
-    <!-- MODAL: BUAT PK -->
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden transform transition-all">
@@ -214,8 +201,6 @@
                 </button>
             </div>
             <div class="p-6 space-y-6">
-                
-                <!-- BARIS 1: Tahun & Keterangan -->
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tahun <span class="text-red-500">*</span></label>
@@ -231,10 +216,7 @@
                     </div>
                 </div>
 
-                <!-- BARIS 2: Pihak 1 & Pihak 2 (Card Info) -->
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    
-                    <!-- Pihak 1 -->
                     <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
                         <div class="flex justify-between items-start mb-3">
                             <div>
@@ -259,7 +241,6 @@
                         </div>
                     </div>
 
-                    <!-- Pihak 2 (GUBERNUR ATAU ATASAN LANGSUNG) -->
                     <div class="border border-gray-200 rounded-xl p-4 bg-gray-50">
                         <div class="flex justify-between items-start mb-3">
                             <div>
@@ -270,7 +251,6 @@
                         </div>
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 rounded-full bg-white border border-gray-200 overflow-hidden flex-shrink-0">
-                                <!-- LOGIKA FOTO GUBERNUR / ATASAN -->
                                 @if($is_kepala_dinas)
                                     <img src="{{ asset('storage/'.$gubernur_foto) }}" class="h-full w-full object-cover">
                                 @elseif($atasan_pegawai && $atasan_pegawai->foto)
@@ -280,7 +260,6 @@
                                 @endif
                             </div>
                             <div class="overflow-hidden">
-                                <!-- LOGIKA NAMA & JABATAN GUBERNUR / ATASAN -->
                                 @if($is_kepala_dinas)
                                     <p class="text-sm font-bold text-gray-800 truncate">{{ $gubernur_nama }}</p>
                                     <p class="text-xs text-gray-500">NIP: -</p>
@@ -296,9 +275,7 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
-
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                 <button wire:click="closeModal" class="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none">Batal</button>
@@ -310,5 +287,4 @@
         </div>
     </div>
     @endif
-
 </div>

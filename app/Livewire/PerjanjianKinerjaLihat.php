@@ -24,6 +24,8 @@ class PerjanjianKinerjaLihat extends Component
     public $atasan_pegawai;
     public $atasan_jabatan;
     public $is_kepala_dinas = false;
+    
+    // Data Statis Gubernur (Bisa disesuaikan atau diambil dari DB settings jika ada)
     public $gubernur_nama = 'H. MUHIDIN'; 
     public $gubernur_jabatan = 'GUBERNUR KALIMANTAN SELATAN';
     public $gubernur_foto = 'muhidin.png'; 
@@ -31,23 +33,19 @@ class PerjanjianKinerjaLihat extends Component
     // --- STATES MODAL ---
     public $isOpenKinerjaUtama = false;
     public $isOpenAnggaran = false;
-    public $isOpenAturTarget = false;
-    // Modal Verifikasi (Baru)
-    public $isOpenVerifikasi = false;
-    public $verifikasiStatusTemp = ''; 
-
+    
     // --- FORM PROPERTIES ---
+    // Form Kinerja Utama
     public $sub_kegiatan_id;
     public $selected_output;
     
+    // Form Anggaran
     public $anggaran_sub_kegiatan_id;
     public $anggaran_nilai;
 
+    // Form Edit Target Indikator
     public $editingIndikatorId = null; 
     public $editTargetValue;
-
-    // Properti untuk Pimpinan
-    public $catatan_pimpinan;
 
     public function mount($id)
     {
@@ -57,6 +55,7 @@ class PerjanjianKinerjaLihat extends Component
 
     public function loadData()
     {
+        // Load PK beserta relasi yang dibutuhkan
         $this->pk = PerjanjianKinerja::with([
             'jabatan', 
             'pegawai', 
@@ -66,9 +65,11 @@ class PerjanjianKinerjaLihat extends Component
 
         $this->jabatan = $this->pk->jabatan;
         $this->pegawai = $this->pk->pegawai;
+        
+        // Cek apakah ini Kepala Dinas (tidak punya parent)
         $this->is_kepala_dinas = is_null($this->jabatan->parent_id);
-        $this->catatan_pimpinan = $this->pk->catatan_pimpinan; // Load catatan lama jika ada
 
+        // Cari Atasan (Pihak 2)
         if ($this->jabatan->parent_id) {
             $parentJabatan = Jabatan::find($this->jabatan->parent_id);
             if ($parentJabatan) {
@@ -79,63 +80,30 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     // =================================================================
-    // 1. FITUR VERIFIKASI (KHUSUS PIMPINAN) - BARU
-    // =================================================================
-
-    public function openModalVerifikasi($status)
-    {
-        $this->verifikasiStatusTemp = $status;
-        $this->isOpenVerifikasi = true;
-    }
-
-    public function simpanVerifikasi()
-    {
-        // Pastikan yang eksekusi adalah Pimpinan
-        if (Auth::user()->role !== 'pimpinan') {
-            session()->flash('error', 'Anda tidak memiliki akses.');
-            return;
-        }
-
-        $this->pk->update([
-            'status_verifikasi' => $this->verifikasiStatusTemp,
-            'catatan_pimpinan' => $this->catatan_pimpinan,
-            'tanggal_verifikasi' => now()
-        ]);
-
-        $statusText = $this->verifikasiStatusTemp == 'disetujui' ? 'DISETUJUI' : 'DITOLAK';
-        session()->flash('message', "Dokumen berhasil $statusText.");
-        
-        $this->isOpenVerifikasi = false;
-        $this->loadData();
-    }
-
-    // =================================================================
-    // 2. FITUR PUBLIKASI (PEGAWAI)
+    // FITUR PUBLIKASI LANGSUNG (Draft -> Terpublikasi)
     // =================================================================
     
     public function ajukan()
     {
+        // 1. Validasi: Harus ada minimal 1 Kinerja Utama
         if ($this->pk->sasarans->count() == 0) {
             session()->flash('error', 'Gagal mempublikasikan. Harap isi minimal satu Kinerja Utama.');
             return;
         }
 
-        $this->pk->update(['status_verifikasi' => 'pending']);
-        session()->flash('message', 'Perjanjian Kinerja BERHASIL DIKIRIM ke Pimpinan.');
+        // 2. Update Status Langsung ke 'disetujui' (Hijau/Terpublikasi)
+        // Tidak perlu verifikasi pimpinan lagi sesuai instruksi
+        $this->pk->update([
+            'status_verifikasi' => 'disetujui', 
+            'tanggal_verifikasi' => now() // Set waktu publikasi
+        ]);
+
+        session()->flash('message', 'Perjanjian Kinerja BERHASIL DIPUBLIKASIKAN.');
         $this->loadData();
     }
 
-    public function batalkan()
-    {
-        if ($this->pk->status_verifikasi == 'pending') {
-            $this->pk->update(['status_verifikasi' => 'draft']);
-            session()->flash('message', 'Pengajuan dibatalkan. Status kembali menjadi Draft.');
-            $this->loadData();
-        }
-    }
-
     // =================================================================
-    // 3. FITUR INPUT DATA (SAMA SEPERTI SEBELUMNYA)
+    // FITUR CRUD KINERJA UTAMA
     // =================================================================
 
     public function openModalKinerjaUtama() { 
@@ -149,13 +117,18 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     public function storeKinerjaUtama() {
-        $this->validate(['sub_kegiatan_id' => 'required', 'selected_output' => 'required']);
+        $this->validate([
+            'sub_kegiatan_id' => 'required', 
+            'selected_output' => 'required'
+        ]);
 
+        // Simpan Sasaran
         $pkSasaran = PkSasaran::create([
             'perjanjian_kinerja_id' => $this->pk->id, 
             'sasaran' => $this->selected_output
         ]);
 
+        // Otomatis tarik indikator dari Master Indikator Sub Kegiatan
         $indikatorsAsli = IndikatorSubKegiatan::where('sub_kegiatan_id', $this->sub_kegiatan_id)->get();
         
         foreach ($indikatorsAsli as $indAsli) {
@@ -163,7 +136,8 @@ class PerjanjianKinerjaLihat extends Component
                 'pk_sasaran_id' => $pkSasaran->id,
                 'nama_indikator' => $indAsli->keterangan ?? $indAsli->indikator,
                 'satuan' => $indAsli->satuan,
-                'arah' => 'Naik',
+                'arah' => 'Naik', // Default arah
+                // Copy target dari master (jika ada)
                 'target_2025' => $indAsli->target_2025, 
                 'target_2026' => $indAsli->target_2026,
                 'target_2027' => $indAsli->target_2027, 
@@ -179,34 +153,61 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     public function deleteKinerjaUtama($id) {
+        // Proteksi: Hanya bisa hapus jika status Draft
+        if ($this->pk->status_verifikasi != 'draft') return;
+
         $sasaran = PkSasaran::find($id);
-        if($sasaran) { $sasaran->delete(); $this->loadData(); }
+        if($sasaran) { 
+            $sasaran->delete(); 
+            $this->loadData(); 
+        }
     }
 
+    // =================================================================
+    // FITUR EDIT TARGET INDIKATOR (INLINE EDIT)
+    // =================================================================
+
     public function startEdit($id) {
+        if ($this->pk->status_verifikasi != 'draft') return;
+
         $this->editingIndikatorId = $id;
         $ind = PkIndikator::find($id);
+        // Ambil target sesuai tahun PK
         $colTarget = 'target_' . $this->pk->tahun;
         $this->editTargetValue = $ind->$colTarget;
     }
 
     public function saveEdit() {
         $this->validate(['editTargetValue' => 'required']);
+        
         $ind = PkIndikator::find($this->editingIndikatorId);
         if ($ind) {
             $colTarget = 'target_' . $this->pk->tahun;
+            // Update kolom target yang dinamis
             $ind->forceFill([$colTarget => $this->editTargetValue])->save();
         }
+        
         $this->editingIndikatorId = null;
         $this->loadData();
     }
 
-    public function cancelEdit() { $this->editingIndikatorId = null; }
+    public function cancelEdit() { 
+        $this->editingIndikatorId = null; 
+    }
 
     public function deleteIndikator($id) {
+        if ($this->pk->status_verifikasi != 'draft') return;
+
         $ind = PkIndikator::find($id);
-        if($ind) { $ind->delete(); $this->loadData(); }
+        if($ind) { 
+            $ind->delete(); 
+            $this->loadData(); 
+        }
     }
+
+    // =================================================================
+    // FITUR ANGGARAN
+    // =================================================================
 
     public function openModalAnggaran() {
         $this->reset(['anggaran_sub_kegiatan_id', 'anggaran_nilai']);
@@ -214,38 +215,59 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     public function storeAnggaran() {
-        $this->validate(['anggaran_sub_kegiatan_id' => 'required', 'anggaran_nilai' => 'required|numeric|min:0']);
+        $this->validate([
+            'anggaran_sub_kegiatan_id' => 'required', 
+            'anggaran_nilai' => 'required|numeric|min:0'
+        ]);
+
         PkAnggaran::create([
             'perjanjian_kinerja_id' => $this->pk->id,
             'sub_kegiatan_id' => $this->anggaran_sub_kegiatan_id,
             'anggaran' => $this->anggaran_nilai
         ]);
+
         $this->loadData();
         $this->closeModal();
     }
 
     public function deleteAnggaran($id) {
+        if ($this->pk->status_verifikasi != 'draft') return;
+
         $ang = PkAnggaran::find($id);
-        if($ang) { $ang->delete(); $this->loadData(); }
+        if($ang) { 
+            $ang->delete(); 
+            $this->loadData(); 
+        }
     }
+
+    // =================================================================
+    // UTILITIES
+    // =================================================================
 
     public function closeModal() {
         $this->isOpenKinerjaUtama = false;
         $this->isOpenAnggaran = false;
-        $this->isOpenAturTarget = false;
-        $this->isOpenVerifikasi = false;
+        $this->resetValidation();
     }
 
     public function deletePk() {
+        // Proteksi Hapus Dokumen
         if ($this->pk->status_verifikasi == 'disetujui') return;
+
         $jabatanId = $this->pk->jabatan_id;
         $this->pk->delete();
+        
+        // Redirect kembali ke halaman index per jabatan
         return redirect()->route('perjanjian.kinerja.detail', $jabatanId);
     }
 
     public function render()
     {
+        // Ambil data sub kegiatan untuk dropdown modal
         $sub_kegiatans = SubKegiatan::orderBy('created_at', 'desc')->get();
-        return view('livewire.perjanjian-kinerja-lihat', ['sub_kegiatans' => $sub_kegiatans]);
+        
+        return view('livewire.perjanjian-kinerja-lihat', [
+            'sub_kegiatans' => $sub_kegiatans
+        ]);
     }
 }
