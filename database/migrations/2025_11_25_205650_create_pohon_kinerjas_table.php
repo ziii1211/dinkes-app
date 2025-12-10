@@ -17,7 +17,7 @@ return new class extends Migration
             $table->text('nama_pohon');
             
             // Jenis Pohon (Root/Level 1/Level 2, dll - Opsional untuk pengembangan nanti)
-            $table->string('jenis')->default('sasaran_strategis'); 
+            // $table->string('jenis')->default('sasaran_strategis'); 
             
             // Relasi Hierarki (Parent ID) - Untuk struktur pohon bertingkat
             $table->unsignedBigInteger('parent_id')->nullable();

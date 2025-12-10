@@ -12,7 +12,6 @@ class PohonKinerja extends Model
     protected $fillable = [
         'tujuan_id',
         'nama_pohon',
-        'jenis',
         'parent_id'
     ];
 
