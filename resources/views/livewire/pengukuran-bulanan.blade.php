@@ -13,16 +13,16 @@
         
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
             
-            <div class="px-6 py-5 border-b border-gray-100">
+            <div class="px-6 py-5 border-b border-gray-100 bg-white">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center">
-                    Pengampu PK — <span class="ml-1 text-gray-600">DINAS KESEHATAN</span>
+                    Pengampu PK — <span class="ml-1 text-gray-800">DINAS KESEHATAN</span>
                 </h2>
             </div>
 
-            <div class="p-6 flex flex-col sm:flex-row justify-between items-center gap-4">
+            <div class="p-6 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white">
                 <div class="flex items-center gap-2 text-sm text-gray-600">
                     <span>Tampil</span>
-                    <select wire:model.live="perPage" class="border border-gray-300 rounded-md text-sm py-1.5 px-3 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer hover:bg-gray-50 transition-colors">
+                    <select wire:model.live="perPage" class="border border-gray-300 rounded-md text-sm py-1.5 px-3 focus:ring-blue-500 focus:border-blue-500 outline-none cursor-pointer bg-white hover:bg-gray-50 transition-colors">
                         <option value="10">10</option>
                         <option value="25">25</option>
                         <option value="50">50</option>
@@ -32,68 +32,86 @@
 
                 <div class="flex items-center gap-2 w-full sm:w-auto">
                     <span class="text-sm text-gray-600">Cari:</span>
-                    <input type="text" wire:model.live.debounce.300ms="search" class="w-full sm:w-64 border border-gray-300 rounded-md text-sm py-1.5 px-3 focus:ring-blue-500 focus:border-blue-500 outline-none placeholder-gray-300 bg-gray-50 focus:bg-white transition-colors">
+                    <input type="text" wire:model.live.debounce.300ms="search" class="w-full sm:w-64 border border-gray-300 rounded-md text-sm py-1.5 px-3 focus:ring-blue-500 focus:border-blue-500 outline-none bg-gray-50 focus:bg-white transition-colors">
                 </div>
             </div>
 
             <div class="overflow-x-auto">
                 <table class="w-full text-left border-collapse">
-                    <thead class="bg-gray-50 text-xs uppercase text-gray-400 font-semibold tracking-wider">
+                    <thead class="bg-white text-xs uppercase text-gray-400 font-bold tracking-wider border-b border-gray-100">
                         <tr>
                             <th class="px-6 py-4 w-16 text-center">#</th>
-                            <th class="px-6 py-4">Jabatan</th>
-                            <th class="px-6 py-4">Penanggung Jawab</th>
-                            <th class="px-6 py-4 text-center">Status</th>
-                            <th class="px-6 py-4 text-center w-64">Aksi</th>
+                            <th class="px-6 py-4">JABATAN</th>
+                            <th class="px-6 py-4">PENANGGUNG JAWAB</th>
+                            <th class="px-6 py-4 text-center">STATUS</th>
+                            <th class="px-6 py-4 text-center w-64">AKSI</th>
                         </tr>
                     </thead>
                     <tbody class="text-sm text-gray-600 divide-y divide-gray-50">
                         @forelse ($jabatans as $index => $jabatan)
                         <tr class="hover:bg-gray-50 transition-colors group">
-                            <td class="px-6 py-4 text-center font-medium text-gray-400">
+                            <td class="px-6 py-4 text-center font-medium text-gray-500">
                                 {{ $jabatans->firstItem() + $index }}
                             </td>
+
                             <td class="px-6 py-4 font-medium text-gray-800">
                                 {{ $jabatan->nama ?? 'Nama Jabatan' }}
                             </td>
+
                             <td class="px-6 py-4">
                                 @if($jabatan->pegawai)
                                     <div class="flex items-center gap-3">
-                                        <div class="h-10 w-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600 font-bold text-xs overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
+                                        <div class="h-10 w-10 rounded-full bg-blue-600 flex items-center justify-center text-white font-bold text-xs overflow-hidden border-2 border-white shadow-sm flex-shrink-0">
                                             @if($jabatan->pegawai->foto)
                                                 <img src="{{ asset('storage/'.$jabatan->pegawai->foto) }}" class="h-full w-full object-cover">
                                             @else
-                                                {{ substr($jabatan->pegawai->nama ?? 'U', 0, 2) }}
+                                                {{ substr($jabatan->pegawai->nama ?? 'U', 0, 1) }}
                                             @endif
                                         </div>
+                                        
                                         <div>
-                                            <div class="font-bold text-gray-800 text-sm">{{ $jabatan->pegawai->nama }}</div>
-                                            <div class="text-xs text-gray-500 mt-0.5">NIP. {{ $jabatan->pegawai->nip }}</div>
+                                            <div class="font-bold text-gray-800 text-sm uppercase">{{ $jabatan->pegawai->nama }}</div>
+                                            <div class="text-xs text-gray-400 mt-0.5">NIP. {{ $jabatan->pegawai->nip }}</div>
                                         </div>
                                     </div>
                                 @else
                                     <span class="text-gray-400 italic text-xs">- Belum ada pejabat -</span>
                                 @endif
                             </td>
+
                             <td class="px-6 py-4 text-center">
                                 @php
-                                    $status = $jabatan->status ?? 'Definitif';
-                                    $badgeColor = $status === 'Definitif' 
-                                        ? 'bg-green-50 text-green-600 border border-green-100' 
-                                        : 'bg-yellow-50 text-yellow-600 border border-yellow-100';
+                                    $status = $jabatan->pegawai->status ?? 'Definitif'; // Ambil status dari pegawai
+                                    $badgeClass = '';
+                                    
+                                    if ($status === 'Definitif') {
+                                        $badgeClass = 'bg-green-100 text-green-600';
+                                    } elseif ($status === 'Plt') {
+                                        $badgeClass = 'bg-yellow-100 text-yellow-600';
+                                    } else {
+                                        $badgeClass = 'bg-gray-100 text-gray-600';
+                                    }
                                 @endphp
-                                <span class="px-3 py-1 rounded-full text-xs font-semibold {{ $badgeColor }}">
-                                    {{ $status }}
-                                </span>
+                                
+                                @if($jabatan->pegawai)
+                                    <span class="px-3 py-1 rounded-md text-xs font-bold {{ $badgeClass }}">
+                                        {{ $status }}
+                                    </span>
+                                @else
+                                    <span class="px-3 py-1 rounded-md text-xs font-bold bg-gray-100 text-gray-400">
+                                        Kosong
+                                    </span>
+                                @endif
                             </td>
+
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('pengukuran.atur', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 border border-red-100 rounded hover:bg-red-100 hover:text-red-600 transition-colors text-xs font-medium">
+                                    <a href="{{ route('pengukuran.atur', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 rounded-md hover:bg-red-100 hover:text-red-600 transition-colors text-xs font-medium border border-red-50">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         Atur Kinerja
                                     </a>
 
-                                    <a href="{{ route('pengukuran.detail', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-500 border border-blue-100 rounded hover:bg-blue-100 hover:text-blue-600 transition-colors text-xs font-medium">
+                                    <a href="{{ route('pengukuran.detail', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-500 rounded-md hover:bg-blue-100 hover:text-blue-600 transition-colors text-xs font-medium border border-blue-50">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                                         Pengukuran
                                     </a>
@@ -114,7 +132,7 @@
                 </table>
             </div>
 
-            <div class="px-6 py-4 border-t border-gray-100 bg-gray-50">
+            <div class="px-6 py-4 border-t border-gray-100 bg-white">
                 {{ $jabatans->links() }}
             </div>
         </div>
