@@ -1,15 +1,5 @@
 <div>
-    <div class="relative -mt-20 mb-8 z-20">
-        <h2 class="text-3xl font-bold text-white tracking-wide">Struktur Organisasi</h2>
-        
-        <div class="flex items-center text-blue-100 text-sm mt-1 font-medium">
-            <a href="/" wire:navigate class="hover:text-white transition-colors">Dashboard</a>
-            <span class="mx-2">/</span>
-            <span class="text-white">Struktur Organisasi</span>
-        </div>
-    </div>
-
-    <div class="space-y-8 relative z-10">
+    <div class="space-y-8 relative z-10 mt-10">
         
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-100 flex items-center bg-white">
@@ -144,7 +134,7 @@
                                     <td class="p-4 text-center">
                                         
                                         @php
-                                            $statusClass = 'bg-gray-100 text-gray-800 border-gray-200'; // Default
+                                            $statusClass = 'bg-gray-100 text-gray-800 border-gray-200';
                                             $dotClass = 'bg-gray-500';
 
                                             if ($pegawai->status == 'Definitif') {

@@ -6,12 +6,9 @@
         <span class="mx-2">/</span>
         <span class="text-blue-200">Perencanaan Kinerja</span>
         <span class="mx-2">/</span>
-        <span class="text-blue-200">Perangkat Daerah</span>
-        <span class="mx-2">/</span>
         <span class="font-medium text-white">Perjanjian Kinerja</span>
     </x-slot>
 
-    <!-- INFO BOX (BIRU - Penjelasan) -->
     <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm mb-8">
         <div class="flex gap-4 items-start">
             <div class="text-blue-500 mt-1 flex-shrink-0">
@@ -20,18 +17,18 @@
             <div>
                 <h4 class="font-bold text-gray-900 text-base mb-1">Penjelasan</h4>
                 <p class="text-blue-700 text-sm leading-relaxed">
-                    Perjanjian Kinerja adalah komitmen tertulis target kinerja yang disepakati, menjadi dasar penilaian kinerja & akuntabilitas. Silakan pilih jabatan di bawah ini untuk memulai input data.
+                    Perjanjian Kinerja adalah komitmen tertulis target kinerja yang disepakati, menjadi dasar penilaian kinerja & akuntabilitas.
                 </p>
                 <div class="flex gap-3 mt-3">
-                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700">
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Akuntabilitas
                     </span>
-                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700">
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-green-100 text-green-700 border border-green-200">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Target Terukur
                     </span>
-                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700">
+                    <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-purple-100 text-purple-700 border border-purple-200">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         IKU
                     </span>
@@ -42,27 +39,28 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
-        <!-- KOLOM KIRI: INFO UNIT KERJA -->
         <div class="lg:col-span-4">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden sticky top-24">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-24">
                 <div class="px-6 py-4 border-b border-gray-100 bg-white">
                     <h3 class="font-bold text-gray-800 text-base flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                        <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                            <path d="M19 2H15V7H9V2H5C3.9 2 3 2.9 3 4V20C3 21.1 3.9 22 5 22H19C20.1 22 21 21.1 21 20V4C21 2.9 20.1 2 19 2ZM11 18H7V16H11V18ZM11 14H7V12H11V14ZM11 10H7V8H11V10ZM17 18H13V16H17V18ZM17 14H13V12H17V14ZM17 10H13V8H17V10Z"/>
+                        </svg>
                         Informasi Unit Kerja
                     </h3>
                 </div>
                 
                 <div class="p-6 space-y-6">
                     <div class="flex justify-between items-center border-b border-gray-50 pb-3">
-                        <span class="text-sm text-gray-500">Nama SKPD</span>
-                        <span class="text-sm font-bold text-gray-800 text-right">DINAS KESEHATAN</span>
+                        <span class="text-sm text-gray-500 font-medium">Nama SKPD</span>
+                        <span class="text-sm text-gray-800 text-right">DINAS KESEHATAN</span>
                     </div>
                     <div class="flex justify-between items-center border-b border-gray-50 pb-3">
-                        <span class="text-sm text-gray-500">Kode SKPD</span>
-                        <span class="text-sm font-bold text-gray-800 font-mono text-right">1.02.0.00.0.00.01.0000</span>
+                        <span class="text-sm text-gray-500 font-medium">Kode SKPD</span>
+                        <span class="text-sm text-gray-800 font-mono text-right">1.02.0.00.0.00.01.0000</span>
                     </div>
                     <div class="flex justify-between items-center">
-                        <span class="text-sm text-gray-500">Status</span>
+                        <span class="text-sm text-gray-500 font-medium">Status</span>
                         <span class="inline-flex items-center px-2.5 py-0.5 rounded text-xs font-bold bg-green-100 text-green-700">
                             SKPD
                         </span>
@@ -71,26 +69,23 @@
             </div>
         </div>
 
-        <!-- KOLOM KANAN: TABEL DAFTAR JABATAN -->
         <div class="lg:col-span-8">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 
-                <!-- Header Tabel: Daftar Jabatan -->
-                <div class="px-6 py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-center gap-4 bg-white">
+                <div class="px-6 py-5 border-b border-gray-100 bg-white flex justify-between items-center">
                     <h3 class="font-bold text-gray-800 text-base flex items-center">
-                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m100v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 30 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 019.288 0M15 7a3 30 11-6 0 3 3 0 016 0zm6 3a2 2011-40220014 0zM7 10a2 2011-40220014 0z"></path></svg>
+                        <svg class="w-5 h-5 mr-2 text-blue-500" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M13 6a3 3 0 11-6 0 3 3 0 016 0zM18 8a2 2 0 11-4 0 2 2 0 014 0zM14 15a4 4 0 00-8 0v3h8v-3zM6 8a2 2 0 11-4 0 2 2 0 014 0zM16 18v-3a5.972 5.972 0 00-.75-2.906A3.005 3.005 0 0119 15v3h-3zM4.75 12.094A5.973 5.973 0 004 15v3H1v-3a3 3 0 013.75-2.906z"></path>
+                        </svg>
                         Daftar Jabatan
                     </h3>
-                    
-                    <!-- Tombol Buat PK TELAH DIHAPUS -->
                 </div>
 
-                <div class="p-6 bg-white">
-                    <!-- Filters: Show & Search -->
+                <div class="p-6">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
                         <div class="flex items-center">
                             <span class="text-sm text-gray-500 mr-2">Show</span>
-                            <select wire:model.live="perPage" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm text-sm">
+                            <select wire:model.live="perPage" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm text-sm py-1">
                                 <option value="5">5</option>
                                 <option value="10">10</option>
                                 <option value="25">25</option>
@@ -98,34 +93,31 @@
                         </div>
                         <div class="flex items-center w-full sm:w-auto">
                             <span class="text-sm text-gray-500 mr-2">Search:</span>
-                            <input type="text" wire:model.live="search" class="w-full sm:w-64 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm text-sm" placeholder="Cari jabatan...">
+                            <input type="text" wire:model.live="search" class="w-full sm:w-64 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm text-sm py-1 bg-gray-50" placeholder="Cari jabatan...">
                         </div>
                     </div>
 
-                    <!-- Table -->
                     <div class="overflow-x-auto rounded-lg border border-gray-100">
                         <table class="w-full text-left text-sm">
                             <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 text-xs uppercase tracking-wider">
                                 <tr>
-                                    <th class="p-4 text-center w-12">No</th>
+                                    <th class="p-4 text-center w-16">No</th>
                                     <th class="p-4">Jabatan</th>
                                     <th class="p-4 text-center w-32">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
                                 @forelse($jabatans as $index => $jabatan)
-                                <tr class="hover:bg-gray-50 transition-colors">
-                                    <td class="p-4 text-center text-gray-500">{{ $jabatans->firstItem() + $index }}</td>
+                                <tr class="hover:bg-blue-50/50 transition-colors">
+                                    <td class="p-4 text-center text-gray-500 font-medium">{{ $jabatans->firstItem() + $index }}</td>
                                     
                                     <td class="p-4">
-                                        <div class="font-medium text-gray-800">{{ $jabatan->nama }}</div>
+                                        <div class="font-semibold text-gray-800">{{ $jabatan->nama }}</div>
                                     </td>
 
                                     <td class="p-4 text-center">
-                                        <!-- Tombol Detail -->
-                                        <!-- Ini link menuju halaman input PK untuk jabatan tersebut -->
-                                        <a href="{{ route('perjanjian.kinerja.detail', $jabatan->id) }}" class="inline-flex items-center px-3 py-1.5 bg-white border border-blue-200 text-blue-600 rounded-md hover:bg-blue-50 text-xs font-medium transition-colors shadow-sm">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        <a href="{{ route('perjanjian.kinerja.detail', $jabatan->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-200 text-xs font-bold transition-all shadow-sm">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                             Detail
                                         </a>
                                     </td>

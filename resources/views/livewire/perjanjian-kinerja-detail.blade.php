@@ -4,11 +4,7 @@
     <x-slot:breadcrumb>
         <a href="/" class="hover:text-white transition-colors">Dashboard</a>
         <span class="mx-2">/</span>
-        <span class="text-blue-200">Master Data</span>
-        <span class="mx-2">/</span>
         <span class="text-blue-200">Perencanaan Kinerja</span>
-        <span class="mx-2">/</span>
-        <span class="text-blue-200">Perangkat Daerah</span>
         <span class="mx-2">/</span>
         <a href="{{ route('perjanjian.kinerja') }}" class="hover:text-white transition-colors" wire:navigate>Perjanjian Kinerja</a>
         <span class="mx-2">/</span>
@@ -19,7 +15,7 @@
         
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
-                <h3 class="font-bold text-gray-800 text-base flex items-center">
+                <h3 class="font-medium text-gray-800 text-base flex items-center">
                     <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m100v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 30 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 019.288 0M15 7a3 30 11-6 0 3 3 0 016 0zm6 3a2 2011-40220014 0zM7 10a2 2011-40220014 0z"></path></svg>
                     Informasi Jabatan & Pengampu
                 </h3>
@@ -34,15 +30,15 @@
                     <div class="space-y-4">
                         <div class="grid grid-cols-12 gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-4 text-sm text-gray-500">Unit Kerja</div>
-                            <div class="col-span-8 text-sm font-bold text-gray-800 uppercase">DINAS KESEHATAN</div>
+                            <div class="col-span-8 text-sm font-medium text-gray-800 uppercase">DINAS KESEHATAN</div>
                         </div>
                         <div class="grid grid-cols-12 gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-4 text-sm text-gray-500">Kode SKPD</div>
-                            <div class="col-span-8 text-sm font-bold text-gray-800">1.02.0.00.0.00.01.0000</div>
+                            <div class="col-span-8 text-sm font-medium text-gray-800">1.02.0.00.0.00.01.0000</div>
                         </div>
                         <div class="grid grid-cols-12 gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-4 text-sm text-gray-500">Jabatan</div>
-                            <div class="col-span-8 text-sm font-bold text-blue-600">{{ $jabatan->nama }}</div>
+                            <div class="col-span-8 text-sm font-medium text-gray-800">{{ $jabatan->nama }}</div>
                         </div>
                         <div class="grid grid-cols-12 gap-4 pt-2 items-center">
                             <div class="col-span-4 text-sm text-gray-500 self-start pt-2">Pengampu Sekarang</div>
@@ -142,11 +138,11 @@
                             @forelse($pks as $index => $pk)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 text-center">{{ $pks->firstItem() + $index }}</td>
-                                <td class="px-6 py-4 font-bold text-gray-800">{{ $pk->tahun }}</td>
-                                <td class="px-6 py-4 font-medium text-gray-800">{{ $pk->keterangan }}</td>
+                                <td class="px-6 py-4 font-normal text-gray-800">{{ $pk->tahun }}</td>
+                                <td class="px-6 py-4 font-normal text-gray-800">{{ $pk->keterangan }}</td>
                                 <td class="px-6 py-4">
                                     @if($pk->pegawai)
-                                        <div class="text-sm font-bold text-gray-800">{{ $pk->pegawai->nama }}</div>
+                                        <div class="text-sm font-normal text-gray-800">{{ $pk->pegawai->nama }}</div>
                                         <div class="text-xs text-gray-400 mt-0.5">NIP: {{ $pk->pegawai->nip }}</div>
                                     @else
                                         <span class="text-gray-400 italic">-</span>

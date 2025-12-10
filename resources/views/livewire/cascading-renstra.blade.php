@@ -4,11 +4,7 @@
     <x-slot:breadcrumb>
         <a href="/" class="hover:text-white transition-colors">Dashboard</a>
         <span class="mx-2">/</span>
-        <span class="text-blue-200">Master Data</span>
-        <span class="mx-2">/</span>
         <span class="text-blue-200">Perencanaan Kinerja</span>
-        <span class="mx-2">/</span>
-        <span class="text-blue-200">Perangkat Daerah</span>
         <span class="mx-2">/</span>
         <span class="font-medium text-white">Cascading Renstra</span>
     </x-slot>
