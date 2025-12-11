@@ -1,319 +1,263 @@
-<div class="min-h-screen bg-gray-100 p-6 font-sans text-gray-600">
+<div class="min-h-screen bg-slate-50/50 p-6 space-y-8 font-sans text-slate-600">
     
-    <div class="grid grid-cols-1 xl:grid-cols-12 gap-6 mb-8">
-        
-        <div class="xl:col-span-4 bg-white rounded-xl shadow-sm border border-gray-200 p-8 flex flex-col items-center justify-center text-center relative overflow-hidden">
-            <div class="absolute top-0 left-0 w-full h-2 bg-gradient-to-r from-yellow-400 via-red-500 to-green-500"></div>
-
-            <div class="mb-6 transform hover:scale-105 transition-transform duration-500">
-                <img src="{{ asset('logo-prov-kalsel.png') }}" alt="Logo Kalsel" class="h-36 w-auto object-contain drop-shadow-md" onerror="this.src='https://via.placeholder.com/150x150.png?text=LOGO+KALSEL'; this.classList.add('rounded-full');">
-            </div>
-            
-            <h2 class="text-xl font-black text-gray-800 tracking-[0.3em] uppercase mb-3">
-                S E L A M A T  D A T A N G
-            </h2>
-            
-            <div class="space-y-1">
-                <p class="text-gray-600 font-medium text-base">Sistem Informasi Kinerja Terintegrasi</p>
-                <p class="text-gray-500 font-medium text-sm">Pemerintah Provinsi Kalimantan Selatan</p>
-            </div>
+    {{-- Header Section --}}
+    <div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <div>
+            <p class="text-xs font-semibold tracking-wide text-indigo-500 uppercase mb-1">Overview</p>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Dashboard Kinerja</h1>
+            <p class="text-sm text-slate-500 mt-1">Selamat datang kembali, <span class="font-semibold text-slate-700">Dinas Kesehatan</span>.</p>
         </div>
-
-        <div class="xl:col-span-8 flex flex-col gap-6">
-            
-            <div class="bg-white p-5 rounded-xl shadow-sm border border-gray-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                <div class="flex items-center gap-4 w-full md:w-auto">
-                    <div class="h-12 w-12 rounded-full bg-gray-50 flex items-center justify-center flex-shrink-0 relative">
-                        <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
-                        </svg>
-                        <div class="absolute bg-blue-600 rounded-full border-2 border-white h-3 w-3 bottom-0 right-0"></div>
-                    </div>
-                    
-                    <div>
-                        <div class="flex items-center gap-2 flex-wrap">
-                            <h3 class="text-lg font-bold text-gray-900">Selamat datang, DINAS KESEHATAN!</h3>
-                            <span class="px-2 py-0.5 rounded text-[11px] font-bold bg-green-500 text-white">Admin Unker</span>
-                        </div>
-                        <div class="flex items-center text-sm text-gray-400 mt-1 font-medium">
-                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
-                            SKPD: DINAS KESEHATAN
-                        </div>
-                    </div>
-                </div>
-
-                <div class="flex items-center gap-6 w-full md:w-auto justify-end border-t md:border-t-0 pt-4 md:pt-0 border-gray-100">
-                    <a href="#" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors group">
-                        <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        Dashboard SKPD
-                    </a>
-                    <a href="#" class="flex items-center gap-2 text-gray-600 hover:text-blue-600 font-medium text-sm transition-colors group">
-                        <svg class="w-5 h-5 text-gray-400 group-hover:text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 14v3m4-3v3m4-3v3M3 21h18M3 10h18M3 7l9-4 9 4M4 10h16v11H4V10z"></path></svg>
-                        Profil SKPD
-                    </a>
-                </div>
+        
+        <div class="flex items-center gap-3">
+            <div class="hidden md:flex items-center text-xs font-medium text-slate-500 bg-white px-3 py-1.5 rounded-full border border-slate-200 shadow-sm">
+                <span class="w-2 h-2 rounded-full bg-emerald-500 mr-2 animate-pulse"></span>
+                System Online
             </div>
-
-            <div class="bg-white p-5 rounded-xl border border-gray-200 shadow-sm">
-                <div class="flex flex-col md:flex-row gap-4 items-end">
-                    <div class="w-full md:w-1/3">
-                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Periode</label>
-                        <div class="relative">
-                            <select class="w-full border border-gray-300 rounded-lg text-sm py-2.5 pl-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white appearance-none cursor-pointer font-medium text-gray-700">
-                                <option>RPJMD 2021-2026</option>
-                                <option>RENSTRA 2025-2029</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="w-full md:w-1/2">
-                        <label class="block text-xs font-bold text-gray-400 uppercase mb-1">Perangkat Daerah</label>
-                        <div class="relative">
-                            <select class="w-full border border-gray-300 rounded-lg text-sm py-2.5 pl-3 pr-10 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none bg-white appearance-none cursor-pointer font-medium text-gray-700">
-                                <option>Semua Perangkat Daerah</option>
-                                <option selected>Dinas Kesehatan</option>
-                            </select>
-                            <div class="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none text-gray-500">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="flex gap-2 w-full md:w-auto">
-                        <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2.5 rounded-lg text-sm font-bold shadow-sm transition-colors flex items-center justify-center gap-2 w-full md:w-auto">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"></path></svg>
-                            Terapkan
-                        </button>
-                        <button class="px-4 py-2.5 bg-gray-50 border border-gray-200 text-gray-600 hover:bg-gray-100 hover:text-gray-800 rounded-lg text-sm font-medium transition-colors flex items-center justify-center gap-1 w-full md:w-auto">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
-                            Reset
-                        </button>
-                    </div>
-                </div>
-            </div>
-            
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-200">
-                <div class="flex items-center justify-between mb-6">
-                    <div class="flex items-center gap-3">
-                        <div class="p-2 bg-blue-100 text-blue-600 rounded-lg">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                        </div>
-                        <div>
-                            <h3 class="text-lg font-bold text-gray-900">Indikator Kinerja Utama</h3>
-                            <p class="text-sm text-gray-500">Progress capaian indikator kinerja utama perangkat daerah</p>
-                        </div>
-                    </div>
-                    <div class="relative">
-                        <select class="appearance-none bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium">
-                            <option>Tahun 2025</option>
-                            <option>Tahun 2026</option>
-                        </select>
-                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                    
-                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-blue-400 transition-colors group">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-white rounded-lg border border-gray-100 shadow-sm group-hover:border-blue-200 transition-colors">
-                                <svg class="w-6 h-6 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                            </div>
-                            <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Tercapai</span>
-                        </div>
-                        <h4 class="font-bold text-gray-800 text-sm mb-1 line-clamp-2">Indeks Pembangunan Manusia (IPM)</h4>
-                        <p class="text-xs text-gray-500 mb-4">Satuan: Poin</p>
-                        
-                        <div class="flex items-end justify-between mb-2">
-                            <div>
-                                <span class="text-sm text-gray-500">Realisasi</span>
-                                <div class="text-2xl font-bold text-gray-900 leading-none">74.56</div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-xs text-gray-500">Target</span>
-                                <div class="text-sm font-bold text-gray-700">74.50</div>
-                            </div>
-                        </div>
-                        
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                            <div class="bg-blue-600 h-2.5 rounded-full" style="width: 100.08%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs font-medium">
-                            <span class="text-blue-600">100.08%</span>
-                            <span class="text-gray-400">Capaian</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-yellow-400 transition-colors group">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-white rounded-lg border border-gray-100 shadow-sm group-hover:border-yellow-200 transition-colors">
-                                <svg class="w-6 h-6 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
-                            </div>
-                            <span class="bg-yellow-100 text-yellow-700 text-xs font-bold px-2.5 py-1 rounded-full">Perlu Perhatian</span>
-                        </div>
-                        <h4 class="font-bold text-gray-800 text-sm mb-1 line-clamp-2">Tingkat Pengangguran Terbuka (TPT)</h4>
-                        <p class="text-xs text-gray-500 mb-4">Satuan: Persen (%)</p>
-                        
-                        <div class="flex items-end justify-between mb-2">
-                            <div>
-                                <span class="text-sm text-gray-500">Realisasi</span>
-                                <div class="text-2xl font-bold text-gray-900 leading-none">4.15</div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-xs text-gray-500">Target</span>
-                                <div class="text-sm font-bold text-gray-700">4.00</div>
-                            </div>
-                        </div>
-                        
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                            <div class="bg-yellow-500 h-2.5 rounded-full" style="width: 96.39%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs font-medium">
-                            <span class="text-yellow-600">96.39%</span>
-                            <span class="text-gray-400">Capaian (Invers)</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-green-400 transition-colors group">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-white rounded-lg border border-gray-100 shadow-sm group-hover:border-green-200 transition-colors">
-                                <svg class="w-6 h-6 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                            </div>
-                            <span class="bg-green-100 text-green-700 text-xs font-bold px-2.5 py-1 rounded-full">Sangat Baik</span>
-                        </div>
-                        <h4 class="font-bold text-gray-800 text-sm mb-1 line-clamp-2">Pertumbuhan Ekonomi Non Tambang</h4>
-                        <p class="text-xs text-gray-500 mb-4">Satuan: Persen (%)</p>
-                        
-                        <div class="flex items-end justify-between mb-2">
-                            <div>
-                                <span class="text-sm text-gray-500">Realisasi</span>
-                                <div class="text-2xl font-bold text-gray-900 leading-none">5.12</div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-xs text-gray-500">Target</span>
-                                <div class="text-sm font-bold text-gray-700">4.50</div>
-                            </div>
-                        </div>
-                        
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                            <div class="bg-green-600 h-2.5 rounded-full" style="width: 100%"></div> </div>
-                        <div class="flex justify-between text-xs font-medium">
-                            <span class="text-green-600">113.78%</span>
-                            <span class="text-gray-400">Capaian</span>
-                        </div>
-                    </div>
-
-                    <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 hover:border-red-400 transition-colors group">
-                        <div class="flex justify-between items-start mb-4">
-                            <div class="p-2 bg-white rounded-lg border border-gray-100 shadow-sm group-hover:border-red-200 transition-colors">
-                                <svg class="w-6 h-6 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6l3 1m0 0l-3 9a5.002 5.002 0 006.001 0M6 7l3 9M6 7l6-2m6 2l3-1m-3 1l-3 9a5.002 5.002 0 006.001 0M18 7l3 9m-3-9l-6-2m0-2v2m0 16V5m0 16H9m3 0h3"></path></svg>
-                            </div>
-                            <span class="bg-red-100 text-red-700 text-xs font-bold px-2.5 py-1 rounded-full">Belum Tercapai</span>
-                        </div>
-                        <h4 class="font-bold text-gray-800 text-sm mb-1 line-clamp-2">Indeks Gini (Ketimpangan Pendapatan)</h4>
-                        <p class="text-xs text-gray-500 mb-4">Satuan: Koefisien</p>
-                        
-                        <div class="flex items-end justify-between mb-2">
-                            <div>
-                                <span class="text-sm text-gray-500">Realisasi</span>
-                                <div class="text-2xl font-bold text-gray-900 leading-none">0.315</div>
-                            </div>
-                            <div class="text-right">
-                                <span class="text-xs text-gray-500">Target</span>
-                                <div class="text-sm font-bold text-gray-700">0.310</div>
-                            </div>
-                        </div>
-                        
-                        <div class="w-full bg-gray-200 rounded-full h-2.5 mb-1">
-                            <div class="bg-red-500 h-2.5 rounded-full" style="width: 98.41%"></div>
-                        </div>
-                        <div class="flex justify-between text-xs font-medium">
-                            <span class="text-red-600">98.41%</span>
-                            <span class="text-gray-400">Capaian (Invers)</span>
-                        </div>
-                    </div>
-
-                </div>
-            </div>
-
+            <button class="bg-white hover:bg-slate-50 text-slate-700 px-4 py-2 rounded-xl text-sm font-semibold border border-slate-200 shadow-sm transition-all hover:shadow-md flex items-center gap-2">
+                <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                Export Laporan
+            </button>
+            <button class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-sm font-semibold shadow-lg shadow-indigo-600/20 transition-all hover:shadow-indigo-600/30 hover:-translate-y-0.5">
+                + Input Data
+            </button>
         </div>
     </div>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-        
-        <div class="flex flex-col md:flex-row justify-between items-center mb-8 border-b border-gray-100 pb-4">
-            <div class="flex gap-4 w-full md:w-auto mb-4 md:mb-0">
-                <div class="relative">
-                    <select class="appearance-none bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium w-32">
-                        <option>2025</option>
-                        <option>2026</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
+    {{-- Filter Bar: Floating Style --}}
+    <div class="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex flex-col lg:flex-row gap-2">
+        <div class="flex-1 grid grid-cols-1 md:grid-cols-2 gap-2">
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-slate-400 text-xs font-semibold">Periode:</span>
                 </div>
-                
-                <div class="relative">
-                    <select class="appearance-none bg-white border border-gray-300 text-gray-700 py-2 pl-4 pr-10 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm font-medium w-64">
-                        <option>DINAS KESEHATAN</option>
-                        <option>DINAS PENDIDIKAN</option>
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-500">
-                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                    </div>
+                <select wire:model.live="periode" class="pl-16 w-full text-sm border-0 bg-slate-50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-slate-700 font-medium py-2.5 transition-colors group-hover:bg-slate-100">
+                    <option>RPJMD 2021-2026</option>
+                    <option>RPJMD 2027-2032</option>
+                </select>
+            </div>
+            <div class="relative group">
+                <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <span class="text-slate-400 text-xs font-semibold">SKPD:</span>
+                </div>
+                <select wire:model.live="perangkat_daerah" class="pl-14 w-full text-sm border-0 bg-slate-50 rounded-xl focus:ring-2 focus:ring-indigo-500/20 text-slate-700 font-medium py-2.5 transition-colors group-hover:bg-slate-100">
+                    <option value="">Semua Perangkat Daerah</option>
+                    <option>Dinas Kesehatan</option>
+                </select>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <button class="bg-slate-800 hover:bg-slate-900 text-white px-6 py-2.5 rounded-xl text-sm font-medium transition-all shadow-md shadow-slate-800/20">
+                Terapkan
+            </button>
+            <button class="bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-4 py-2.5 rounded-xl text-sm font-medium transition-colors">
+                Reset
+            </button>
+        </div>
+    </div>
+
+    {{-- Stats Grid: Cards with "Pop" effect --}}
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        
+        {{-- Card 1 --}}
+        <div class="group bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 hover:shadow-lg hover:shadow-indigo-500/10 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex justify-between items-start mb-4">
+                <div class="bg-indigo-50 group-hover:bg-indigo-100 p-2.5 rounded-xl text-indigo-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
                 </div>
             </div>
-            
-            <div class="text-sm font-medium text-gray-500">
-                Capaian Indikator Kinerja Utama
+            <p class="text-slate-500 text-sm font-medium">Capaian RPJMD</p>
+            <h3 class="text-3xl font-bold text-slate-800 mt-1">{{ $stats['capaian_rpjmd'] }}%</h3>
+            <div class="w-full bg-slate-100 rounded-full h-1.5 mt-4 overflow-hidden">
+                <div class="bg-indigo-500 h-1.5 rounded-full transition-all duration-1000 ease-out shadow-[0_0_10px_rgba(99,102,241,0.5)]" style="width: {{ $stats['capaian_rpjmd'] > 100 ? 100 : $stats['capaian_rpjmd'] }}%"></div>
             </div>
         </div>
 
-        <div class="w-full">
-            <h3 class="text-center text-gray-500 font-bold uppercase mb-2 text-sm">DINAS KESEHATAN</h3>
-            
-            <div class="flex flex-wrap justify-center gap-4 mb-6 text-[10px] text-gray-500">
-                <div class="flex items-center gap-1"><span class="w-3 h-3 bg-blue-400 inline-block"></span> Angka Kematian Ibu (AKI)</div>
-                <div class="flex items-center gap-1"><span class="w-3 h-3 bg-pink-300 inline-block"></span> Angka Kematian Bayi (AKB)</div>
-                <div class="flex items-center gap-1"><span class="w-3 h-3 bg-orange-300 inline-block"></span> Prevalensi Stunting</div>
-                <div class="flex items-center gap-1"><span class="w-3 h-3 bg-yellow-200 inline-block"></span> Angka Kesakitan</div>
+        {{-- Card 2 --}}
+        <div class="group bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 hover:shadow-lg hover:shadow-emerald-500/10 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex justify-between items-start mb-4">
+                <div class="bg-emerald-50 group-hover:bg-emerald-100 p-2.5 rounded-xl text-emerald-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
             </div>
+            <p class="text-slate-500 text-sm font-medium">Dokumen PK</p>
+            <h3 class="text-3xl font-bold text-slate-800 mt-1">{{ $stats['renstra_sinkron'] }}</h3>
+            <p class="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-0.5 rounded-md border border-emerald-100">
+                {{ $stats['renstra_badge'] }}
+            </p>
+        </div>
 
-            <div class="relative h-64 flex items-end gap-1 sm:gap-2 px-4 border-l border-b border-gray-200 mx-4">
-                
-                <div class="absolute -left-8 bottom-0 flex flex-col justify-between h-full text-[10px] text-gray-400 py-1">
-                    <span>100</span><span>80</span><span>60</span><span>40</span><span>20</span><span>0</span>
+        {{-- Card 3 --}}
+        <div class="group bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 hover:shadow-lg hover:shadow-amber-500/10 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex justify-between items-start mb-4">
+                <div class="bg-amber-50 group-hover:bg-amber-100 p-2.5 rounded-xl text-amber-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                </div>
+            </div>
+            <p class="text-slate-500 text-sm font-medium">Estimasi Serapan</p>
+            <h3 class="text-3xl font-bold text-slate-800 mt-1">{{ $stats['serapan_anggaran'] }}</h3>
+            <p class="text-xs text-slate-400 mt-1 font-medium">dari total pagu Rp {{ $stats['pagu_anggaran'] }}</p>
+        </div>
+
+        {{-- Card 4 --}}
+        <div class="group bg-white p-5 rounded-2xl shadow-[0_2px_10px_-3px_rgba(6,81,237,0.1)] border border-slate-100 hover:shadow-lg hover:shadow-rose-500/10 transition-all duration-300 hover:-translate-y-1">
+            <div class="flex justify-between items-start mb-4">
+                <div class="bg-rose-50 group-hover:bg-rose-100 p-2.5 rounded-xl text-rose-600 transition-colors">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                @if($stats['isu_kritis'] > 0)
+                <span class="w-2 h-2 rounded-full bg-rose-500 animate-ping"></span>
+                @endif
+            </div>
+            <p class="text-slate-500 text-sm font-medium">Indikator Underperform</p>
+            <h3 class="text-3xl font-bold text-slate-800 mt-1">{{ $stats['isu_kritis'] }}</h3>
+            <p class="text-xs text-rose-600 font-medium mt-2">Perlu tindak lanjut segera</p>
+        </div>
+    </div>
+
+    {{-- Main Content --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {{-- Chart Section (SAMA PERSIS DENGAN UPLOADAN AWAL + DATA DINAMIS) --}}
+        <div class="lg:col-span-2 bg-white rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 p-8">
+            <div class="flex items-center justify-between mb-8">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Analisis Tren Indikator</h3>
+                    <p class="text-xs text-slate-400">Perbandingan performa antar triwulan</p>
+                </div>
+                <div class="flex bg-slate-50 p-1 rounded-xl border border-slate-200">
+                    <button class="px-3 py-1.5 text-xs font-semibold bg-white rounded-lg shadow-sm text-slate-700">Grafik</button>
+                    <button class="px-3 py-1.5 text-xs font-medium text-slate-500 hover:text-slate-700">Tabel</button>
+                </div>
+            </div>
+            
+            {{-- Modern Chart Container --}}
+            <div class="relative h-72 w-full flex items-end justify-between gap-2 px-2">
+                {{-- Background Grid --}}
+                <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                    <div class="border-b border-dashed border-slate-100 h-full w-full"></div>
+                    <div class="border-b border-dashed border-slate-100 h-full w-full"></div>
+                    <div class="border-b border-dashed border-slate-100 h-full w-full"></div>
+                    <div class="border-b border-dashed border-slate-100 h-full w-full"></div>
                 </div>
 
-                <div class="absolute inset-0 flex flex-col justify-between h-full w-full pointer-events-none">
-                    <div class="border-t border-gray-100 w-full h-0"></div>
-                    <div class="border-t border-gray-100 w-full h-0"></div>
-                    <div class="border-t border-gray-100 w-full h-0"></div>
-                    <div class="border-t border-gray-100 w-full h-0"></div>
-                    <div class="border-t border-gray-100 w-full h-0"></div>
-                    <div class="border-t border-gray-100 w-full h-0"></div>
-                </div>
-
-                @foreach(['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'July', 'Agustus', 'September', 'Oktober', 'November', 'Desember'] as $bulan)
-                    <div class="flex-1 flex items-end justify-center gap-[1px] group h-full relative">
-                        <div class="w-1.5 bg-blue-400 h-[40%] rounded-t-sm opacity-80 hover:opacity-100 transition-all"></div>
-                        <div class="w-1.5 bg-pink-300 h-[60%] rounded-t-sm opacity-80 hover:opacity-100 transition-all"></div>
-                        <div class="w-1.5 bg-orange-300 h-[30%] rounded-t-sm opacity-80 hover:opacity-100 transition-all"></div>
-                        <div class="w-1.5 bg-yellow-200 h-[80%] rounded-t-sm opacity-80 hover:opacity-100 transition-all"></div>
-                        
-                        <div class="absolute -bottom-8 left-1/2 transform -translate-x-1/2 -rotate-45 text-[9px] text-gray-500 origin-top-left w-12 text-right">
-                            {{ $bulan }}
+                {{-- Styled Bars with Gradients (LOOPING DATA DINAMIS) --}}
+                @foreach($chart_data as $index => $val)
+                <div class="w-full bg-slate-50 rounded-t-2xl relative group h-full flex items-end overflow-hidden">
+                    <div style="height: {{ $val > 100 ? 100 : $val }}%" class="w-full bg-gradient-to-t from-indigo-600 to-violet-400 rounded-t-lg relative transition-all duration-500 hover:opacity-90">
+                        {{-- Tooltip on Hover --}}
+                        <div class="opacity-0 group-hover:opacity-100 absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] py-1 px-2 rounded shadow-xl transition-opacity whitespace-nowrap z-10 pointer-events-none">
+                            Capaian: {{ $val }}%
+                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
                         </div>
                     </div>
+                </div>
                 @endforeach
-
             </div>
-            <div class="h-12"></div> </div>
+            <div class="flex justify-between mt-4 text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
+                 @foreach($chart_labels as $label)
+                 <span class="w-full text-center">{{ $label }}</span>
+                 @endforeach
+            </div>
+        </div>
 
+        {{-- Highlights Section --}}
+        <div class="bg-white rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 p-8">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Highlight Kinerja</h3>
+            <div class="space-y-4">
+                @foreach($highlights as $item)
+                <div class="group p-4 rounded-2xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-md hover:border-indigo-100 transition-all cursor-default">
+                    <div class="flex items-start gap-4">
+                        <div class="p-2.5 rounded-xl bg-white shadow-sm border border-slate-100 {{ $item['color'] }}">
+                            @if($item['icon'] == 'star')
+                                <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                            @elseif($item['icon'] == 'warning')
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                            @else
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                            @endif
+                        </div>
+                        <div>
+                            <h4 class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{{ $item['label'] }}</h4>
+                            <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ $item['desc'] }}</p>
+                        </div>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+            
+            <button class="w-full mt-6 py-3 border border-dashed border-slate-300 rounded-xl text-xs font-semibold text-slate-500 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2">
+                Lihat Semua Highlight
+            </button>
+        </div>
+    </div>
+
+    {{-- Bottom Section --}}
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        
+        {{-- Activity Timeline (Width 2/3) --}}
+        <div class="lg:col-span-2 bg-white rounded-3xl shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07)] border border-slate-100 p-8">
+            <h3 class="text-lg font-bold text-slate-800 mb-6">Log Aktivitas</h3>
+            
+            <div class="relative border-l border-slate-100 ml-3 space-y-8">
+                @foreach($activities as $act)
+                <div class="relative pl-8 group">
+                    {{-- Timeline Dot --}}
+                    <div class="absolute -left-1.5 top-1.5 w-3 h-3 rounded-full border-2 border-white ring-1 ring-slate-200 bg-slate-50 group-hover:bg-indigo-500 group-hover:ring-indigo-200 transition-all"></div>
+                    
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                        <div>
+                            <p class="text-sm font-semibold text-slate-800 group-hover:text-indigo-700 transition-colors">{!! $act['aktivitas'] !!}</p>
+                            <div class="flex items-center gap-3 mt-1.5">
+                                <span class="text-xs text-slate-400 flex items-center gap-1">
+                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    {{ $act['waktu'] }}
+                                </span>
+                                <span class="text-xs text-slate-400">•</span>
+                                <span class="text-xs text-slate-500 font-medium flex items-center gap-1">
+                                    <div class="w-4 h-4 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center text-[8px] font-bold">{{ substr($act['user'], 0, 1) }}</div>
+                                    {{ $act['user'] }}
+                                </span>
+                            </div>
+                        </div>
+                        <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider {{ str_replace('bg-', 'bg-opacity-10 bg-', $act['status_color']) }} border border-transparent">
+                            {{ $act['status'] }}
+                        </span>
+                    </div>
+                </div>
+                @endforeach
+            </div>
+        </div>
+
+        {{-- Quick Actions (Modern Grid) --}}
+        <div class="bg-gradient-to-br from-indigo-600 to-violet-700 rounded-3xl shadow-xl shadow-indigo-500/20 p-8 text-white relative overflow-hidden">
+            {{-- Decorative Background --}}
+            <div class="absolute top-0 right-0 -mr-8 -mt-8 w-48 h-48 bg-white opacity-10 rounded-full blur-2xl"></div>
+            <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-32 h-32 bg-indigo-400 opacity-20 rounded-full blur-xl"></div>
+            
+            <h3 class="text-lg font-bold mb-6 relative z-10">Aksi Cepat</h3>
+            <div class="grid grid-cols-2 gap-3 relative z-10">
+                <a href="{{ route('matrik.dokumen') }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 p-4 rounded-2xl text-left transition-all hover:-translate-y-0.5 group">
+                    <svg class="w-6 h-6 text-indigo-200 group-hover:text-white mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <span class="text-xs font-semibold block">Buat RPJMD</span>
+                </a>
+                <a href="{{ route('pohon.kinerja') }}" class="bg-white/10 hover:bg-white/20 backdrop-blur-sm border border-white/10 p-4 rounded-2xl text-left transition-all hover:-translate-y-0.5 group">
+                    <svg class="w-6 h-6 text-indigo-200 group-hover:text-white mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+                    <span class="text-xs font-semibold block">Tambah Pohon</span>
+                </a>
+                <button class="col-span-2 bg-white text-indigo-600 hover:bg-indigo-50 p-3 rounded-xl text-sm font-bold text-center transition-colors shadow-lg">
+                    Lihat Semua Menu
+                </button>
+            </div>
+
+            <div class="mt-8 pt-6 border-t border-white/20 relative z-10">
+                <p class="text-xs font-medium text-indigo-200 mb-2">Notifikasi Penting</p>
+                <div class="flex items-start gap-3 bg-indigo-800/50 p-3 rounded-xl border border-indigo-500/30">
+                    <div class="w-1.5 h-1.5 bg-rose-400 rounded-full mt-1.5 shrink-0 animate-pulse"></div>
+                    <p class="text-xs text-indigo-100 leading-relaxed">
+                        Batas unggah realisasi triwulan IV tersisa <span class="font-bold text-white">2 hari lagi</span>.
+                    </p>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
