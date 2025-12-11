@@ -3,34 +3,68 @@
 namespace App\Livewire\Admin;
 
 use Livewire\Component;
-// Import Model Indikator (Sesuaikan jika nama model berbeda di projectmu)
-use App\Models\IndikatorTujuan;
-use App\Models\IndikatorSasaran;
-use App\Models\IndikatorOutcome; // Biasanya outcome program
-use App\Models\IndikatorKegiatan;
-use App\Models\IndikatorSubKegiatan;
 
 class Dashboard extends Component
 {
+    public $periode = 'RPJMD 2021-2026';
+    public $perangkat_daerah = '';
+
     public function render()
     {
-        // Mengambil jumlah data real dari database
-        // Gunakan try-catch agar jika tabel belum ada isinya, tidak error fatal (tetap 0)
-        try {
-            $data = [
-                'ind_tujuan' => IndikatorTujuan::count(),
-                'ind_sasaran' => IndikatorSasaran::count(),
-                'ind_program' => IndikatorOutcome::count(), // Program biasanya punya Outcome
-                'ind_kegiatan' => IndikatorKegiatan::count(),
-                'ind_sub_kegiatan' => IndikatorSubKegiatan::count(),
-            ];
-        } catch (\Exception $e) {
-            // Fallback jika migrasi belum lengkap
-            $data = [
-                'ind_tujuan' => 0, 'ind_sasaran' => 0, 'ind_program' => 0, 
-                'ind_kegiatan' => 0, 'ind_sub_kegiatan' => 0
-            ];
-        }
+        // DATA DUMMY (Sesuaikan dengan gambar untuk preview UI)
+        $data = [
+            'stats' => [
+                'capaian_rpjmd' => 72,
+                'renstra_sinkron' => '54/72',
+                'renstra_badge' => '+3 minggu ini',
+                'serapan_anggaran' => 'Rp 1,42T',
+                'pagu_anggaran' => '2,10T',
+                'isu_kritis' => 7,
+            ],
+            'highlights' => [
+                [
+                    'label' => 'Top Performer: Pendidikan',
+                    'desc' => 'Capaian 88%, serapan 92%.',
+                    'icon' => 'star',
+                    'color' => 'text-yellow-500'
+                ],
+                [
+                    'label' => 'Perlu Perhatian: Kesehatan',
+                    'desc' => '3 indikator turun dibanding triwulan lalu.',
+                    'icon' => 'warning',
+                    'color' => 'text-red-500'
+                ],
+                [
+                    'label' => 'Cascading SKPD',
+                    'desc' => '54 SKPD telah sinkron.',
+                    'icon' => 'share',
+                    'color' => 'text-blue-500'
+                ],
+            ],
+            'activities' => [
+                [
+                    'waktu' => 'Hari ini 09:12',
+                    'aktivitas' => 'Update indikator <strong>Angka Partisipasi Sekolah</strong>',
+                    'user' => 'Yudha',
+                    'status' => 'Sukses',
+                    'status_color' => 'bg-green-100 text-green-700'
+                ],
+                [
+                    'waktu' => 'Kemarin 16:40',
+                    'aktivitas' => 'Sinkronisasi Renstra Dinas Kesehatan',
+                    'user' => 'Rina',
+                    'status' => 'Proses',
+                    'status_color' => 'bg-yellow-100 text-yellow-700'
+                ],
+                [
+                    'waktu' => '3 hari lalu',
+                    'aktivitas' => 'Import pagu triwulan III',
+                    'user' => 'Dedi',
+                    'status' => 'Gagal',
+                    'status_color' => 'bg-red-100 text-red-700'
+                ],
+            ]
+        ];
 
         return view('livewire.admin.dashboard', $data);
     }
