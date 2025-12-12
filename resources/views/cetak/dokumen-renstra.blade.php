@@ -17,8 +17,7 @@
         li { margin-bottom: 3px; }
         .font-bold { font-weight: bold; }
         .text-center { text-align: center; }
-        .program-code { font-weight: bold; display: block; font-size: 8pt; margin-bottom: 2px; }
-        .program-name { display: block; text-transform: uppercase; font-size: 8pt; }
+        .label-type { font-size: 7pt; font-weight: bold; display: block; margin-bottom: 2px; color: #555; }
     </style>
 </head>
 <body>
@@ -38,22 +37,23 @@
             <tr>
                 <th style="width: 15%;">Tujuan</th>
                 <th style="width: 15%;">Sasaran</th>
-                <th style="width: 15%;">Outcome</th>
-                <th style="width: 15%;">Output</th>
-                <th style="width: 20%;">Indikator</th>
-                <th style="width: 20%;">Program / Kegiatan / Sub Kegiatan</th>
+                <th style="width: 15%;">Outcome (Program)</th>
+                <th style="width: 15%;">Output (Kegiatan)</th>
+                <th style="width: 20%;">Indikator Kinerja</th>
+                <th style="width: 20%;">Sub Kegiatan</th>
             </tr>
         </thead>
         <tbody>
             
             @foreach($tujuans as $tujuan)
             <tr>
-                <td class="font-bold">{{ $tujuan->tujuan ?? $tujuan->sasaran_rpjmd }}</td>
+                <td class="font-bold">{{ $tujuan->nama_pohon }}</td>
                 <td></td><td></td><td></td>
                 <td>
-                    @if(isset($tujuan->indikators_from_pohon) && $tujuan->indikators_from_pohon->count() > 0)
+                    @if($tujuan->indikators->count() > 0)
                         <ul>
-                            @foreach($tujuan->indikators_from_pohon as $ind) 
+                            @foreach($tujuan->indikators as $ind) 
+                                {{-- REVISI: HANYA TAMPILKAN NAMA --}}
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
@@ -66,12 +66,13 @@
             @foreach($sasarans as $sasaran)
             <tr>
                 <td></td>
-                <td class="font-bold">{{ $sasaran->sasaran }}</td>
+                <td class="font-bold">{{ $sasaran->nama_pohon }}</td>
                 <td></td><td></td>
                 <td>
-                    @if(isset($sasaran->indikators_from_pohon) && $sasaran->indikators_from_pohon->count() > 0)
+                    @if($sasaran->indikators->count() > 0)
                         <ul>
-                            @foreach($sasaran->indikators_from_pohon as $ind) 
+                            @foreach($sasaran->indikators as $ind) 
+                                {{-- REVISI: HANYA TAMPILKAN NAMA --}}
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
@@ -84,72 +85,62 @@
             @foreach($outcomes as $outcome)
             <tr>
                 <td></td><td></td>
-                <td class="font-bold">{{ $outcome->outcome }}</td>
+                <td class="font-bold">
+                    <span class="label-type">PROGRAM</span>
+                    {{ $outcome->nama_pohon }}
+                </td>
                 <td></td>
                 <td>
-                    @if(isset($outcome->indikators_from_pohon) && $outcome->indikators_from_pohon->count() > 0)
+                    @if($outcome->indikators->count() > 0)
                         <ul>
-                            @foreach($outcome->indikators_from_pohon as $ind) 
+                            @foreach($outcome->indikators as $ind) 
+                                {{-- REVISI: HANYA TAMPILKAN NAMA --}}
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
                     @else - @endif
                 </td>
-                <td>
-                    <span class="program-code">{{ $outcome->program->kode ?? '' }}</span>
-                    <span class="program-name">{{ $outcome->program->nama ?? '' }}</span>
-                </td>
+                <td></td>
             </tr>
             @endforeach
 
             @foreach($kegiatans as $kegiatan)
             <tr>
                 <td></td><td></td><td></td>
-                <td class="font-bold">{{ $kegiatan->output }}</td>
+                <td class="font-bold">
+                    <span class="label-type">KEGIATAN</span>
+                    {{ $kegiatan->nama_pohon }}
+                </td>
                 <td>
-                    @if(isset($kegiatan->indikators_from_pohon) && $kegiatan->indikators_from_pohon->count() > 0)
+                    @if($kegiatan->indikators->count() > 0)
                         <ul>
-                            @foreach($kegiatan->indikators_from_pohon as $ind) 
+                            @foreach($kegiatan->indikators as $ind) 
+                                {{-- REVISI: HANYA TAMPILKAN NAMA --}}
+                                <li>{{ $ind->nama_indikator }}</li> 
+                            @endforeach
+                        </ul>
+                    @else - @endif
+                </td>
+                <td></td>
+            </tr>
+            @endforeach
+
+            @foreach($sub_kegiatans as $sub)
+            <tr>
+                <td></td><td></td><td></td><td></td>
+                <td>
+                    @if($sub->indikators->count() > 0)
+                        <ul>
+                            @foreach($sub->indikators as $ind) 
+                                {{-- REVISI: HANYA TAMPILKAN NAMA --}}
                                 <li>{{ $ind->nama_indikator }}</li> 
                             @endforeach
                         </ul>
                     @else - @endif
                 </td>
                 <td>
-                    <span class="program-code">{{ $kegiatan->kode }}</span>
-                    <span class="program-name">{{ $kegiatan->nama }}</span>
-                </td>
-            </tr>
-            @endforeach
-
-            @foreach($sub_kegiatans as $sub)
-            <tr>
-                <td></td><td></td><td></td>
-                <td>{{ $sub->output ?? '-' }}</td>
-                <td>
-                    {{-- PRIORITAS 1: DATA INPUT MANUAL --}}
-                    @if($sub->indikators->isNotEmpty())
-                        <ul style="font-weight: bold; color: #000;">
-                            @foreach($sub->indikators as $ind) 
-                                <li>{{ $ind->keterangan }}</li> 
-                            @endforeach
-                        </ul>
-                    
-                    {{-- PRIORITAS 2: DATA DARI POHON KINERJA --}}
-                    @elseif(isset($sub->indikators_from_pohon) && $sub->indikators_from_pohon->count() > 0)
-                        <ul>
-                            @foreach($sub->indikators_from_pohon as $ind) 
-                                <li>{{ $ind->nama_indikator }}</li> 
-                            @endforeach
-                        </ul>
-                    
-                    @else
-                        -
-                    @endif
-                </td>
-                <td>
-                    <span class="program-code">{{ $sub->kode }}</span>
-                    <span class="program-name">{{ $sub->nama }}</span>
+                    <span class="label-type">SUB KEGIATAN</span>
+                    {{ $sub->nama_pohon }}
                 </td>
             </tr>
             @endforeach

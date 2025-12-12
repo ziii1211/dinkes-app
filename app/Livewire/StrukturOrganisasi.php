@@ -12,6 +12,9 @@ class StrukturOrganisasi extends Component
 {
     use WithFileUploads;
 
+    // --- STATE PENCARIAN ---
+    public $search = '';
+
     // --- STATE MODAL ---
     public $modalJabatanOpen = false;
     public $modalPegawaiOpen = false;
@@ -26,16 +29,24 @@ class StrukturOrganisasi extends Component
     public function render()
     {
         // LOGIKA BARU: Hierarchical Tree Sorting
-        // Kita ambil semua data, lalu urutkan manual menggunakan fungsi rekursif
         $allJabatans = Jabatan::all();
         $sortedJabatans = $this->sortJabatanTree($allJabatans);
 
+        // LOGIKA PENCARIAN PEGAWAI
+        $pegawais = Pegawai::with('jabatan')
+            ->when($this->search, function($query) {
+                $query->where('nama', 'like', '%' . $this->search . '%')
+                      ->orWhere('nip', 'like', '%' . $this->search . '%');
+            })
+            ->orderBy('id', 'asc')
+            ->get();
+
         return view('livewire.struktur-organisasi', [
-            // Kirim data yang sudah diurutkan secara pohon hierarki
+            // Data Jabatan (Tree)
             'jabatans' => $sortedJabatans,
             
-            // Pegawai tetap urut ID (input terakhir di bawah)
-            'pegawais' => Pegawai::with('jabatan')->orderBy('id', 'asc')->get()
+            // Data Pegawai (Filtered)
+            'pegawais' => $pegawais
         ]);
     }
 
@@ -43,19 +54,11 @@ class StrukturOrganisasi extends Component
     private function sortJabatanTree($elements, $parentId = null)
     {
         $branch = collect();
-
-        // Ambil semua item yang parent_id-nya sesuai dengan $parentId (Mencari anak)
-        // Kita sort by 'id' agar sesama saudara (sibling) urut berdasarkan waktu input
         $children = $elements->where('parent_id', $parentId)->sortBy('id');
 
         foreach ($children as $child) {
-            // Masukkan node (jabatan) ini ke hasil
             $branch->push($child);
-
-            // Cari lagi anak-anak dari jabatan ini (Rekursif)
             $grandChildren = $this->sortJabatanTree($elements, $child->id);
-            
-            // Jika punya anak, masukkan anak-anaknya tepat di bawahnya
             if ($grandChildren->isNotEmpty()) {
                 $branch = $branch->merge($grandChildren);
             }
@@ -65,17 +68,19 @@ class StrukturOrganisasi extends Component
     }
 
     // =================================================================
-    // LOGIC JABATAN
+    // LOGIC JABATAN (PROTECTED)
     // =================================================================
     
     public function createJabatan()
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $this->reset(['jab_id', 'jab_nama', 'jab_parent_id', 'isEditMode']);
         $this->modalJabatanOpen = true;
     }
 
     public function editJabatan($id)
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $jabatan = Jabatan::find($id);
         if($jabatan) {
             $this->jab_id = $id;
@@ -88,6 +93,7 @@ class StrukturOrganisasi extends Component
 
     public function storeJabatan()
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $this->validate(['jab_nama' => 'required']);
         
         $level = 0;
@@ -110,22 +116,23 @@ class StrukturOrganisasi extends Component
                 'level' => $level
             ]);
         }
-
         $this->modalJabatanOpen = false;
     }
 
     public function deleteJabatan($id)
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $jabatan = Jabatan::find($id);
         if($jabatan) $jabatan->delete();
     }
 
     // =================================================================
-    // LOGIC PEGAWAI
+    // LOGIC PEGAWAI (PROTECTED)
     // =================================================================
 
     public function createPegawai()
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $this->reset(['peg_id', 'peg_nama', 'peg_nip', 'peg_status', 'peg_jabatan_id', 'peg_foto', 'isEditMode']);
         $this->peg_status = 'Definitif'; 
         $this->modalPegawaiOpen = true;
@@ -133,6 +140,7 @@ class StrukturOrganisasi extends Component
 
     public function editPegawai($id)
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $pegawai = Pegawai::find($id);
         if($pegawai) {
             $this->peg_id = $id;
@@ -148,6 +156,7 @@ class StrukturOrganisasi extends Component
 
     public function storePegawai()
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $this->validate([
             'peg_nama' => 'required',
             'peg_nip' => 'required',
@@ -176,12 +185,12 @@ class StrukturOrganisasi extends Component
         } else {
             Pegawai::create($data);
         }
-
         $this->modalPegawaiOpen = false;
     }
 
     public function deletePegawai($id)
     {
+        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
         $pegawai = Pegawai::find($id);
         if ($pegawai) {
             if ($pegawai->foto) Storage::disk('public')->delete($pegawai->foto);
