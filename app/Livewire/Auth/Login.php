@@ -7,12 +7,14 @@ use Illuminate\Support\Facades\Auth;
 
 class Login extends Component
 {
-    public $email = '';
+    // Ubah variabel public dari email ke username
+    public $username = '';
     public $password = '';
     public $remember = false;
 
+    // Aturan validasi diubah
     protected $rules = [
-        'email' => 'required|email',
+        'username' => 'required|string',
         'password' => 'required',
     ];
 
@@ -20,14 +22,15 @@ class Login extends Component
     {
         $this->validate();
 
-        if (Auth::attempt(['email' => $this->email, 'password' => $this->password], $this->remember)) {
+        // Auth::attempt menggunakan key 'username'
+        if (Auth::attempt(['username' => $this->username, 'password' => $this->password], $this->remember)) {
             session()->regenerate();
 
             // LOGIKA REDIRECT
             if (Auth::user()->role === 'admin') {
                 return redirect()->intended(route('admin.dashboard'));
             }
-            // TAMBAHAN UNTUK PIMPINAN
+            
             if (Auth::user()->role === 'pimpinan') {
                 return redirect()->intended(route('pimpinan.dashboard'));
             }
@@ -35,15 +38,12 @@ class Login extends Component
             return redirect()->intended(route('dashboard'));
         }
 
-        $this->addError('email', 'Email atau password yang Anda masukkan salah.');
+        // Error message jika gagal
+        $this->addError('username', 'Username atau password yang Anda masukkan salah.');
     }
 
     public function render()
     {
-        // Pastikan layout yang dipakai adalah layout khusus guest (login page)
-        // Biasanya layoutnya berbeda dengan dashboard dalam (tanpa sidebar)
         return view('livewire.auth.login')->layout('components.layouts.guest'); 
-        // Jika kamu tidak punya layout guest, ganti dengan ->layout('components.layouts.app') 
-        // tapi nanti sidebar akan muncul di halaman login.
     }
 }
