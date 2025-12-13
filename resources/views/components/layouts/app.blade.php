@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}">
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" class="scroll-smooth">
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -11,6 +11,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
+            darkMode: 'class', // Penting!
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -28,13 +29,51 @@
             }
         }
     </script>
+    
+    {{-- Script Pencegah FOUC (Flash of Unstyled Content) --}}
+    <script>
+        // Cek Local Storage sebelum halaman render sepenuhnya
+        if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark')
+        }
+    </script>
+
     @livewireStyles
 </head>
-<body class="bg-gray-100 font-sans antialiased text-gray-600">
+
+{{-- LOGIC DARK MODE DIPERBAIKI DISINI --}}
+<body class="bg-gray-100 dark:bg-slate-900 font-sans antialiased text-gray-600 dark:text-slate-300 transition-colors duration-300"
+      x-data="{ 
+          openUser: false,
+          // Ambil state awal dari Local Storage
+          isDark: localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
+          
+          // Fungsi Init berjalan setiap kali navigasi terjadi (wire:navigate)
+          init() {
+              this.updateTheme();
+          },
+
+          toggleTheme() {
+              this.isDark = !this.isDark;
+              // Simpan ke Local Storage
+              localStorage.setItem('color-theme', this.isDark ? 'dark' : 'light');
+              this.updateTheme();
+          },
+
+          updateTheme() {
+              if (this.isDark) {
+                  document.documentElement.classList.add('dark');
+              } else {
+                  document.documentElement.classList.remove('dark');
+              }
+          }
+      }">
 
     <div class="min-h-screen flex flex-col">
         
-        <header class="bg-white border-b border-gray-200 sticky top-0 z-50">
+        <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50 transition-colors duration-300">
             <div class="w-full px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-24">
                     
@@ -50,31 +89,31 @@
                             if(auth()->user()->role == 'pimpinan') $dashboardRoute = route('pimpinan.dashboard');
                         @endphp
                         
-                        <a href="{{ $dashboardRoute }}" wire:navigate class="text-gray-700 hover:text-blue-600 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('pimpinan.dashboard') ? 'text-blue-600' : '' }}">
+                        <a href="{{ $dashboardRoute }}" wire:navigate class="text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('pimpinan.dashboard') ? 'text-blue-600 dark:text-blue-400' : '' }}">
                             Dashboard
                         </a>
 
                         @if(auth()->user()->role == 'pimpinan')
                             
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 hover:text-blue-600 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Pengukuran Kinerja
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <div class="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="{{ route('pengukuran.bulanan') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600">
+                                <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                    <a href="{{ route('pengukuran.bulanan') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">
                                         Pengukuran Bulanan
                                     </a>
                                 </div>
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 hover:text-blue-600 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Master Data
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <div class="absolute right-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="/struktur-organisasi" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">
+                                <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                    <a href="/struktur-organisasi" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                         Struktur Organisasi
                                     </a>
                                 </div>
@@ -82,48 +121,48 @@
 
                         @else 
                         <div class="relative group">
-                                <button class="flex items-center text-gray-700 hover:text-blue-600 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Matrik Renstra
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <div class="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                   <a href="{{ route('matrik.dokumen') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">Dokumen Renstra</a>
-                                    <a href="/matrik-renstra/tujuan" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">Tujuan</a>
-                                    <a href="/matrik-renstra/sasaran" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">Sasaran</a>
-                                    <a href="/matrik-renstra/outcome" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">Outcome</a>
-                                    <a href="/matrik-renstra/program-kegiatan-sub" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600">Program/Kegiatan/Sub</a>
+                                <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                   <a href="{{ route('matrik.dokumen') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Dokumen Renstra</a>
+                                    <a href="/matrik-renstra/tujuan" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Tujuan</a>
+                                    <a href="/matrik-renstra/sasaran" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Sasaran</a>
+                                    <a href="/matrik-renstra/outcome" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Outcome</a>
+                                    <a href="/matrik-renstra/program-kegiatan-sub" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Program/Kegiatan/Sub</a>
                                 </div>
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 hover:text-blue-600 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Perencanaan Kinerja
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <div class="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="{{ route('pohon.kinerja') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">Pohon Kinerja</a>
-                                    <a href="{{ route('cascading.renstra') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 border-b border-gray-50">Cascading Renstra</a>
-                                    <a href="{{ route('perjanjian.kinerja') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600">Perjanjian Kinerja</a>
+                                <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                    <a href="{{ route('pohon.kinerja') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Pohon Kinerja</a>
+                                    <a href="{{ route('cascading.renstra') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Cascading Renstra</a>
+                                    <a href="{{ route('perjanjian.kinerja') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Perjanjian Kinerja</a>
                                 </div>
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 hover:text-blue-600 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Pengukuran Kinerja
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <div class="absolute left-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="{{ route('pengukuran.bulanan') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600">Pengukuran Bulanan</a>
+                                <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                    <a href="{{ route('pengukuran.bulanan') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Pengukuran Bulanan</a>
                                 </div>
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 hover:text-blue-600 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Master Data
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
-                                <div class="absolute right-0 mt-0 w-64 bg-white border border-gray-100 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="/struktur-organisasi" wire:navigate class="block px-4 py-3 text-sm text-gray-600 hover:bg-blue-50 hover:text-blue-600 transition-colors">Struktur Organisasi</a>
+                                <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                    <a href="/struktur-organisasi" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
                                 </div>
                             </div>
 
@@ -131,19 +170,41 @@
 
                     </nav>
 
-                    <div class="flex items-center gap-4 flex-shrink-0 relative" x-data="{ openUser: false }">
+                    <div class="flex items-center gap-4 flex-shrink-0 relative">
                         <div class="hidden md:flex flex-col text-right cursor-pointer" @click="openUser = !openUser">
-                            <span class="text-sm font-bold text-gray-800">{{ auth()->user()->name ?? 'Administrator' }}</span>
-                            <span class="text-xs text-gray-500 uppercase">{{ auth()->user()->role ?? 'Pegawai' }}</span>
+                            <span class="text-sm font-bold text-gray-800 dark:text-slate-200">{{ auth()->user()->name ?? 'Administrator' }}</span>
+                            <span class="text-xs text-gray-500 dark:text-slate-400 uppercase">{{ auth()->user()->role ?? 'Pegawai' }}</span>
                         </div>
-                        <div class="h-12 w-12 rounded-full bg-gray-200 border-2 border-white shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" @click="openUser = !openUser">
+                        <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-white dark:border-slate-600 shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" @click="openUser = !openUser">
                             <img src="{{ asset('user-icon.png') }}" alt="User" class="h-full w-full object-cover">
                         </div>
-                        <div x-show="openUser" @click.outside="openUser = false" style="display: none;" class="absolute right-0 top-14 w-48 bg-white rounded-lg shadow-xl py-2 border border-gray-100 z-50 animate-fade-in-down">
-                            <a href="#" class="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100">Profil Saya</a>
-                            <div class="border-t border-gray-100 my-1"></div>
-                            <a href="{{ route('logout') }}" class="block px-4 py-2 text-sm text-red-600 hover:bg-red-50 hover:text-red-700 transition-colors flex items-center">
-                                <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
+                        
+                        {{-- DROPDOWN USER & DARK MODE TOGGLE --}}
+                        <div x-show="openUser" @click.outside="openUser = false" style="display: none;" class="absolute right-0 top-14 w-56 bg-white dark:bg-slate-800 rounded-xl shadow-xl py-2 border border-gray-100 dark:border-slate-700 z-50 animate-fade-in-down">
+                            
+                            {{-- BUTTON TOGGLE DARK MODE --}}
+                            <button @click="toggleTheme()" class="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center justify-between transition-colors">
+                                <div class="flex items-center">
+                                    {{-- Icon Sun (Light Mode) --}}
+                                    <svg x-show="!isDark" class="w-4 h-4 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                    
+                                    {{-- Icon Moon (Dark Mode) --}}
+                                    <svg x-show="isDark" style="display: none;" class="w-4 h-4 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
+                                    
+                                    <span x-text="isDark ? 'Mode Terang' : 'Mode Gelap'"></span>
+                                </div>
+                                
+                                {{-- Switch Toggle UI --}}
+                                <div class="relative inline-flex items-center cursor-pointer">
+                                    <div class="w-9 h-5 bg-gray-200 dark:bg-slate-600 rounded-full peer-focus:outline-none transition-colors"></div>
+                                    <div class="absolute left-[2px] top-[2px] bg-white border border-gray-300 rounded-full h-4 w-4 transition-transform duration-300 ease-in-out" :class="isDark ? 'translate-x-full border-white bg-blue-500' : 'translate-x-0'"></div>
+                                </div>
+                            </button>
+
+                            <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
+                            
+                            <a href="{{ route('logout') }}" class="block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 transition-colors flex items-center">
+                                <svg class="w-4 h-4 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"></path></svg>
                                 Keluar
                             </a>
                         </div>
@@ -153,7 +214,7 @@
             </div>
         </header>
 
-        <div class="bg-blue-600 pb-48 pt-10">
+        <div class="bg-blue-600 dark:bg-blue-900 pb-48 pt-10 transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center text-blue-100 text-sm mb-6">
                     <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : (auth()->user()->role === 'pimpinan' ? route('pimpinan.dashboard') : route('dashboard')) }}" wire:navigate class="hover:text-white transition-colors">

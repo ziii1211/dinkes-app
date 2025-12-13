@@ -237,14 +237,13 @@ class Dashboard extends Component
         $hasRealChartData = false;
         $bulanLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         
-        // Cek apakah ada data real
         if(count($chartData) > 0) {
             $hasRealChartData = true;
             for ($i = 1; $i <= 12; $i++) {
                 $normalizedChart[] = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
             }
         } else {
-            // JIKA KOSONG: Generate Data Contoh (Tren Naik)
+            // Generate Data Contoh (Tren Naik)
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
 
@@ -329,7 +328,7 @@ class Dashboard extends Component
             'activities' => $activities,
             'chart_data' => $normalizedChart,
             'chart_labels' => $bulanLabels,
-            'is_dummy_chart' => !$hasRealChartData // Flag untuk view
+            'is_dummy_chart' => !$hasRealChartData
         ];
 
         return view('livewire.admin.dashboard', $data);
