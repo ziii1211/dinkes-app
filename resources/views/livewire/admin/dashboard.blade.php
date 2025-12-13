@@ -294,16 +294,29 @@
                     </div>
                 </div>
 
+                {{-- NOTIFIKASI DEADLINE DINAMIS --}}
                 <div class="mt-8 pt-6 border-t border-white/10 relative z-10">
                     <div class="flex items-start gap-3 bg-indigo-900/40 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
-                        <span class="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-                        </span>
-                        <p class="text-xs text-indigo-100 leading-relaxed font-medium">
-                            <span class="block text-white font-bold mb-0.5">Deadline Mendekat!</span>
-                            Batas unggah realisasi triwulan IV tersisa <span class="underline decoration-rose-400 decoration-2 underline-offset-2 font-bold text-white cursor-pointer hover:text-rose-200 transition-colors">2 hari lagi</span>.
-                        </p>
+                        @if($deadline)
+                            <span class="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                            </span>
+                            <div class="text-xs text-indigo-100 leading-relaxed font-medium">
+                                <span class="block text-white font-bold mb-0.5">Deadline Mendekat!</span>
+                                Batas unggah realisasi bulan 
+                                <span class="text-white font-bold">{{ Carbon\Carbon::createFromFormat('m', $deadline->bulan)->isoFormat('MMMM') }} {{ $deadline->tahun }}</span>
+                                tersisa <span class="underline decoration-rose-400 decoration-2 underline-offset-2 font-bold text-white cursor-pointer hover:text-rose-200 transition-colors">{{ $sisa_hari }} hari lagi</span>.
+                            </div>
+                        @else
+                            <span class="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <div class="text-xs text-indigo-100 leading-relaxed font-medium">
+                                <span class="block text-white font-bold mb-0.5">Jadwal Aman</span>
+                                Belum ada jadwal pengukuran kinerja yang aktif saat ini.
+                            </div>
+                        @endif
                     </div>
                 </div>
             </div>

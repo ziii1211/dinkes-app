@@ -6,13 +6,13 @@ use Livewire\Component;
 use App\Models\RealisasiKinerja;
 use App\Models\PkAnggaran;
 use App\Models\PerjanjianKinerja;
+use App\Models\JadwalPengukuran;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    // Filter
     public $periode = 'RPJMD 2021-2026';
     public $perangkat_daerah = '';
 
@@ -25,7 +25,6 @@ class Dashboard extends Component
     public $detailIsuKritis = [];
     public $detailDokumen = [];
 
-    // Helper Format Angka
     private function formatShortNumber($num)
     {
         if ($num >= 1000000000000) return round($num / 1000000000000, 2) . 'T';
@@ -34,7 +33,6 @@ class Dashboard extends Component
         return number_format($num, 0, ',', '.');
     }
 
-    // --- Actions Modal ---
     public function openHighlightModal($tab = 'performer')
     {
         $this->activeTab = $tab;
@@ -225,7 +223,7 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        // --- GRAFIK TREN (LOGIKA DATA CONTOH) ---
+        // Chart Data
         $chartData = RealisasiKinerja::selectRaw('bulan, AVG(capaian) as rata_rata')
             ->where('tahun', date('Y'))
             ->groupBy('bulan')
@@ -243,7 +241,6 @@ class Dashboard extends Component
                 $normalizedChart[] = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
             }
         } else {
-            // Generate Data Contoh (Tren Naik)
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
 
@@ -294,6 +291,33 @@ class Dashboard extends Component
                 ];
             });
 
+        // =========================================================
+        // FITUR DEADLINE ALERT (PERBAIKAN LOGIKA & FORMAT)
+        // =========================================================
+        $activeSchedule = JadwalPengukuran::where('is_active', true)
+            ->whereDate('tanggal_mulai', '<=', now()) // Pastikan jadwal sudah dimulai
+            ->whereDate('tanggal_selesai', '>=', now()) // Pastikan jadwal belum lewat
+            ->orderBy('tanggal_selesai', 'asc') // Ambil yang deadline-nya paling dekat
+            ->first();
+
+        $deadlineInfo = null;
+        if ($activeSchedule) {
+            // Gunakan startOfDay() agar perhitungan hari bulat (mengabaikan jam)
+            $daysLeft = now()->startOfDay()->diffInDays($activeSchedule->tanggal_selesai->startOfDay(), false);
+            
+            // Casting ke Integer untuk menghilangkan desimal
+            $daysLeft = (int) $daysLeft;
+
+            $bulanNama = Carbon::create()->month($activeSchedule->bulan)->isoFormat('MMMM');
+            $pesan = "Batas unggah realisasi <strong>Bulan $bulanNama</strong> tersisa";
+            
+            $deadlineInfo = [
+                'days' => $daysLeft,
+                'message' => $pesan,
+                'date_human' => $activeSchedule->tanggal_selesai->format('d M Y')
+            ];
+        }
+
         $data = [
             'stats' => [
                 'capaian_rpjmd' => round($avgCapaian, 1),
@@ -328,7 +352,10 @@ class Dashboard extends Component
             'activities' => $activities,
             'chart_data' => $normalizedChart,
             'chart_labels' => $bulanLabels,
-            'is_dummy_chart' => !$hasRealChartData
+            'is_dummy_chart' => !$hasRealChartData,
+            
+            // DATA DEADLINE
+            'deadline_alert' => $deadlineInfo 
         ];
 
         return view('livewire.admin.dashboard', $data);
