@@ -8,6 +8,7 @@ use App\Models\PkAnggaran;
 use App\Models\PerjanjianKinerja;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
+use Carbon\Carbon;
 
 class Dashboard extends Component
 {
@@ -17,9 +18,9 @@ class Dashboard extends Component
 
     // --- Modal State ---
     public $isOpenHighlight = false;
-    public $activeTab = 'performer'; // performer, isu, dokumen
+    public $activeTab = 'performer';
 
-    // --- Data Detail untuk Modal ---
+    // --- Data Detail ---
     public $detailPerformers = [];
     public $detailIsuKritis = [];
     public $detailDokumen = [];
@@ -33,13 +34,11 @@ class Dashboard extends Component
         return number_format($num, 0, ',', '.');
     }
 
-    // --- Actions ---
+    // --- Actions Modal ---
     public function openHighlightModal($tab = 'performer')
     {
         $this->activeTab = $tab;
         $this->isOpenHighlight = true;
-        
-        // Load data detail (Lazy Loading)
         $this->loadDetailData();
     }
 
@@ -75,7 +74,6 @@ class Dashboard extends Component
             )
             ->get();
 
-        // Proses Agregasi
         $tempScores = [];
         $this->detailIsuKritis = [];
 
@@ -84,14 +82,12 @@ class Dashboard extends Component
                 $rawCapaian = ($row->realisasi / $row->target_tahun) * 100;
                 $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
 
-                // Grouping Jabatan
                 if (!isset($tempScores[$row->jabatan])) {
                     $tempScores[$row->jabatan] = ['total' => 0, 'count' => 0];
                 }
                 $tempScores[$row->jabatan]['total'] += $cappedCapaian;
                 $tempScores[$row->jabatan]['count']++;
 
-                // Filter Isu Kritis
                 if ($rawCapaian < 50) {
                     $this->detailIsuKritis[] = [
                         'jabatan' => $row->jabatan,
@@ -104,7 +100,6 @@ class Dashboard extends Component
             }
         }
 
-        // Finalisasi Data Performer (Ranking)
         $this->detailPerformers = [];
         foreach ($tempScores as $jabatan => $data) {
             if ($data['count'] > 0) {
@@ -116,7 +111,6 @@ class Dashboard extends Component
                 ];
             }
         }
-        // Sort Ranking
         usort($this->detailPerformers, function($a, $b) {
             return $b['score'] <=> $a['score'];
         });
@@ -130,21 +124,16 @@ class Dashboard extends Component
             ->select('perjanjian_kinerjas.*')
             ->get()
             ->map(function($pk) {
-                
-                // Nama Pejabat
                 $namaPejabat = $pk->jabatan->pegawai->nama ?? '-';
                 $statusPejabat = $pk->jabatan->pegawai->status ?? '';
-                
-                if(in_array($statusPejabat, ['Plt', 'Pj', 'Pjs'])) {
-                    $namaPejabat .= " ({$statusPejabat})";
-                }
+                if(in_array($statusPejabat, ['Plt', 'Pj', 'Pjs'])) $namaPejabat .= " ({$statusPejabat})";
 
                 return [
                     'jabatan' => $pk->jabatan->nama ?? '-',
                     'pegawai' => $namaPejabat,
                     'tahun' => $pk->tahun,
                     'status' => ucfirst($pk->status),
-                    'tanggal' => $pk->updated_at->format('d M Y') // Tanggal Update Saja
+                    'tanggal' => $pk->updated_at->format('d M Y')
                 ];
             })
             ->toArray();
@@ -152,7 +141,7 @@ class Dashboard extends Component
 
     public function render()
     {
-        // 1. QUERY & LOGIC: KINERJA
+        // 1. QUERY CORE
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -174,7 +163,6 @@ class Dashboard extends Component
         $jabatanScores = [];
         $totalGlobalCapaian = 0;
         $countGlobalData = 0;
-        
         $isuKritisCount = 0;
         $isuKritisNames = [];
 
@@ -222,7 +210,7 @@ class Dashboard extends Component
             $isuKritisDesc = "{$isuKritisCount} Isu: {$listNames}.";
         }
 
-        // 2. TOTAL DOKUMEN
+        // 2. QUERY LAINNYA
         $pkStats = PerjanjianKinerja::selectRaw("status, count(*) as total")
             ->whereIn('status', ['draft', 'final'])
             ->groupBy('status')
@@ -234,10 +222,10 @@ class Dashboard extends Component
         $totalPk = $countFinal + $countDraft; 
         $totalPkDesc = "{$countFinal} Final & {$countDraft} Draft terdata.";
 
-        // 3. LAINNYA
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
+        // --- GRAFIK TREN (LOGIKA DATA CONTOH) ---
         $chartData = RealisasiKinerja::selectRaw('bulan, AVG(capaian) as rata_rata')
             ->where('tahun', date('Y'))
             ->groupBy('bulan')
@@ -246,22 +234,64 @@ class Dashboard extends Component
             ->toArray();
         
         $normalizedChart = [];
+        $hasRealChartData = false;
         $bulanLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-        for ($i = 1; $i <= 12; $i++) {
-            $normalizedChart[] = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
+        
+        // Cek apakah ada data real
+        if(count($chartData) > 0) {
+            $hasRealChartData = true;
+            for ($i = 1; $i <= 12; $i++) {
+                $normalizedChart[] = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
+            }
+        } else {
+            // JIKA KOSONG: Generate Data Contoh (Tren Naik)
+            $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
 
-        $activities = RealisasiKinerja::latest()
-            ->take(3)
+        $activities = DB::table('realisasi_kinerjas')
+            ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
+            ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
+            ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
+            ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->leftJoin('pegawais', 'jabatans.id', '=', 'pegawais.jabatan_id')
+            ->select(
+                'realisasi_kinerjas.id',
+                'realisasi_kinerjas.bulan',
+                'realisasi_kinerjas.capaian',
+                'realisasi_kinerjas.tanggapan',
+                'realisasi_kinerjas.updated_at',
+                'pk_indikators.nama_indikator',
+                'pegawais.nama as nama_pegawai',
+                'jabatans.nama as nama_jabatan'
+            )
+            ->orderBy('realisasi_kinerjas.updated_at', 'desc')
+            ->take(5)
             ->get()
             ->map(function ($item) {
-                $isCompleted = $item->capaian >= 100;
+                $isFeedback = !empty($item->tanggapan);
+                $statusText = 'Proses';
+                $statusColor = 'bg-amber-100 text-amber-700';
+
+                if ($isFeedback) {
+                    $statusText = 'Ditanggapi';
+                    $statusColor = 'bg-blue-100 text-blue-700';
+                    $activityText = 'Memberikan Tanggapan <span class="text-slate-400 font-normal">pada indikator</span> ' . Str::limit($item->nama_indikator, 30);
+                } else {
+                    if ($item->capaian >= 100) {
+                        $statusText = 'Tercapai';
+                        $statusColor = 'bg-emerald-100 text-emerald-700';
+                    }
+                    $activityText = 'Melaporkan Kinerja <span class="font-bold text-indigo-600">Bulan ' . Carbon::createFromFormat('m', $item->bulan)->isoFormat('MMMM') . '</span>';
+                }
+
+                $userName = $item->nama_pegawai ?? $item->nama_jabatan;
+
                 return [
-                    'waktu' => $item->created_at->diffForHumans(),
-                    'aktivitas' => 'Update Realisasi', 
-                    'user' => 'Pegawai', 
-                    'status' => $isCompleted ? 'Tercapai' : 'Proses',
-                    'status_color' => $isCompleted ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'
+                    'waktu' => Carbon::parse($item->updated_at)->diffForHumans(),
+                    'aktivitas' => $activityText,
+                    'user' => Str::limit($userName, 20),
+                    'status' => $statusText,
+                    'status_color' => $statusColor
                 ];
             });
 
@@ -298,7 +328,8 @@ class Dashboard extends Component
             ],
             'activities' => $activities,
             'chart_data' => $normalizedChart,
-            'chart_labels' => $bulanLabels
+            'chart_labels' => $bulanLabels,
+            'is_dummy_chart' => !$hasRealChartData // Flag untuk view
         ];
 
         return view('livewire.admin.dashboard', $data);

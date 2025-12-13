@@ -147,7 +147,12 @@
         <div class="lg:col-span-8 bg-white rounded-[28px] shadow-[0_2px_20px_rgba(0,0,0,0.03)] border border-slate-100 p-8 flex flex-col relative overflow-hidden">
             <div class="flex items-center justify-between mb-8 z-10">
                 <div>
-                    <h3 class="text-xl font-bold text-slate-800">Tren Capaian Kinerja</h3>
+                    <h3 class="text-xl font-bold text-slate-800 flex items-center gap-2">
+                        Tren Capaian Kinerja
+                        @if($is_dummy_chart)
+                        <span class="text-[10px] bg-indigo-50 text-indigo-500 px-2 py-0.5 rounded border border-indigo-100">Data Contoh</span>
+                        @endif
+                    </h3>
                     <p class="text-sm text-slate-400 font-medium mt-1">Analisis performa bulanan tahun berjalan</p>
                 </div>
                 <div class="hidden sm:flex bg-slate-50 p-1.5 rounded-xl border border-slate-100">
@@ -159,6 +164,7 @@
             <div class="relative h-80 w-full flex items-end justify-between gap-3 flex-1 z-10">
                 {{-- Grid Lines --}}
                 <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
+                    <div class="absolute top-0 w-full border-t border-dashed border-indigo-200 z-0 opacity-50"><span class="text-[9px] text-indigo-300 absolute -top-3 right-0">Target 100%</span></div>
                     @for($i=0; $i<5; $i++)
                         <div class="border-b border-dashed border-slate-100 h-full w-full"></div>
                     @endfor
