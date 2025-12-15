@@ -292,30 +292,17 @@ class Dashboard extends Component
             });
 
         // =========================================================
-        // FITUR DEADLINE ALERT (PERBAIKAN LOGIKA & FORMAT)
+        // FITUR DEADLINE ALERT (PERBAIKAN)
         // =========================================================
         $activeSchedule = JadwalPengukuran::where('is_active', true)
-            ->whereDate('tanggal_mulai', '<=', now()) // Pastikan jadwal sudah dimulai
-            ->whereDate('tanggal_selesai', '>=', now()) // Pastikan jadwal belum lewat
-            ->orderBy('tanggal_selesai', 'asc') // Ambil yang deadline-nya paling dekat
+            ->whereDate('tanggal_mulai', '<=', now()) 
+            ->whereDate('tanggal_selesai', '>=', now()) 
+            ->orderBy('tanggal_selesai', 'asc') 
             ->first();
 
-        $deadlineInfo = null;
+        $sisaHari = 0;
         if ($activeSchedule) {
-            // Gunakan startOfDay() agar perhitungan hari bulat (mengabaikan jam)
-            $daysLeft = now()->startOfDay()->diffInDays($activeSchedule->tanggal_selesai->startOfDay(), false);
-            
-            // Casting ke Integer untuk menghilangkan desimal
-            $daysLeft = (int) $daysLeft;
-
-            $bulanNama = Carbon::create()->month($activeSchedule->bulan)->isoFormat('MMMM');
-            $pesan = "Batas unggah realisasi <strong>Bulan $bulanNama</strong> tersisa";
-            
-            $deadlineInfo = [
-                'days' => $daysLeft,
-                'message' => $pesan,
-                'date_human' => $activeSchedule->tanggal_selesai->format('d M Y')
-            ];
+            $sisaHari = (int) now()->startOfDay()->diffInDays($activeSchedule->tanggal_selesai->startOfDay(), false);
         }
 
         $data = [
@@ -354,8 +341,9 @@ class Dashboard extends Component
             'chart_labels' => $bulanLabels,
             'is_dummy_chart' => !$hasRealChartData,
             
-            // DATA DEADLINE
-            'deadline_alert' => $deadlineInfo 
+            // PERBAIKAN: Mengirim nama variabel yang sesuai dengan blade
+            'deadline' => $activeSchedule,
+            'sisa_hari' => $sisaHari
         ];
 
         return view('livewire.admin.dashboard', $data);
