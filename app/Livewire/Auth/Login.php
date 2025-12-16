@@ -7,39 +7,51 @@ use Illuminate\Support\Facades\Auth;
 
 class Login extends Component
 {
-    // Ubah variabel public dari email ke username
+    // Properti form
     public $username = '';
     public $password = '';
     public $remember = false;
+    
+    // Default value untuk periode (PENTING: ini harus ada karena dipakai di view)
+    public $periode = '2025-2029';
 
-    // Aturan validasi diubah
+    // Rules validasi
     protected $rules = [
         'username' => 'required|string',
         'password' => 'required',
+        'periode'  => 'required',
+    ];
+
+    // Custom messages agar lebih ramah
+    protected $messages = [
+        'username.required' => 'Username wajib diisi.',
+        'password.required' => 'Password wajib diisi.',
     ];
 
     public function login()
     {
         $this->validate();
 
-        // Auth::attempt menggunakan key 'username'
+        // Coba login
         if (Auth::attempt(['username' => $this->username, 'password' => $this->password], $this->remember)) {
             session()->regenerate();
 
-            // LOGIKA REDIRECT
-            if (Auth::user()->role === 'admin') {
-                return redirect()->intended(route('admin.dashboard'));
-            }
-            
-            if (Auth::user()->role === 'pimpinan') {
-                return redirect()->intended(route('pimpinan.dashboard'));
-            }
+            // Simpan periode terpilih ke session jika diperlukan nanti
+            session(['periode_renstra' => $this->periode]);
 
-            return redirect()->intended(route('dashboard'));
+            // Logika Redirect berdasarkan Role
+            $role = Auth::user()->role;
+
+            return match ($role) {
+                'admin' => redirect()->intended(route('admin.dashboard')),
+                'pimpinan' => redirect()->intended(route('pimpinan.dashboard')),
+                default => redirect()->intended(route('dashboard')),
+            };
         }
 
-        // Error message jika gagal
-        $this->addError('username', 'Username atau password yang Anda masukkan salah.');
+        // Jika gagal
+        $this->addError('username', 'Username atau password tidak sesuai.');
+        $this->password = ''; // Reset password field
     }
 
     public function render()
