@@ -55,12 +55,14 @@
                     {{-- Logo Group --}}
                     <div class="flex items-center justify-center gap-5 mb-6">
                         <img src="{{ asset('logo-prov-kalsel.png') }}" 
-                             class="h-14 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
+                             class="h-16 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
                              alt="Kalsel">
                         <div class="h-10 w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
-                        <img src="{{ asset('logo-sakip (1).png') }}" 
-                             class="h-14 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
-                             alt="SAKIP">
+                        
+                        {{-- PERUBAHAN ADA DI SINI: Logo GERMAS --}}
+                        <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" 
+                             class="h-16 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
+                             alt="GERMAS">
                     </div>
                     
                     <h2 class="text-2xl font-bold text-white tracking-tight">Selamat Datang</h2>
