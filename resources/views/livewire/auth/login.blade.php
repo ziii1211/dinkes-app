@@ -53,16 +53,20 @@
                 {{-- Header Section --}}
                 <div class="text-center mb-8">
                     {{-- Logo Group --}}
-                    <div class="flex items-center justify-center gap-5 mb-6">
+                    {{-- UPDATED: Logo Kalsel & GERMAS Berdampingan --}}
+                    <div class="flex items-center justify-center gap-6 mb-6">
+                        {{-- 1. Logo Provinsi Kalsel --}}
                         <img src="{{ asset('logo-prov-kalsel.png') }}" 
-                             class="h-16 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
-                             alt="Kalsel">
-                        <div class="h-10 w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent"></div>
+                             class="h-20 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
+                             alt="Pemprov Kalsel">
                         
-                        {{-- PERUBAHAN ADA DI SINI: Logo GERMAS --}}
+                        {{-- Divider Vertikal Halus --}}
+                        <div class="h-12 w-[1px] bg-gradient-to-b from-transparent via-white/30 to-transparent"></div>
+                        
+                        {{-- 2. Logo GERMAS --}}
                         <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" 
-                             class="h-16 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
-                             alt="GERMAS">
+                             class="h-20 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
+                             alt="Logo GERMAS">
                     </div>
                     
                     <h2 class="text-2xl font-bold text-white tracking-tight">Selamat Datang</h2>

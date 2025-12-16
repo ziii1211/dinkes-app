@@ -43,7 +43,6 @@
     @livewireStyles
 </head>
 
-{{-- LOGIC DARK MODE DIPERBAIKI DISINI --}}
 <body class="bg-gray-100 dark:bg-slate-900 font-sans antialiased text-gray-600 dark:text-slate-300 transition-colors duration-300"
       x-data="{ 
           openUser: false,
@@ -77,8 +76,9 @@
             <div class="w-full px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-24">
                     
-                    <div class="flex items-center flex-shrink-0">
-                        <img src="{{ asset('logo-sakip (1).png') }}" alt="Logo SAKIP" class="h-20 w-auto object-contain">
+                    {{-- PERBAIKAN LOGO: DIBESARKAN (h-24) & DIGESER KE TENGAH (ml-6) --}}
+                    <div class="flex items-center flex-shrink-0 ml-6">
+                        <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" alt="Logo GERMAS" class="h-24 w-auto object-contain">
                     </div>
 
                     <nav class="hidden lg:flex space-x-2 items-center justify-center flex-1 px-4 whitespace-nowrap">
