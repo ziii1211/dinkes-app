@@ -217,10 +217,11 @@
                             <option value="">Pilih Satuan</option>
                             <option value="Dokumen">Dokumen</option>
                             <option value="Persen">Persen</option>
-                            <option value="Orang">Orang</option>
-                            <option value="Kegiatan">Kegiatan</option>
-                            <option value="Barang">Barang</option>
+                            <option value="Orang">Per1000 Penduduk</option>
+                            <option value="Kegiatan">Nilai</option>
+                            <option value="Barang">Angka</option>
                             <option value="Indeks">Indeks</option>
+                            <option value="Indeks">Rupiah</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
                     </div>
@@ -233,8 +234,8 @@
                     <div class="relative">
                         <select wire:model="ind_arah" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
                             <option value="">Pilih Arah</option>
-                            <option value="Meningkat">Meningkat</option>
-                            <option value="Menurun">Menurun</option>
+                            <option value="Meningkat">Naik</option>
+                            <option value="Menurun">Turun</option>
                             <option value="Tetap">Tetap</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
