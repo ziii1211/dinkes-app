@@ -1,7 +1,7 @@
 <div>
     <div class="bg-white shadow-xl rounded-[2.5rem] p-8 sm:p-12 border border-gray-100 relative z-10 space-y-10">
 
-        {{-- HEADER DAN NAVIGASI --}}
+        {{-- HEADER DAN INFO KARTU --}}
         <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-2">
@@ -47,7 +47,6 @@
             </div>
         </div>
 
-        {{-- INFO KARTU --}}
         <div class="bg-gray-50/50 border border-gray-200 rounded-xl p-6 xl:p-8">
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 <div class="xl:col-span-6 space-y-3">
@@ -154,14 +153,13 @@
                                     <td class="px-4 py-3 text-gray-700">{{ $ind->nama_indikator }}</td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->satuan }}</td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100 font-bold text-gray-900">
-                                        {{-- OTOMATIS TAMPIL BERDASARKAN TAHUN PK --}}
+                                        {{-- TAMPIL OTOMATIS BERDASARKAN TAHUN PK --}}
                                         @php $col = 'target_'.$pk->tahun; echo $ind->$col ?? $ind->target; @endphp
                                     </td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->arah }}</td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100">
                                         @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                                         <div class="flex justify-center gap-2">
-                                            {{-- TOMBOL ATUR TARGET DIHAPUS, HANYA SISA HAPUS INDIKATOR --}}
                                             <button wire:click="deleteIndikator({{ $ind->id }})" wire:confirm="Hapus?" class="inline-flex items-center px-2 py-1 bg-[#ffecec] text-[#dc3545] text-xs font-bold rounded hover:bg-red-100">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                             </button>
@@ -260,14 +258,28 @@
             <div class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Kinerja Utamamu</label>
-                    <select wire:model.live="sasaran_id" class="w-full border border-gray-300 rounded px-3 py-2">
-                        <option value="">-- Pilih Sasaran Strategis --</option>
-                        @foreach($sasarans as $sas)
-                            <option value="{{ $sas->id }}">{{ $sas->sasaran }}</option>
+                    
+                    {{-- DROPDOWN DINAMIS (BISA SASARAN / OUTCOME) --}}
+                    <select wire:model.live="sumber_kinerja_id" class="w-full border border-gray-300 rounded px-3 py-2">
+                        <option value="">-- Pilih Kinerja --</option>
+                        @foreach($sumber_kinerjas as $item)
+                            {{-- Tampilkan 'sasaran' jika Kadis, 'outcome' jika Bawahan --}}
+                            <option value="{{ $item->id }}">
+                                {{ $is_kepala_dinas ? $item->sasaran : $item->outcome }}
+                            </option>
                         @endforeach
                     </select>
-                    @if(empty($sasarans) || $sasarans->isEmpty())
-                        <p class="text-xs text-red-500 mt-2 italic">*Tidak ada data Sasaran Renstra untuk jabatan ini.</p>
+
+                    {{-- PESAN JIKA KOSONG --}}
+                    @if(empty($sumber_kinerjas) || $sumber_kinerjas->isEmpty())
+                        @if($is_kepala_dinas)
+                            <p class="text-xs text-red-500 mt-2 italic">*Tidak ada data Sasaran Renstra.</p>
+                        @else
+                            <p class="text-xs text-red-500 mt-2 italic">
+                                *Tidak ada Outcome yang ditugaskan ke jabatan ini. 
+                                <br>Silakan atur Penanggung Jawab di menu Renstra > Outcome.
+                            </p>
+                        @endif
                     @endif
                 </div>
             </div>
@@ -279,7 +291,7 @@
     </div>
     @endif
 
-    {{-- MODAL ANGGARAN (SAMA) --}}
+    {{-- MODAL ANGGARAN (TETAP SAMA) --}}
     @if($isOpenAnggaran)
     <div class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">

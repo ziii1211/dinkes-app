@@ -48,8 +48,9 @@ class PengukuranKinerja extends Component
         $this->jabatan = Jabatan::with('pegawai')->findOrFail($jabatanId);
         $this->pegawai = $this->jabatan->pegawai;
 
+        // PERBAIKAN: Ambil PK terakhir yang status_verifikasi = 'disetujui'
         $lastPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
-                    ->where('status', 'final')
+                    ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
                     ->latest('tahun')
                     ->first();
 
@@ -69,10 +70,11 @@ class PengukuranKinerja extends Component
     {
         $this->checkScheduleStatus();
 
+        // PERBAIKAN: Ambil PK yang status_verifikasi = 'disetujui'
         $this->pk = PerjanjianKinerja::with(['sasarans.indikators'])
             ->where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
-            ->where('status', 'final')
+            ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
             ->first();
             
         if ($this->pk) {
@@ -122,7 +124,6 @@ class PengukuranKinerja extends Component
         }
     }
 
-    // --- PERBAIKAN LOGIKA HITUNG HARI & JAM ---
     public function checkScheduleStatus()
     {
         if (!class_exists(JadwalPengukuran::class)) {
@@ -134,27 +135,21 @@ class PengukuranKinerja extends Component
                     ->where('bulan', $this->selectedMonth)
                     ->first();
 
-        // Gunakan Waktu Sekarang yang Presisi
         $now = Carbon::now();
 
         if ($jadwal && $jadwal->is_active) {
             $start = Carbon::parse($jadwal->tanggal_mulai)->startOfDay();
-            // Set batas akhir ke penghujung hari (23:59:59)
             $end = Carbon::parse($jadwal->tanggal_selesai)->endOfDay();
             
             $this->deadlineDate = $end->translatedFormat('d F Y H:i');
 
             if ($now->between($start, $end)) {
                 $this->isScheduleOpen = true;
-                
-                // HITUNG SELISIH WAKTU (HARI & JAM)
                 $diff = $now->diff($end);
                 
-                // Logic tampilan teks agar lebih natural
                 if ($diff->days > 0) {
                     $this->scheduleMessage = "Sisa Waktu: {$diff->days} Hari {$diff->h} Jam lagi.";
                 } else {
-                    // Jika sisa kurang dari 1 hari, tampilkan Jam & Menit
                     $this->scheduleMessage = "Segera Berakhir: {$diff->h} Jam {$diff->i} Menit lagi.";
                 }
 
@@ -218,7 +213,6 @@ class PengukuranKinerja extends Component
         session()->flash('message', 'Jadwal pengisian berhasil diperbarui.');
     }
 
-    // ... (Sisa method lain: openRealisasi, simpanRealisasi, dll tetap sama) ...
     public function openRealisasi($id, $nama, $target, $satuan) {
         $this->indikatorId = $id; $this->indikatorNama = $nama; $this->indikatorTarget = $target; $this->indikatorSatuan = $satuan;
         $data = RealisasiKinerja::where('indikator_id', $id)->where('bulan', $this->selectedMonth)->where('tahun', $this->tahun)->first();

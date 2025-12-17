@@ -9,7 +9,8 @@ use App\Models\PkIndikator;
 use App\Models\PkAnggaran;
 use App\Models\Jabatan;
 use App\Models\Pegawai;
-use App\Models\Sasaran; // Model Sasaran Renstra
+use App\Models\Sasaran; // Untuk Kepala Dinas
+use App\Models\Outcome; // Untuk Bawahan (IMPORT BARU)
 use App\Models\SubKegiatan;
 use Illuminate\Support\Facades\Auth;
 
@@ -27,14 +28,13 @@ class PerjanjianKinerjaLihat extends Component
     
     public $gubernur_nama = 'H. MUHIDIN'; 
     public $gubernur_jabatan = 'GUBERNUR KALIMANTAN SELATAN';
-    // public $gubernur_foto = 'muhidin.png'; 
 
     // --- STATES MODAL ---
     public $isOpenKinerjaUtama = false;
     public $isOpenAnggaran = false;
     
     // --- FORM PROPERTIES ---
-    public $sasaran_id; 
+    public $sumber_kinerja_id; // Ganti nama variabel biar general (bisa ID sasaran atau ID outcome)
     
     public $anggaran_sub_kegiatan_id;
     public $anggaran_nilai;
@@ -56,6 +56,8 @@ class PerjanjianKinerjaLihat extends Component
 
         $this->jabatan = $this->pk->jabatan;
         $this->pegawai = $this->pk->pegawai;
+        
+        // Cek apakah Kepala Dinas (biasanya parent_id NULL)
         $this->is_kepala_dinas = is_null($this->jabatan->parent_id);
 
         if ($this->jabatan->parent_id) {
@@ -93,12 +95,12 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     // =================================================================
-    // FITUR CRUD KINERJA UTAMA
+    // FITUR CRUD KINERJA UTAMA (LOGIKA UTAMA DISINI)
     // =================================================================
 
     public function openModalKinerjaUtama() { 
         if (!$this->canEdit()) return; 
-        $this->reset(['sasaran_id']); 
+        $this->reset(['sumber_kinerja_id']); // Reset pilihan
         $this->isOpenKinerjaUtama = true; 
     }
 
@@ -106,33 +108,47 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
 
         $this->validate([
-            'sasaran_id' => 'required', 
+            'sumber_kinerja_id' => 'required', 
         ]);
 
-        // Ambil Data Sasaran Renstra
-        $sumberSasaran = Sasaran::with('indikators')->find($this->sasaran_id);
+        // Variabel penampung
+        $textSasaran = '';
+        $indikators = [];
 
-        if (!$sumberSasaran) {
-            session()->flash('error', 'Data Sasaran tidak ditemukan.');
-            return;
+        // 1. CEK ROLE: KEPALA DINAS ATAU BAWAHAN?
+        if ($this->is_kepala_dinas) {
+            // --- KEPALA DINAS: Ambil dari SASARAN ---
+            $sumber = Sasaran::with('indikators')->find($this->sumber_kinerja_id);
+            if (!$sumber) { session()->flash('error', 'Data Sasaran tidak ditemukan.'); return; }
+            
+            $textSasaran = $sumber->sasaran;
+            $indikators = $sumber->indikators; // Relasi ke IndikatorSasaran
+
+        } else {
+            // --- BAWAHAN: Ambil dari OUTCOME ---
+            $sumber = Outcome::with('indikators')->find($this->sumber_kinerja_id);
+            if (!$sumber) { session()->flash('error', 'Data Outcome tidak ditemukan.'); return; }
+
+            $textSasaran = $sumber->outcome; // Ambil teks Outcome
+            $indikators = $sumber->indikators; // Relasi ke IndikatorOutcome
         }
 
-        // Simpan Sasaran ke PK
+        // 2. SIMPAN KE TABEL PK_SASARAN (KINERJA UTAMA)
         $pkSasaran = PkSasaran::create([
             'perjanjian_kinerja_id' => $this->pk->id, 
-            'sasaran' => $sumberSasaran->sasaran 
+            'sasaran' => $textSasaran 
         ]);
 
-        // Salin Indikator dari Renstra ke PK
-        foreach ($sumberSasaran->indikators as $indAsli) {
+        // 3. SALIN INDIKATOR
+        foreach ($indikators as $indAsli) {
             PkIndikator::create([
                 'pk_sasaran_id' => $pkSasaran->id,
-                // Pastikan mengambil nama indikator dengan benar (dari 'keterangan')
-                'nama_indikator' => $indAsli->keterangan ?? $indAsli->indikator ?? 'Indikator Tanpa Nama',
+                // Field 'keterangan' digunakan baik di IndikatorSasaran maupun IndikatorOutcome
+                'nama_indikator' => $indAsli->keterangan ?? $indAsli->nama_indikator ?? '-',
                 'satuan' => $indAsli->satuan,
                 'arah' => $indAsli->arah ?? 'Naik', 
                 
-                // Salin Target Tahunan agar otomatis tampil
+                // Salin Target (nama kolom sama di kedua tabel sumber)
                 'target_2025' => $indAsli->target_2025, 
                 'target_2026' => $indAsli->target_2026,
                 'target_2027' => $indAsli->target_2027, 
@@ -201,10 +217,6 @@ class PerjanjianKinerjaLihat extends Component
         }
     }
 
-    // =================================================================
-    // UTILITIES
-    // =================================================================
-
     public function closeModal() {
         $this->isOpenKinerjaUtama = false;
         $this->isOpenAnggaran = false;
@@ -220,20 +232,26 @@ class PerjanjianKinerjaLihat extends Component
 
     public function render()
     {
-        // LOGIKA TAMPILAN SASARAN:
-        // Jika Kepala Dinas, ambil SEMUA Sasaran Renstra
+        // === LOGIKA PENGAMBILAN DATA DROP DOWN ===
+        
         if ($this->is_kepala_dinas) {
-            $sasarans = Sasaran::with('indikators')
+            // KEPALA DINAS: Ambil SEMUA Sasaran Renstra
+            $sumber_kinerjas = Sasaran::with('indikators')
                         ->orderBy('created_at', 'desc')
                         ->get();
         } else {
-            $sasarans = collect(); 
+            // BAWAHAN (Sekretaris, Kabid, dll): 
+            // Ambil OUTCOME yang Penanggung Jawabnya (jabatan_id) adalah Jabatan PK ini
+            $sumber_kinerjas = Outcome::with('indikators')
+                        ->where('jabatan_id', $this->pk->jabatan_id) // Filter PJ
+                        ->orderBy('created_at', 'desc')
+                        ->get();
         }
 
         $sub_kegiatans = SubKegiatan::orderBy('created_at', 'desc')->get();
         
         return view('livewire.perjanjian-kinerja-lihat', [
-            'sasarans' => $sasarans,
+            'sumber_kinerjas' => $sumber_kinerjas, // Variable dikirim ke View
             'sub_kegiatans' => $sub_kegiatans
         ]);
     }

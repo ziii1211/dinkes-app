@@ -1,5 +1,4 @@
 <div>
-    <!-- HEADER HALAMAN -->
     <div class="relative -mt-20 mb-8 z-20">
         <h2 class="text-3xl font-bold text-white tracking-wide">Outcome</h2>
         <p class="text-blue-100 text-sm mt-1">Master Data / Matrik Renstra / Outcome</p>
@@ -8,7 +7,6 @@
     <div class="space-y-8 relative z-10">
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             
-            <!-- Header Card -->
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Outcome</h3>
                 <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
@@ -37,10 +35,8 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white text-sm text-gray-600">
                             @forelse($outcomes as $outcome)
-                                <!-- BARIS INDUK: OUTCOME -->
                                 <tr class="bg-white border-b border-gray-100">
                                     <td class="p-6 border-r border-gray-100 align-top">
-                                        <!-- Revisi: Teks Sasaran dihapus disini -->
                                         <div class="flex flex-col gap-1">
                                             <div class="flex gap-3">
                                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 border border-green-200 h-6 whitespace-nowrap">
@@ -50,7 +46,6 @@
                                                     {{ $outcome->outcome }}
                                                 </span>
                                             </div>
-                                            <!-- Label PJ jika ada -->
                                             @if($outcome->jabatan)
                                                 <div class="mt-1 ml-14 inline-flex items-center px-2 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 border border-yellow-100 w-fit">
                                                     <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -59,10 +54,8 @@
                                             @endif
                                         </div>
                                     </td>
-                                    <!-- Target Kosong untuk Induk -->
                                     <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
                                     
-                                    <!-- Menu Aksi Outcome -->
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm">
@@ -80,7 +73,6 @@
                                     </td>
                                 </tr>
 
-                                <!-- BARIS ANAK: INDIKATOR OUTCOME -->
                                 @foreach($outcome->indikators as $indikator)
                                 <tr class="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                     <td class="p-6 border-r border-gray-100 align-top pl-12"> 
@@ -94,7 +86,6 @@
                                         </div>
                                     </td>
                                     
-                                    <!-- Data Target -->
                                     <td class="p-4 border-r text-center text-gray-700 text-sm">{{ $indikator->target_2025 ? $indikator->target_2025 . ' ' . $indikator->satuan : '-' }}</td>
                                     <td class="p-4 border-r text-center text-gray-700 text-sm">{{ $indikator->target_2026 ? $indikator->target_2026 . ' ' . $indikator->satuan : '-' }}</td>
                                     <td class="p-4 border-r text-center text-gray-700 text-sm">{{ $indikator->target_2027 ? $indikator->target_2027 . ' ' . $indikator->satuan : '-' }}</td>
@@ -102,7 +93,6 @@
                                     <td class="p-4 border-r text-center text-gray-700 text-sm">{{ $indikator->target_2029 ? $indikator->target_2029 . ' ' . $indikator->satuan : '-' }}</td>
                                     <td class="p-4 border-r text-center text-gray-700 text-sm">{{ $indikator->target_2030 ? $indikator->target_2030 . ' ' . $indikator->satuan : '-' }}</td>
 
-                                    <!-- Menu Aksi Indikator -->
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none shadow-sm">
@@ -129,7 +119,6 @@
         </div>
     </div>
 
-    <!-- MODAL 1: FORM OUTCOME (DENGAN DROPDOWN SASARAN) -->
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
@@ -139,7 +128,6 @@
             </div>
             
             <div class="space-y-4">
-                <!-- INPUT SASARAN RENSTRA (DROPDOWN) -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Sasaran Renstra <span class="text-red-500">*</span></label>
                     <div class="relative">
@@ -154,7 +142,6 @@
                     @error('sasaran_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
 
-                <!-- INPUT KETERANGAN -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
                     <textarea wire:model="outcome" rows="4" placeholder="Keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none placeholder-gray-400"></textarea>
@@ -170,7 +157,6 @@
     </div>
     @endif
 
-    <!-- MODAL 2: PENANGGUNG JAWAB -->
     @if($isOpenPJ)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
@@ -193,7 +179,6 @@
     </div>
     @endif
 
-    <!-- MODAL 3: INDIKATOR -->
     @if($isOpenIndikator)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
@@ -202,40 +187,39 @@
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="space-y-6">
-                <!-- KETERANGAN -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
                     <textarea wire:model="ind_keterangan" rows="3" placeholder="Keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
                     @error('ind_keterangan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
                 
-                <!-- SATUAN -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Satuan Indikator <span class="text-red-500">*</span></label>
                     <div class="relative">
-                        <select wire:model="ind_satuan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
-                            <option value="">Pilih Satuan</option>
+                        <select wire:model.live="ind_satuan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
+                            <option value="">-- Pilih Satuan --</option>
                             <option value="Dokumen">Dokumen</option>
                             <option value="Persen">Persen</option>
-                            <option value="Orang">Per1000 Penduduk</option>
-                            <option value="Kegiatan">Nilai</option>
-                            <option value="Barang">Angka</option>
+                            <option value="Per 1000 Penduduk">Per 1000 Penduduk</option>
+                            <option value="Nilai">Nilai</option>
+                            <option value="Angka">Angka</option>
                             <option value="Indeks">Indeks</option>
-                            <option value="Indeks">Rupiah</option>
+                            <option value="Rupiah">Rupiah</option>
+                            <option value="Paket">Paket</option>
+                            <option value="Orang">Orang</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
                     </div>
                     @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
                 
-                <!-- ARAH -->
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Arah <span class="text-red-500">*</span></label>
                     <div class="relative">
                         <select wire:model="ind_arah" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
                             <option value="">Pilih Arah</option>
-                            <option value="Meningkat">Naik</option>
-                            <option value="Menurun">Turun</option>
+                            <option value="Meningkat">Meningkat</option>
+                            <option value="Menurun">Menurun</option>
                             <option value="Tetap">Tetap</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
@@ -244,7 +228,6 @@
                 </div>
             </div>
 
-            <!-- FOOTER -->
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
                 <button wire:click="closeModal" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">Batal</button>
                 <button wire:click="storeIndikator" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
@@ -253,7 +236,6 @@
     </div>
     @endif
 
-    <!-- MODAL 4: TARGET -->
     @if($isOpenTarget)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">

@@ -25,9 +25,10 @@ class PengaturanKinerja extends Component
         $this->jabatan = Jabatan::with('pegawai')->findOrFail($jabatanId);
         $this->pegawai = $this->jabatan->pegawai;
 
-        // Cek PK terakhir
+        // PERBAIKAN: Mengambil PK terakhir yang status_verifikasi = 'disetujui' (Terpublikasi)
+        // Sebelumnya menggunakan where('status', 'final')
         $lastPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
-                    ->where('status', 'final')
+                    ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
                     ->latest('tahun')
                     ->first();
 
@@ -41,15 +42,18 @@ class PengaturanKinerja extends Component
 
     public function loadPkList()
     {
+        // PERBAIKAN: Filter query agar hanya mengambil data yang 'disetujui' (Terpublikasi)
         $this->pkList = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->filterTahun)
-            ->where('status', 'final') 
+            ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
             ->get();
             
         if ($this->pkList->count() > 0) {
+            // Jika ada data, otomatis pilih yang pertama
             $this->selectedPkId = $this->pkList->first()->id;
             $this->loadPkDetail();
         } else {
+            // Jika kosong, reset pilihan
             $this->selectedPkId = '';
             $this->currentPk = null;
         }
@@ -78,6 +82,8 @@ class PengaturanKinerja extends Component
 
                 foreach ($this->currentPk->sasarans as $sasaran) {
                     foreach ($sasaran->indikators as $indikator) {
+                        // Jika ada kolom target spesifik tahun (target_2025 dst), gunakan itu.
+                        // Jika tidak, gunakan default 'target'.
                         $indikator->target = $indikator->$colTarget ?? $indikator->target;
                     }
                 }
@@ -107,10 +113,9 @@ class PengaturanKinerja extends Component
     // --- FUNGSI PERBARUI BULANAN RHK ---
     public function updateBulananRhk()
     {
-        // Logika untuk generate/update data bulanan
-        // Di sini Anda bisa menambahkan logika simpan ke tabel target_bulanan atau sejenisnya
+        // Logika untuk generate/update data bulanan (jika diperlukan logic khusus)
+        // Saat ini hanya notifikasi sukses.
         
-        // Simulasi notifikasi sukses (bisa diganti sweetalert nanti)
         session()->flash('message', 'Data Rencana Hasil Kerja (RHK) Bulan ini berhasil diperbarui!');
     }
 

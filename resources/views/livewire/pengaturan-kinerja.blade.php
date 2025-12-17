@@ -14,7 +14,6 @@
 
     <div class="min-h-screen bg-gray-100 p-6">
         
-        <!-- Notifikasi Sukses (Opsional) -->
         @if (session()->has('message'))
             <div class="max-w-7xl mx-auto mb-4 bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative" role="alert">
                 <strong class="font-bold">Sukses!</strong>
@@ -22,7 +21,6 @@
             </div>
         @endif
 
-        <!-- MAIN CARD -->
         <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative mt-4">
             
             <a href="{{ route('pengukuran.bulanan') }}" class="absolute top-6 right-6 text-gray-400 hover:text-gray-600 transition-colors z-10">
@@ -31,7 +29,6 @@
 
             <div class="p-8 space-y-8">
                 
-                <!-- HEADER SECTION -->
                 <div class="flex justify-between items-center border-b border-gray-100 pb-6">
                     <div class="flex items-center gap-2">
                         <h2 class="text-xl font-bold text-gray-800 border-l-4 border-blue-600 pl-3">Pengaturan Kinerja</h2>
@@ -48,9 +45,9 @@
                     </div>
                 </div>
 
-                <!-- SECTION PILIH DOKUMEN -->
                 <div class="bg-gray-50 rounded-xl p-6 border border-gray-100">
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Dokumen PK (status: final)</label>
+                    {{-- UPDATE LABEL DISINI --}}
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Dokumen PK (status: Terpublikasi)</label>
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="flex-1">
                             <select wire:model="selectedPkId" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer">
@@ -58,7 +55,8 @@
                                 @forelse($pkList as $pk)
                                     <option value="{{ $pk->id }}">{{ $pk->keterangan }}</option>
                                 @empty
-                                    <option value="" disabled>Tidak ada PK Final di tahun {{ $filterTahun }}</option>
+                                    {{-- UPDATE PESAN EMPTY DISINI --}}
+                                    <option value="" disabled>Tidak ada PK Terpublikasi di tahun {{ $filterTahun }}</option>
                                 @endforelse
                             </select>
                         </div>
@@ -69,7 +67,6 @@
                     </div>
                 </div>
 
-                <!-- SECTION DETAIL RHK -->
                 @if($currentPk)
                 <div class="pt-2 animate-fade-in-down">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 flex items-center gap-2">
@@ -88,7 +85,6 @@
                                     Hapus RKH
                                 </button>
                                 
-                                <!-- TOMBOL PERBARUI BULANAN -->
                                 <button wire:click="updateBulananRhk" wire:loading.attr="disabled" class="px-4 py-2 bg-green-500 hover:bg-green-600 text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
                                     <svg wire:loading.remove class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
                                     <svg wire:loading class="animate-spin w-4 h-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
@@ -97,7 +93,6 @@
                             </div>
                         </div>
 
-                        <!-- Toolbar Bulan -->
                         <div class="flex flex-wrap items-center gap-2 mb-6">
                             <span class="text-sm text-gray-500 mr-2 font-medium">Pilih bulan pengisian:</span>
                             @php
@@ -120,8 +115,6 @@
                             @endforeach
                         </div>
 
-                        <!-- KONDISI TAMPIL DATA -->
-                        <!-- Hanya tampilkan tabel jika bulan yang dipilih adalah bulan sekarang -->
                         @if($selectedMonth == (int)date('n'))
                             <div class="overflow-x-auto border border-gray-200 rounded-lg animate-fade-in-down">
                                 <table class="w-full text-left text-sm">
@@ -183,7 +176,6 @@
                                 </table>
                             </div>
                         @else
-                            <!-- TAMPILAN JIKA BULAN TIDAK SESUAI -->
                             <div class="py-12 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg animate-fade-in-down">
                                 <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                                 <p class="text-lg font-medium text-gray-500">Data untuk bulan {{ $months[$selectedMonth] }} belum tersedia.</p>
