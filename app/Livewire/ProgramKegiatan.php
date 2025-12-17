@@ -28,12 +28,10 @@ class ProgramKegiatan extends Component
                         ->orderBy('kode', 'asc')
                         ->get(),
             
-            // 2. Ambil Outcome untuk Dropdown
-            // HANYA ambil outcome yang belum punya program (program_id = NULL)
-            // Agar data yang sudah dipilih tidak muncul lagi
+            // 2. Ambil Data Outcome untuk Dropdown (PERBAIKAN DISINI)
+            // Filter whereNull('program_id') DIHAPUS agar SEMUA data outcome tampil
             'outcomes_list' => Outcome::with('sasaran')
-                            ->whereNull('program_id') 
-                            ->latest()
+                            ->orderBy('id', 'desc') // Urutkan dari yang terbaru
                             ->get() 
         ]);
     }
@@ -48,18 +46,45 @@ class ProgramKegiatan extends Component
 
     // --- PROGRAM CRUD ---
     public function openModal() { $this->isOpen = true; }
-    public function create() { $this->reset(['kode', 'nama', 'isEditMode']); $this->openModal(); }
+    
+    public function create() { 
+        $this->reset(['kode', 'nama', 'isEditMode']); 
+        $this->openModal(); 
+    }
+    
     public function store() {
         $this->validate(['kode' => 'required', 'nama' => 'required']);
-        if ($this->isEditMode) { Program::find($this->program_id)->update(['kode' => $this->kode, 'nama' => $this->nama]); } 
-        else { Program::create(['kode' => $this->kode, 'nama' => $this->nama]); }
+        
+        if ($this->isEditMode) { 
+            Program::find($this->program_id)->update([
+                'kode' => $this->kode, 
+                'nama' => $this->nama
+            ]); 
+        } else { 
+            Program::create([
+                'kode' => $this->kode, 
+                'nama' => $this->nama
+            ]); 
+        }
+        
         $this->closeModal();
     }
+    
     public function edit($id) {
         $data = Program::find($id);
-        if ($data) { $this->program_id = $id; $this->kode = $data->kode; $this->nama = $data->nama; $this->isEditMode = true; $this->openModal(); }
+        if ($data) { 
+            $this->program_id = $id; 
+            $this->kode = $data->kode; 
+            $this->nama = $data->nama; 
+            $this->isEditMode = true; 
+            $this->openModal(); 
+        }
     }
-    public function delete($id) { $data = Program::find($id); if ($data) $data->delete(); }
+    
+    public function delete($id) { 
+        $data = Program::find($id); 
+        if ($data) $data->delete(); 
+    }
 
 
     // --- LOGIC TAMBAH OUTCOME KE PROGRAM ---
@@ -80,6 +105,7 @@ class ProgramKegiatan extends Component
         ]);
 
         // Update Outcome dengan Program ID yang dipilih
+        // Ini akan "memindahkan" outcome ke program ini jika sebelumnya sudah punya program
         $outcome = Outcome::find($this->outcome_id_to_add);
         
         if ($outcome) {

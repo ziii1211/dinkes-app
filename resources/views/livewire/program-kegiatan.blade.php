@@ -1,5 +1,4 @@
 <div>
-    <!-- HEADER HALAMAN -->
     <div class="relative -mt-20 mb-8 z-20">
         <h2 class="text-3xl font-bold text-white tracking-wide">Program</h2>
         <p class="text-blue-100 text-sm mt-1">Master Data / Matrik Renstra / Program, Kegiatan & Sub Kegiatan / Program</p>
@@ -8,7 +7,6 @@
     <div class="space-y-8 relative z-10">
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             
-            <!-- Header Card & Tombol Tambah -->
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Program / Kegiatan / Sub Kegiatan</h3>
                 <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
@@ -37,7 +35,6 @@
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white text-sm text-gray-600">
                             @forelse($programs as $program)
-                                <!-- LEVEL 1: PROGRAM -->
                                 <tr class="bg-white border-b border-gray-100">
                                     <td class="p-6 border-r border-gray-100 align-top">
                                         <div class="flex gap-3 items-center">
@@ -51,7 +48,6 @@
                                     </td>
                                     <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
                                     
-                                    <!-- Menu Aksi Program -->
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm">
@@ -77,12 +73,10 @@
                                     </td>
                                 </tr>
 
-                                <!-- LEVEL 2: OUTCOME (Looping) -->
                                 @foreach($program->outcomes as $outcome)
                                     <tr class="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                         <td class="p-6 border-r border-gray-100 align-top pl-12">
                                             <div class="flex flex-col gap-2">
-                                                <!-- Tampilan Outcome (Rapi & Sejajar) -->
                                                 <div class="flex gap-3 items-start">
                                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 border border-green-200 h-6 whitespace-nowrap">
                                                         Outcome
@@ -91,29 +85,22 @@
                                                         {{ $outcome->outcome }}
                                                     </span>
                                                 </div>
-                                                <!-- INDIKATOR DIHILANGKAN SESUAI PERMINTAAN -->
                                             </div>
                                         </td>
                                         
-                                        <!-- Target Display (Kosongkan agar rapi) -->
                                         <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
                                         
-                                        <!-- MENU AKSI OUTCOME (Dropdown seperti Gambar) -->
                                         <td class="p-4 text-center align-middle relative">
                                             <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-                                                <!-- Tombol Menu Biru Muda -->
                                                 <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-transparent px-3 py-1.5 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none transition-colors">
                                                     Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                                                 </button>
-                                                <!-- Dropdown Isi -->
                                                 <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100">
                                                     <div class="py-1">
-                                                        <!-- Menu Kegiatan (Biru) -->
                                                         <a href="{{ route('matrik.kegiatan', ['id' => $program->id]) }}" wire:navigate class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
                                                             <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                                             Kegiatan
                                                         </a>
-                                                        <!-- Menu Hapus Outcome (Merah) -->
                                                         <button wire:click="removeOutcome({{ $outcome->id }})" wire:confirm="Lepas outcome ini dari program?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                             <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                             Hapus Outcome
@@ -135,7 +122,6 @@
         </div>
     </div>
 
-    <!-- MODAL 1: FORM PROGRAM -->
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
@@ -165,7 +151,6 @@
     </div>
     @endif
 
-    <!-- MODAL 2: PILIH OUTCOME (MENGHUBUNGKAN DATA) -->
     @if($isOpenOutcome)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
@@ -186,7 +171,10 @@
                             <option value="">-- Pilih Outcome dari Data Master --</option>
                             @foreach($outcomes_list as $outcome)
                                 <option value="{{ $outcome->id }}">
-                                    [Sasaran: {{ Str::limit($outcome->sasaran->sasaran ?? 'N/A', 50) }}] - {{ Str::limit($outcome->outcome, 80) }}
+                                    @if($outcome->program_id)
+                                        [Sudah Terpakai] - 
+                                    @endif
+                                    {{ Str::limit($outcome->outcome, 100) }}
                                 </option>
                             @endforeach
                         </select>
@@ -196,7 +184,7 @@
                     </div>
                     <p class="text-xs text-gray-500 mt-2 flex items-center">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Data ini diambil dari halaman Master Data > Outcome.
+                        Menampilkan seluruh data Outcome yang diinput di halaman Outcome.
                     </p>
                     @error('outcome_id_to_add') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
