@@ -15,8 +15,11 @@ use App\Livewire\OutcomeRenstra;
 use App\Livewire\ProgramKegiatan;
 use App\Livewire\KegiatanRenstra;
 use App\Livewire\SubKegiatanRenstra;
-use App\Livewire\PohonKinerja;
-use App\Livewire\CascadingRenstra;
+
+// PERUBAHAN 1: Import Class Baru (CascadingRenstra) menggantikan PohonKinerja
+use App\Livewire\CascadingRenstra; 
+
+use App\Livewire\CascadingRenstra as CascadingRenstraComponent; // (Opsional: Jika ingin alias, tapi pakai langsung Class juga bisa)
 use App\Livewire\PerjanjianKinerja;
 use App\Livewire\PerjanjianKinerjaDetail;
 use App\Livewire\PerjanjianKinerjaLihat;
@@ -33,7 +36,7 @@ use App\Models\Sasaran;
 use App\Models\Outcome;
 use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
-use App\Models\PohonKinerja as PohonModel; // Pastikan Model ini di-import
+use App\Models\PohonKinerja as PohonModel; // Tetap pakai Model PohonKinerja untuk logika database
 use App\Exports\DokumenRenstraExport;
 
 // --- 4. FACADES ---
@@ -63,7 +66,7 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/dokumen', DokumenRenstra::class)->name('matrik.dokumen');
         
-        // --- EXPORT PDF (LOGIKA DIPERBAIKI) ---
+        // --- EXPORT PDF ---
         Route::get('/dokumen/cetak', function () {
             
             // 1. Ambil Data Pohon Kinerja & Indikatornya
@@ -158,8 +161,12 @@ Route::middleware('auth')->group(function () {
 
     // PERENCANAAN KINERJA
     Route::prefix('perencanaan-kinerja')->group(function () {
-        Route::get('/pohon-kinerja', PohonKinerja::class)->name('pohon.kinerja');
+        
+        // PERUBAHAN 2: Ganti route pohon-kinerja menjadi cascading-renstra
         Route::get('/cascading-renstra', CascadingRenstra::class)->name('cascading.renstra');
+        
+        Route::get('/cascading-renstra-lama', \App\Livewire\CascadingRenstra::class)->name('cascading.renstra.lama'); // (Opsional: Hapus baris ini jika file lama sudah dihapus total)
+        
         Route::get('/perjanjian-kinerja', PerjanjianKinerja::class)->name('perjanjian.kinerja');
         Route::get('/perjanjian-kinerja/{id}', PerjanjianKinerjaDetail::class)->name('perjanjian.kinerja.detail');
         Route::get('/perjanjian-kinerja/lihat/{id}', PerjanjianKinerjaLihat::class)->name('perjanjian.kinerja.lihat');

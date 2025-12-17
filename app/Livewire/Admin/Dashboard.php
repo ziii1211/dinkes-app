@@ -7,14 +7,16 @@ use App\Models\RealisasiKinerja;
 use App\Models\PkAnggaran;
 use App\Models\PerjanjianKinerja;
 use App\Models\JadwalPengukuran;
+use App\Models\Jabatan; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    public $periode = 'RPJMD 2021-2026';
-    public $perangkat_daerah = '';
+    // UBAH DEFAULT PERIODE KE RENSTRA
+    public $periode = 'Renstra 2026-2030';
+    public $perangkat_daerah = ''; // ID Jabatan yang dipilih (Kosong = Dinas Kesehatan Global)
 
     // --- Modal State ---
     public $isOpenHighlight = false;
@@ -52,12 +54,15 @@ class Dashboard extends Component
 
     private function loadDetailData()
     {
-        // 1. Data Detail Performer & Isu
+        // 1. Data Detail Performer & Isu (Dengan Filter Jabatan)
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
             ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatans.id', $this->perangkat_daerah);
+            })
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
@@ -113,9 +118,12 @@ class Dashboard extends Component
             return $b['score'] <=> $a['score'];
         });
 
-        // 2. Data Detail Dokumen
+        // 2. Data Detail Dokumen (Dengan Filter Jabatan)
         $this->detailDokumen = PerjanjianKinerja::with(['jabatan.pegawai'])
             ->whereIn('status', ['draft', 'final'])
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatan_id', $this->perangkat_daerah);
+            })
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
             ->orderBy('jabatans.level', 'asc')
             ->orderBy('jabatans.id', 'asc')
@@ -139,12 +147,18 @@ class Dashboard extends Component
 
     public function render()
     {
-        // 1. QUERY CORE
+        // 0. AMBIL DATA JABATAN UNTUK DROPDOWN
+        $jabatans = Jabatan::orderBy('nama', 'asc')->get();
+
+        // 1. QUERY CORE (Dengan Filter Jabatan)
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
             ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatans.id', $this->perangkat_daerah);
+            })
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
@@ -208,8 +222,12 @@ class Dashboard extends Component
             $isuKritisDesc = "{$isuKritisCount} Isu: {$listNames}.";
         }
 
-        // 2. QUERY LAINNYA
-        $pkStats = PerjanjianKinerja::selectRaw("status, count(*) as total")
+        // 2. QUERY LAINNYA (Dengan Filter Jabatan)
+        $pkStats = PerjanjianKinerja::query()
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatan_id', $this->perangkat_daerah);
+            })
+            ->selectRaw("status, count(*) as total")
             ->whereIn('status', ['draft', 'final'])
             ->groupBy('status')
             ->pluck('total', 'status')
@@ -249,6 +267,9 @@ class Dashboard extends Component
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
             ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatans.id', $this->perangkat_daerah);
+            })
             ->leftJoin('pegawais', 'jabatans.id', '=', 'pegawais.jabatan_id')
             ->select(
                 'realisasi_kinerjas.id',
@@ -291,9 +312,7 @@ class Dashboard extends Component
                 ];
             });
 
-        // =========================================================
-        // FITUR DEADLINE ALERT (PERBAIKAN)
-        // =========================================================
+        // Deadline Alert
         $activeSchedule = JadwalPengukuran::where('is_active', true)
             ->whereDate('tanggal_mulai', '<=', now()) 
             ->whereDate('tanggal_selesai', '>=', now()) 
@@ -341,9 +360,11 @@ class Dashboard extends Component
             'chart_labels' => $bulanLabels,
             'is_dummy_chart' => !$hasRealChartData,
             
-            // PERBAIKAN: Mengirim nama variabel yang sesuai dengan blade
             'deadline' => $activeSchedule,
-            'sisa_hari' => $sisaHari
+            'sisa_hari' => $sisaHari,
+            
+            // KIRIM DATA JABATAN KE VIEW
+            'jabatans' => $jabatans 
         ];
 
         return view('livewire.admin.dashboard', $data);

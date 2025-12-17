@@ -76,7 +76,7 @@
             <div class="w-full px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-24">
                     
-                    {{-- PERBAIKAN LOGO: DIBESARKAN (h-24) & DIGESER KE TENGAH (ml-6) --}}
+                    {{-- PERBAIKAN LOGO --}}
                     <div class="flex items-center flex-shrink-0 ml-6">
                         <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" alt="Logo GERMAS" class="h-24 w-auto object-contain">
                     </div>
@@ -140,7 +140,7 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="{{ route('pohon.kinerja') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Pohon Kinerja</a>
+                                    {{-- PERBAIKAN DI SINI: Menu 'Cascading Renstra' dengan route baru --}}
                                     <a href="{{ route('cascading.renstra') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Cascading Renstra</a>
                                     <a href="{{ route('perjanjian.kinerja') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Perjanjian Kinerja</a>
                                 </div>
