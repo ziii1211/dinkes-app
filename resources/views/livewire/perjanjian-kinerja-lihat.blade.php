@@ -1,6 +1,7 @@
 <div>
     <div class="bg-white shadow-xl rounded-[2.5rem] p-8 sm:p-12 border border-gray-100 relative z-10 space-y-10">
 
+        {{-- HEADER DAN NAVIGASI --}}
         <div class="flex flex-col xl:flex-row justify-between items-start xl:items-center gap-6">
             <div>
                 <div class="flex items-center gap-3 mb-2">
@@ -46,6 +47,7 @@
             </div>
         </div>
 
+        {{-- INFO KARTU --}}
         <div class="bg-gray-50/50 border border-gray-200 rounded-xl p-6 xl:p-8">
             <div class="grid grid-cols-1 xl:grid-cols-12 gap-8">
                 <div class="xl:col-span-6 space-y-3">
@@ -65,10 +67,6 @@
                         <span class="text-gray-400 font-medium">Keterangan:</span>
                         <span class="text-gray-900 font-bold">{{ $pk->keterangan ?? '-' }}</span>
                     </div>
-                     <div class="grid grid-cols-[120px_1fr] gap-2 text-sm">
-                        <span class="text-gray-400 font-medium">Generate Date:</span>
-                        <span class="text-gray-900 font-bold">—</span>
-                    </div>
                 </div>
 
                 <div class="xl:col-span-3 bg-white rounded-lg p-5 border border-gray-100 shadow-sm">
@@ -87,11 +85,9 @@
                         @if($is_kepala_dinas)
                             <p class="text-xs text-gray-500">{{ $gubernur_jabatan }}</p>
                             <p class="text-sm font-bold text-gray-800 uppercase">{{ $gubernur_nama }}</p>
-                            <p class="text-xs text-gray-400">NIP: -</p>
                         @elseif($atasan_pegawai)
                             <p class="text-xs text-gray-500">{{ $atasan_jabatan->nama ?? 'Atasan' }}</p>
                             <p class="text-sm font-bold text-gray-800 uppercase">{{ $atasan_pegawai->nama }}</p>
-                            <p class="text-xs text-gray-400">NIP: {{ $atasan_pegawai->nip }}</p>
                         @else
                             <p class="text-sm italic text-gray-400 py-2">Belum diset</p>
                         @endif
@@ -115,6 +111,7 @@
         </div>
         @endif
 
+        {{-- DAFTAR KINERJA UTAMA --}}
         <div class="space-y-6 pt-4">
             @forelse($pk->sasarans as $index => $sasaran)
             <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden" x-data="{ open: true }">
@@ -134,16 +131,17 @@
                         @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                         <button wire:click="deleteKinerjaUtama({{ $sasaran->id }})" wire:confirm="Hapus Kinerja Utama?" class="bg-[#f93154] hover:bg-[#d92644] text-white text-xs font-bold px-3 py-2 rounded shadow-sm flex items-center shrink-0">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                            Hapus Kinerja Utama
+                            Hapus
                         </button>
                         @endif
                     </div>
 
+                    {{-- TABEL INDIKATOR --}}
                     <div class="border border-gray-200 rounded overflow-hidden">
                         <table class="w-full text-left text-sm">
                             <thead class="bg-gray-50 border-b border-gray-200">
                                 <tr>
-                                    <th class="px-4 py-3 font-bold text-gray-700 w-5/12">Indikator <span class="text-red-500">*</span></th>
+                                    <th class="px-4 py-3 font-bold text-gray-700 w-5/12">Indikator</th>
                                     <th class="px-4 py-3 font-bold text-gray-700 w-2/12 border-l border-gray-200 text-center">Satuan</th>
                                     <th class="px-4 py-3 font-bold text-gray-700 w-2/12 border-l border-gray-200 text-center">Target</th>
                                     <th class="px-4 py-3 font-bold text-gray-700 w-1/12 border-l border-gray-200 text-center">Arah</th>
@@ -153,39 +151,23 @@
                             <tbody class="divide-y divide-gray-100 bg-white">
                                 @foreach($sasaran->indikators as $ind)
                                 <tr class="hover:bg-gray-50">
-                                    @if($editingIndikatorId === $ind->id)
-                                        <td class="px-4 py-3">{{ $ind->nama_indikator }}</td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->satuan }}</td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100 p-1">
-                                            <input type="text" wire:model="editTargetValue" class="w-full border border-blue-400 rounded px-2 py-1 text-center font-bold">
-                                        </td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->arah }}</td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100">
-                                            <div class="flex justify-center gap-1">
-                                                <button wire:click="saveEdit" class="text-xs bg-green-600 text-white px-2 py-1 rounded">Simpan</button>
-                                                <button wire:click="cancelEdit" class="text-xs bg-gray-300 text-gray-700 px-2 py-1 rounded">Batal</button>
-                                            </div>
-                                        </td>
-                                    @else
-                                        <td class="px-4 py-3 text-gray-700">{{ $ind->nama_indikator }}</td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->satuan }}</td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100 font-bold text-gray-900">
-                                            @php $col = 'target_'.$pk->tahun; echo $ind->$col ?? $ind->target; @endphp
-                                        </td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->arah }}</td>
-                                        <td class="px-4 py-3 text-center border-l border-gray-100">
-                                            @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
-                                            <div class="flex justify-center gap-2">
-                                                <button wire:click="startEdit({{ $ind->id }})" class="inline-flex items-center px-2 py-1 bg-[#f3f0ff] text-[#6f42c1] text-xs font-bold rounded hover:bg-purple-100">
-                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> Atur Target
-                                                </button>
-                                                <button wire:click="deleteIndikator({{ $ind->id }})" wire:confirm="Hapus?" class="inline-flex items-center px-2 py-1 bg-[#ffecec] text-[#dc3545] text-xs font-bold rounded hover:bg-red-100">
-                                                    <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg> Hapus
-                                                </button>
-                                            </div>
-                                            @endif
-                                        </td>
-                                    @endif
+                                    <td class="px-4 py-3 text-gray-700">{{ $ind->nama_indikator }}</td>
+                                    <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->satuan }}</td>
+                                    <td class="px-4 py-3 text-center border-l border-gray-100 font-bold text-gray-900">
+                                        {{-- OTOMATIS TAMPIL BERDASARKAN TAHUN PK --}}
+                                        @php $col = 'target_'.$pk->tahun; echo $ind->$col ?? $ind->target; @endphp
+                                    </td>
+                                    <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->arah }}</td>
+                                    <td class="px-4 py-3 text-center border-l border-gray-100">
+                                        @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
+                                        <div class="flex justify-center gap-2">
+                                            {{-- TOMBOL ATUR TARGET DIHAPUS, HANYA SISA HAPUS INDIKATOR --}}
+                                            <button wire:click="deleteIndikator({{ $ind->id }})" wire:confirm="Hapus?" class="inline-flex items-center px-2 py-1 bg-[#ffecec] text-[#dc3545] text-xs font-bold rounded hover:bg-red-100">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
+                                        @endif
+                                    </td>
                                 </tr>
                                 @endforeach
                             </tbody>
@@ -200,6 +182,7 @@
             @endforelse
         </div>
 
+        {{-- ANGGARAN --}}
         <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden mt-8">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-gray-50/50">
                 <h3 class="font-bold text-gray-900 text-lg">Anggaran</h3>
@@ -266,6 +249,7 @@
 
     </div> 
 
+    {{-- MODAL KINERJA UTAMA --}}
     @if($isOpenKinerjaUtama)
     <div class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden">
@@ -275,20 +259,17 @@
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Sub Kegiatan</label>
-                    <select wire:model.live="sub_kegiatan_id" class="w-full border border-gray-300 rounded px-3 py-2">
-                        <option value="">-- Pilih --</option>
-                        @foreach($sub_kegiatans as $sub)
-                            <option value="{{ $sub->id }}">{{ $sub->nama }}</option>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Kinerja Utamamu</label>
+                    <select wire:model.live="sasaran_id" class="w-full border border-gray-300 rounded px-3 py-2">
+                        <option value="">-- Pilih Sasaran Strategis --</option>
+                        @foreach($sasarans as $sas)
+                            <option value="{{ $sas->id }}">{{ $sas->sasaran }}</option>
                         @endforeach
                     </select>
+                    @if(empty($sasarans) || $sasarans->isEmpty())
+                        <p class="text-xs text-red-500 mt-2 italic">*Tidak ada data Sasaran Renstra untuk jabatan ini.</p>
+                    @endif
                 </div>
-                @if($selected_output)
-                <div class="bg-blue-50 border border-blue-200 rounded p-4">
-                    <p class="text-xs font-bold text-blue-600 uppercase mb-1">Output</p>
-                    <p class="text-sm font-bold text-gray-900">{{ $selected_output }}</p>
-                </div>
-                @endif
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                 <button wire:click="closeModal" class="px-4 py-2 bg-white border border-gray-300 rounded text-sm font-bold text-gray-600">Batal</button>
@@ -298,6 +279,7 @@
     </div>
     @endif
 
+    {{-- MODAL ANGGARAN (SAMA) --}}
     @if($isOpenAnggaran)
     <div class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">

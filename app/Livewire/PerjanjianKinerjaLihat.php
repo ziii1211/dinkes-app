@@ -9,8 +9,8 @@ use App\Models\PkIndikator;
 use App\Models\PkAnggaran;
 use App\Models\Jabatan;
 use App\Models\Pegawai;
+use App\Models\Sasaran; // Model Sasaran Renstra
 use App\Models\SubKegiatan;
-use App\Models\IndikatorSubKegiatan;
 use Illuminate\Support\Facades\Auth;
 
 class PerjanjianKinerjaLihat extends Component
@@ -27,21 +27,17 @@ class PerjanjianKinerjaLihat extends Component
     
     public $gubernur_nama = 'H. MUHIDIN'; 
     public $gubernur_jabatan = 'GUBERNUR KALIMANTAN SELATAN';
-    public $gubernur_foto = 'muhidin.png'; 
+    // public $gubernur_foto = 'muhidin.png'; 
 
     // --- STATES MODAL ---
     public $isOpenKinerjaUtama = false;
     public $isOpenAnggaran = false;
     
     // --- FORM PROPERTIES ---
-    public $sub_kegiatan_id;
-    public $selected_output;
+    public $sasaran_id; 
     
     public $anggaran_sub_kegiatan_id;
     public $anggaran_nilai;
-
-    public $editingIndikatorId = null; 
-    public $editTargetValue;
 
     public function mount($id)
     {
@@ -71,30 +67,15 @@ class PerjanjianKinerjaLihat extends Component
         }
     }
 
-    // =================================================================
-    // HELPER: IZIN AKSES (ADMIN SAKTI)
-    // =================================================================
     public function canEdit()
     {
-        // Admin boleh edit kapan saja
-        if (Auth::user()->role == 'admin') {
-            return true;
-        }
-        // Pegawai hanya boleh edit jika draft
-        if ($this->pk->status_verifikasi == 'draft') {
-            return true;
-        }
-        // Selain itu (misal Pimpinan atau Pegawai saat status final) tidak boleh
+        if (Auth::user()->role == 'admin') return true;
+        if ($this->pk->status_verifikasi == 'draft') return true;
         return false;
     }
 
-    // =================================================================
-    // FITUR PUBLIKASI
-    // =================================================================
-    
     public function ajukan()
     {
-        // Pastikan punya akses
         if (!$this->canEdit()) return;
 
         if ($this->pk->sasarans->count() == 0) {
@@ -116,37 +97,42 @@ class PerjanjianKinerjaLihat extends Component
     // =================================================================
 
     public function openModalKinerjaUtama() { 
-        if (!$this->canEdit()) return; // Proteksi Modal
-        $this->reset(['sub_kegiatan_id', 'selected_output']); 
+        if (!$this->canEdit()) return; 
+        $this->reset(['sasaran_id']); 
         $this->isOpenKinerjaUtama = true; 
     }
 
-    public function updatedSubKegiatanId($value) {
-        $sub = SubKegiatan::find($value);
-        $this->selected_output = $sub ? $sub->output : '';
-    }
-
     public function storeKinerjaUtama() {
-        if (!$this->canEdit()) return; // Proteksi Simpan
+        if (!$this->canEdit()) return;
 
         $this->validate([
-            'sub_kegiatan_id' => 'required', 
-            'selected_output' => 'required'
+            'sasaran_id' => 'required', 
         ]);
 
+        // Ambil Data Sasaran Renstra
+        $sumberSasaran = Sasaran::with('indikators')->find($this->sasaran_id);
+
+        if (!$sumberSasaran) {
+            session()->flash('error', 'Data Sasaran tidak ditemukan.');
+            return;
+        }
+
+        // Simpan Sasaran ke PK
         $pkSasaran = PkSasaran::create([
             'perjanjian_kinerja_id' => $this->pk->id, 
-            'sasaran' => $this->selected_output
+            'sasaran' => $sumberSasaran->sasaran 
         ]);
 
-        $indikatorsAsli = IndikatorSubKegiatan::where('sub_kegiatan_id', $this->sub_kegiatan_id)->get();
-        
-        foreach ($indikatorsAsli as $indAsli) {
+        // Salin Indikator dari Renstra ke PK
+        foreach ($sumberSasaran->indikators as $indAsli) {
             PkIndikator::create([
                 'pk_sasaran_id' => $pkSasaran->id,
-                'nama_indikator' => $indAsli->keterangan ?? $indAsli->indikator,
+                // Pastikan mengambil nama indikator dengan benar (dari 'keterangan')
+                'nama_indikator' => $indAsli->keterangan ?? $indAsli->indikator ?? 'Indikator Tanpa Nama',
                 'satuan' => $indAsli->satuan,
-                'arah' => 'Naik', 
+                'arah' => $indAsli->arah ?? 'Naik', 
+                
+                // Salin Target Tahunan agar otomatis tampil
                 'target_2025' => $indAsli->target_2025, 
                 'target_2026' => $indAsli->target_2026,
                 'target_2027' => $indAsli->target_2027, 
@@ -162,8 +148,7 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     public function deleteKinerjaUtama($id) {
-        if (!$this->canEdit()) return; // Proteksi Hapus
-
+        if (!$this->canEdit()) return;
         $sasaran = PkSasaran::find($id);
         if($sasaran) { 
             $sasaran->delete(); 
@@ -171,41 +156,8 @@ class PerjanjianKinerjaLihat extends Component
         }
     }
 
-    // =================================================================
-    // FITUR EDIT TARGET INDIKATOR
-    // =================================================================
-
-    public function startEdit($id) {
-        if (!$this->canEdit()) return; // Proteksi Edit
-
-        $this->editingIndikatorId = $id;
-        $ind = PkIndikator::find($id);
-        $colTarget = 'target_' . $this->pk->tahun;
-        $this->editTargetValue = $ind->$colTarget;
-    }
-
-    public function saveEdit() {
-        if (!$this->canEdit()) return; // Proteksi Simpan Edit
-
-        $this->validate(['editTargetValue' => 'required']);
-        
-        $ind = PkIndikator::find($this->editingIndikatorId);
-        if ($ind) {
-            $colTarget = 'target_' . $this->pk->tahun;
-            $ind->forceFill([$colTarget => $this->editTargetValue])->save();
-        }
-        
-        $this->editingIndikatorId = null;
-        $this->loadData();
-    }
-
-    public function cancelEdit() { 
-        $this->editingIndikatorId = null; 
-    }
-
     public function deleteIndikator($id) {
-        if (!$this->canEdit()) return; // Proteksi Hapus Indikator
-
+        if (!$this->canEdit()) return;
         $ind = PkIndikator::find($id);
         if($ind) { 
             $ind->delete(); 
@@ -218,14 +170,13 @@ class PerjanjianKinerjaLihat extends Component
     // =================================================================
 
     public function openModalAnggaran() {
-        if (!$this->canEdit()) return; // Proteksi Modal
+        if (!$this->canEdit()) return;
         $this->reset(['anggaran_sub_kegiatan_id', 'anggaran_nilai']);
         $this->isOpenAnggaran = true;
     }
 
     public function storeAnggaran() {
-        if (!$this->canEdit()) return; // Proteksi Simpan
-
+        if (!$this->canEdit()) return;
         $this->validate([
             'anggaran_sub_kegiatan_id' => 'required', 
             'anggaran_nilai' => 'required|numeric|min:0'
@@ -242,8 +193,7 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     public function deleteAnggaran($id) {
-        if (!$this->canEdit()) return; // Proteksi Hapus
-
+        if (!$this->canEdit()) return;
         $ang = PkAnggaran::find($id);
         if($ang) { 
             $ang->delete(); 
@@ -262,19 +212,28 @@ class PerjanjianKinerjaLihat extends Component
     }
 
     public function deletePk() {
-        if (!$this->canEdit()) return; // Proteksi Hapus Dokumen
-
+        if (!$this->canEdit()) return;
         $jabatanId = $this->pk->jabatan_id;
         $this->pk->delete();
-        
         return redirect()->route('perjanjian.kinerja.detail', $jabatanId);
     }
 
     public function render()
     {
+        // LOGIKA TAMPILAN SASARAN:
+        // Jika Kepala Dinas, ambil SEMUA Sasaran Renstra
+        if ($this->is_kepala_dinas) {
+            $sasarans = Sasaran::with('indikators')
+                        ->orderBy('created_at', 'desc')
+                        ->get();
+        } else {
+            $sasarans = collect(); 
+        }
+
         $sub_kegiatans = SubKegiatan::orderBy('created_at', 'desc')->get();
         
         return view('livewire.perjanjian-kinerja-lihat', [
+            'sasarans' => $sasarans,
             'sub_kegiatans' => $sub_kegiatans
         ]);
     }
