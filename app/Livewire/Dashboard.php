@@ -6,22 +6,23 @@ use Livewire\Component;
 use App\Models\RealisasiKinerja;
 use App\Models\PkAnggaran;
 use App\Models\PerjanjianKinerja;
-use App\Models\JadwalPengukuran; // Jangan lupa import ini
+use App\Models\JadwalPengukuran;
+use App\Models\Jabatan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    // Filter
-    public $periode = 'RPJMD 2021-2026';
-    public $perangkat_daerah = '';
+    // Filter State
+    public $periode = 'Renstra 2026-2030';
+    public $perangkat_daerah = ''; 
 
-    // --- Modal State ---
+    // Modal State
     public $isOpenHighlight = false;
     public $activeTab = 'performer';
 
-    // --- Data Detail ---
+    // Data Detail
     public $detailPerformers = [];
     public $detailIsuKritis = [];
     public $detailDokumen = [];
@@ -53,17 +54,18 @@ class Dashboard extends Component
 
     private function loadDetailData()
     {
-        // 1. Data Detail Performer & Isu
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
             ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatans.id', $this->perangkat_daerah);
+            })
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
                 'realisasi_kinerjas.realisasi',
-                'realisasi_kinerjas.capaian as capaian_db',
                 'realisasi_kinerjas.tahun',
                 DB::raw("CASE 
                     WHEN realisasi_kinerjas.tahun = 2025 THEN pk_indikators.target_2025
@@ -114,9 +116,11 @@ class Dashboard extends Component
             return $b['score'] <=> $a['score'];
         });
 
-        // 2. Data Detail Dokumen
         $this->detailDokumen = PerjanjianKinerja::with(['jabatan.pegawai'])
             ->whereIn('status', ['draft', 'final'])
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatan_id', $this->perangkat_daerah);
+            })
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
             ->orderBy('jabatans.level', 'asc')
             ->orderBy('jabatans.id', 'asc')
@@ -140,12 +144,16 @@ class Dashboard extends Component
 
     public function render()
     {
-        // 1. QUERY CORE
+        $jabatans = Jabatan::orderBy('nama', 'asc')->get();
+
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
             ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatans.id', $this->perangkat_daerah);
+            })
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
@@ -209,8 +217,11 @@ class Dashboard extends Component
             $isuKritisDesc = "{$isuKritisCount} Isu: {$listNames}.";
         }
 
-        // 2. QUERY LAINNYA
-        $pkStats = PerjanjianKinerja::selectRaw("status, count(*) as total")
+        $pkStats = PerjanjianKinerja::query()
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatan_id', $this->perangkat_daerah);
+            })
+            ->selectRaw("status, count(*) as total")
             ->whereIn('status', ['draft', 'final'])
             ->groupBy('status')
             ->pluck('total', 'status')
@@ -224,7 +235,6 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        // Chart Data
         $chartData = RealisasiKinerja::selectRaw('bulan, AVG(capaian) as rata_rata')
             ->where('tahun', date('Y'))
             ->groupBy('bulan')
@@ -250,6 +260,9 @@ class Dashboard extends Component
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
             ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->when($this->perangkat_daerah, function($query) {
+                $query->where('jabatans.id', $this->perangkat_daerah);
+            })
             ->leftJoin('pegawais', 'jabatans.id', '=', 'pegawais.jabatan_id')
             ->select(
                 'realisasi_kinerjas.id',
@@ -292,31 +305,15 @@ class Dashboard extends Component
                 ];
             });
 
-        // =========================================================
-        // FITUR DEADLINE ALERT (PERBAIKAN LOGIKA & FORMAT)
-        // =========================================================
         $activeSchedule = JadwalPengukuran::where('is_active', true)
-            ->whereDate('tanggal_mulai', '<=', now()) // Pastikan jadwal sudah dimulai
-            ->whereDate('tanggal_selesai', '>=', now()) // Pastikan jadwal belum lewat
-            ->orderBy('tanggal_selesai', 'asc') // Ambil yang deadline-nya paling dekat
+            ->whereDate('tanggal_mulai', '<=', now()) 
+            ->whereDate('tanggal_selesai', '>=', now()) 
+            ->orderBy('tanggal_selesai', 'asc') 
             ->first();
 
-        $deadlineInfo = null;
+        $sisaHari = 0;
         if ($activeSchedule) {
-            // Gunakan startOfDay() agar perhitungan hari bulat (mengabaikan jam)
-            $daysLeft = now()->startOfDay()->diffInDays($activeSchedule->tanggal_selesai->startOfDay(), false);
-            
-            // Casting ke Integer untuk menghilangkan desimal
-            $daysLeft = (int) $daysLeft;
-
-            $bulanNama = Carbon::create()->month($activeSchedule->bulan)->isoFormat('MMMM');
-            $pesan = "Batas unggah realisasi <strong>Bulan $bulanNama</strong> tersisa";
-            
-            $deadlineInfo = [
-                'days' => $daysLeft,
-                'message' => $pesan,
-                'date_human' => $activeSchedule->tanggal_selesai->format('d M Y')
-            ];
+            $sisaHari = (int) now()->startOfDay()->diffInDays($activeSchedule->tanggal_selesai->startOfDay(), false);
         }
 
         $data = [
@@ -354,9 +351,9 @@ class Dashboard extends Component
             'chart_data' => $normalizedChart,
             'chart_labels' => $bulanLabels,
             'is_dummy_chart' => !$hasRealChartData,
-            
-            // Variabel inilah yang harus dikirim agar tidak error
-            'deadline_alert' => $deadlineInfo 
+            'deadline' => $activeSchedule,
+            'sisa_hari' => $sisaHari,
+            'jabatans' => $jabatans 
         ];
 
         return view('livewire.dashboard', $data);

@@ -1,5 +1,6 @@
 <div class="space-y-8 animate-fade-in-up font-sans text-slate-600 relative">
     
+    {{-- CSS Utilities --}}
     <style>
         @keyframes fadeInUp {
             from { opacity: 0; transform: translateY(15px); }
@@ -11,7 +12,7 @@
         .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
     </style>
 
-    {{-- Background Decorations --}}
+    {{-- Background Decorations (Blobs) --}}
     <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
         <div class="absolute -top-20 -left-20 w-96 h-96 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
         <div class="absolute top-40 right-20 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
@@ -21,22 +22,27 @@
     {{-- Section 1: Filter & Action Bar --}}
     <div class="glass-card p-4 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 flex flex-col lg:flex-row gap-4 items-center justify-between relative z-20">
         <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto flex-1">
+            
+            {{-- Filter 1: PERIODE (RENSTRA) --}}
             <div class="relative group w-full sm:w-64">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <select wire:model.live="periode" class="pl-11 w-full text-sm font-semibold border-slate-200 bg-slate-50/50 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 py-3 transition-all hover:bg-white cursor-pointer hover:shadow-sm">
-                    <option>RPJMD 2021-2026</option>
-                    <option>RPJMD 2027-2032</option>
+                    <option>Renstra 2026-2030</option>
                 </select>
             </div>
+            
+            {{-- Filter 2: UNIT KERJA (Dropdown Dinas Kesehatan) --}}
             <div class="relative group w-full sm:w-64">
                 <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
                     <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                 </div>
                 <select wire:model.live="perangkat_daerah" class="pl-11 w-full text-sm font-semibold border-slate-200 bg-slate-50/50 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 py-3 transition-all hover:bg-white cursor-pointer hover:shadow-sm">
-                    <option value="">Semua Perangkat Daerah</option>
-                    <option>Dinas Kesehatan</option>
+                    <option value="">Dinas Kesehatan</option>
+                    @foreach($jabatans as $jab)
+                        <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+                    @endforeach
                 </select>
             </div>
         </div>
@@ -48,89 +54,6 @@
             <button class="flex-1 lg:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-6 py-3 rounded-2xl text-sm font-bold transition-colors hover:text-indigo-600 shadow-sm">
                 Reset
             </button>
-        </div>
-    </div>
-
-    {{-- Section 2: Stats Grid --}}
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        
-        <div class="group relative bg-white p-6 rounded-[30px] shadow-[0_15px_35px_-5px_rgba(0,0,0,0.06)] border border-indigo-50 hover:border-indigo-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
-            <div class="absolute -right-6 -top-6 w-32 h-32 bg-indigo-50 rounded-full opacity-50 group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-3 bg-gradient-to-br from-indigo-100 to-indigo-50 text-indigo-600 rounded-2xl shadow-sm group-hover:rotate-6 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path></svg>
-                    </div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">RPJMD</span>
-                </div>
-                <div class="flex items-baseline gap-1">
-                    <h3 class="text-4xl font-extrabold text-slate-800 tracking-tight">{{ $stats['capaian_rpjmd'] }}</h3>
-                    <span class="text-xl font-bold text-slate-400">%</span>
-                </div>
-                <div class="w-full bg-slate-100 rounded-full h-2 mt-5 overflow-hidden">
-                    <div class="bg-gradient-to-r from-indigo-500 to-purple-500 h-2 rounded-full shadow-[0_0_15px_rgba(99,102,241,0.4)] relative" style="width: {{ $stats['capaian_rpjmd'] > 100 ? 100 : $stats['capaian_rpjmd'] }}%">
-                         <div class="absolute right-0 top-0 bottom-0 w-2 bg-white/50 animate-pulse"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="group relative bg-white p-6 rounded-[30px] shadow-[0_15px_35px_-5px_rgba(0,0,0,0.06)] border border-emerald-50 hover:border-emerald-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
-             <div class="absolute -right-6 -top-6 w-32 h-32 bg-emerald-50 rounded-full opacity-50 group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-3 bg-gradient-to-br from-emerald-100 to-emerald-50 text-emerald-600 rounded-2xl shadow-sm group-hover:-rotate-6 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Total PK</span>
-                </div>
-                <h3 class="text-4xl font-extrabold text-slate-800 tracking-tight">{{ $stats['renstra_sinkron'] }}</h3>
-                <div class="mt-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-emerald-50 border border-emerald-100 text-emerald-700 text-[11px] font-bold">
-                    <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                    {{ $stats['renstra_badge'] }}
-                </div>
-            </div>
-        </div>
-
-        <div class="group relative bg-white p-6 rounded-[30px] shadow-[0_15px_35px_-5px_rgba(0,0,0,0.06)] border border-amber-50 hover:border-amber-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
-            <div class="absolute -right-6 -top-6 w-32 h-32 bg-amber-50 rounded-full opacity-50 group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="relative z-10">
-                <div class="flex items-center gap-3 mb-4">
-                    <div class="p-3 bg-gradient-to-br from-amber-100 to-amber-50 text-amber-600 rounded-2xl shadow-sm group-hover:rotate-6 transition-transform">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    </div>
-                    <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Estimasi</span>
-                </div>
-                <h3 class="text-4xl font-extrabold text-slate-800 tracking-tight">{{ $stats['serapan_anggaran'] }}</h3>
-                <p class="text-xs text-slate-500 mt-4 font-semibold bg-white/60 inline-block px-3 py-1.5 rounded-lg backdrop-blur-sm border border-slate-100 shadow-sm">
-                    Pagu: <span class="font-bold text-slate-700">Rp {{ $stats['pagu_anggaran'] }}</span>
-                </p>
-            </div>
-        </div>
-
-        <div class="group relative bg-white p-6 rounded-[30px] shadow-[0_15px_35px_-5px_rgba(0,0,0,0.06)] border border-rose-50 hover:border-rose-100 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl overflow-hidden">
-             <div class="absolute -right-6 -top-6 w-32 h-32 bg-rose-50 rounded-full opacity-50 group-hover:scale-125 transition-transform duration-500"></div>
-            <div class="relative z-10">
-                <div class="flex items-center justify-between mb-4">
-                    <div class="flex items-center gap-3">
-                        <div class="p-3 bg-gradient-to-br from-rose-100 to-rose-50 text-rose-600 rounded-2xl shadow-sm group-hover:-rotate-6 transition-transform">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                        </div>
-                        <span class="text-xs font-bold text-slate-400 uppercase tracking-widest">Kritis</span>
-                    </div>
-                    @if($stats['isu_kritis'] > 0)
-                    <span class="relative flex h-3 w-3">
-                      <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                      <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                    </span>
-                    @endif
-                </div>
-                <h3 class="text-4xl font-extrabold text-slate-800 tracking-tight">{{ $stats['isu_kritis'] }}</h3>
-                <p class="text-xs text-rose-500 mt-4 font-bold flex items-center gap-1.5">
-                    <svg class="w-4 h-4 animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 17h8m0 0V9m0 8l-8-8-4 4-6-6"></path></svg>
-                    Indikator Perlu Atensi
-                </p>
-            </div>
         </div>
     </div>
 
@@ -272,6 +195,7 @@
                         Aksi Cepat
                     </h3>
                     <div class="space-y-3">
+                        {{-- PERBAIKAN: Route ini sudah benar menggunakan nama route yang ada di web.php --}}
                         <a href="{{ route('matrik.dokumen') }}" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 p-4 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg group/item cursor-pointer">
                             <div class="p-2.5 bg-white/10 rounded-xl group-hover/item:bg-white/20 transition-colors">
                                 <svg class="w-5 h-5 text-indigo-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -281,235 +205,237 @@
                                 <span class="text-[10px] text-indigo-200 font-medium">Input Data Perencanaan</span>
                             </div>
                         </a>
-                        {{-- PERBAIKAN DI SINI: Route 'pohon.kinerja' diganti ke 'cascading.renstra' --}}
+                        {{-- PERBAIKAN: Ganti route('pohon.kinerja') menjadi route('cascading.renstra') --}}
                         <a href="{{ route('cascading.renstra') }}" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 p-4 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg group/item cursor-pointer">
                             <div class="p-2.5 bg-white/10 rounded-xl group-hover/item:bg-white/20 transition-colors">
                                 <svg class="w-5 h-5 text-indigo-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                             </div>
                             <div>
-                                <span class="text-sm font-bold block">Cascading Renstra</span>
+                                <span class="text-sm font-bold block">Tambah Pohon</span>
                                 <span class="text-[10px] text-indigo-200 font-medium">Cascading Kinerja</span>
                             </div>
                         </a>
                     </div>
                 </div>
 
-                {{-- NOTIFIKASI DEADLINE DINAMIS (DIPERBAIKI) --}}
-                @if(isset($deadline_alert) && $deadline_alert)
-                <div class="mt-8 pt-6 border-t border-white/10 relative z-10 animate-fade-in-up">
-                    <div class="flex items-start gap-3 bg-indigo-900/40 p-4 rounded-2xl border border-white/10 backdrop-blur-md hover:bg-indigo-900/60 transition-colors cursor-pointer group/alert">
-                        <span class="relative flex h-3 w-3 mt-1 shrink-0">
-                          <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                          <span class="relative inline-flex rounded-full h-3 w-3 bg-rose-500"></span>
-                        </span>
-                        <div>
-                            <p class="text-xs text-indigo-100 leading-relaxed font-medium">
-                                <span class="block text-white font-bold mb-0.5 text-sm">Deadline Mendekat!</span>
-                                {!! $deadline_alert['message'] !!} 
-                                <span class="underline decoration-rose-400 decoration-2 underline-offset-2 font-bold text-white group-hover/alert:text-rose-200 transition-colors">
-                                    {{ $deadline_alert['days'] }} hari lagi
-                                </span>.
-                            </p>
-                            <div class="text-[10px] text-indigo-300 mt-1 font-mono">Batas: {{ $deadline_alert['date_human'] }}</div>
-                        </div>
-                    </div>
-                </div>
-                @else
+                {{-- NOTIFIKASI DEADLINE DINAMIS --}}
                 <div class="mt-8 pt-6 border-t border-white/10 relative z-10">
-                    <div class="flex items-center gap-3 bg-white/5 p-4 rounded-2xl border border-white/5">
-                        <svg class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        <p class="text-xs text-indigo-100 font-medium">Tidak ada jadwal pengukuran aktif saat ini.</p>
+                    <div class="flex items-start gap-3 bg-indigo-900/40 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
+                        @if($deadline)
+                            <span class="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
+                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
+                            </span>
+                            <div class="text-xs text-indigo-100 leading-relaxed font-medium">
+                                <span class="block text-white font-bold mb-0.5">Deadline Mendekat!</span>
+                                Batas unggah realisasi bulan 
+                                <span class="text-white font-bold">{{ Carbon\Carbon::createFromFormat('m', $deadline->bulan)->isoFormat('MMMM') }} {{ $deadline->tahun }}</span>
+                                tersisa <span class="underline decoration-rose-400 decoration-2 underline-offset-2 font-bold text-white cursor-pointer hover:text-rose-200 transition-colors">{{ $sisa_hari }} hari lagi</span>.
+                            </div>
+                        @else
+                            <span class="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
+                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <div class="text-xs text-indigo-100 leading-relaxed font-medium">
+                                <span class="block text-white font-bold mb-0.5">Jadwal Aman</span>
+                                Belum ada jadwal pengukuran kinerja yang aktif saat ini.
+                            </div>
+                        @endif
                     </div>
                 </div>
-                @endif
-
             </div>
         </div>
 
     </div>
 
     {{-- ================================================================= --}}
-    {{-- MODAL HIGHLIGHT KINERJA --}}
+    {{-- MODAL HIGHLIGHT KINERJA (UPDATED) --}}
     {{-- ================================================================= --}}
     @if($isOpenHighlight)
-    <div class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        <div class="flex items-center justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-            
-            {{-- Backdrop --}}
-            <div wire:click="closeHighlightModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity duration-300" aria-hidden="true"></div>
+    <div class="relative z-[99]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        
+        {{-- Backdrop (Background Gelap & Blur Kuat) --}}
+        <div 
+            wire:click="closeHighlightModal"
+            class="fixed inset-0 bg-slate-900/60 backdrop-blur-[6px] transition-opacity"
+            aria-hidden="true"
+        ></div>
 
-            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-
-            {{-- Modal Panel --}}
-            <div class="relative inline-block align-bottom bg-white rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-5xl w-full">
+        {{-- Positioning Wrapper Center --}}
+        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
                 
-                {{-- Header Modal --}}
-                <div class="bg-white px-8 py-6 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
-                    <div>
-                        <h3 class="text-xl font-extrabold text-slate-800 tracking-tight" id="modal-title">Detail Kinerja Organisasi</h3>
-                        <p class="text-sm text-slate-400 font-medium mt-1">Pantau performa indikator dan dokumen secara rinci</p>
-                    </div>
-                    <button wire:click="closeHighlightModal" class="bg-slate-50 p-2 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
-
-                {{-- Tab Navigation --}}
-                <div class="bg-slate-50/80 backdrop-blur-sm px-8 pt-2 border-b border-slate-200">
-                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                        <button wire:click="switchTab('performer')" class="{{ $activeTab === 'performer' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
-                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                            Top Performer Ranking
-                        </button>
-                        <button wire:click="switchTab('isu')" class="{{ $activeTab === 'isu' ? 'border-rose-500 text-rose-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
-                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            Isu Kritis (Underperform)
-                        </button>
-                        <button wire:click="switchTab('dokumen')" class="{{ $activeTab === 'dokumen' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
-                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                            Status Dokumen PK
-                        </button>
-                    </nav>
-                </div>
-
-                {{-- Modal Content Body --}}
-                <div class="p-8 min-h-[400px] bg-slate-50/30">
+                {{-- Modal Panel --}}
+                <div class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all sm:my-8 sm:w-full sm:max-w-5xl border border-slate-100 ring-1 ring-slate-200">
                     
-                    {{-- TAB 1: PERFORMER --}}
-                    @if($activeTab === 'performer')
-                        <div class="animate-fade-in-up">
-                            <h4 class="text-sm font-bold text-slate-500 mb-6 uppercase tracking-wider">Peringkat Capaian Kinerja Unit</h4>
-                            @if(count($detailPerformers) > 0)
-                                <div class="overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm">
-                                    <table class="min-w-full divide-y divide-slate-100">
-                                        <thead class="bg-slate-50/80">
-                                            <tr>
-                                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Peringkat</th>
-                                                <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Jabatan / Unit</th>
-                                                <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Jumlah Indikator</th>
-                                                <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata Capaian</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody class="bg-white divide-y divide-slate-100">
-                                            @foreach($detailPerformers as $index => $item)
-                                            <tr class="hover:bg-slate-50 transition-colors">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $index == 0 ? 'text-yellow-600' : 'text-slate-500' }}">
-                                                    #{{ $index + 1 }}
-                                                    @if($index == 0) <span class="ml-2 inline-block animate-bounce">👑</span> @endif
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-700">{{ $item['jabatan'] }}</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-500 font-medium">{{ $item['jumlah_indikator'] }}</td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                                                    <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold {{ $item['score'] >= 90 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : ($item['score'] >= 75 ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-amber-100 text-amber-700 border border-amber-200') }}">
-                                                        {{ $item['score'] }}%
-                                                    </span>
-                                                </td>
-                                            </tr>
-                                            @endforeach
-                                        </tbody>
-                                    </table>
-                                </div>
-                            @else
-                                <div class="flex flex-col items-center justify-center py-16 text-slate-400">
-                                    <svg class="w-16 h-16 text-slate-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                    <span class="font-medium">Belum ada data kinerja yang diinput.</span>
-                                </div>
-                            @endif
+                    {{-- Header Modal --}}
+                    <div class="bg-white px-8 py-6 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
+                        <div>
+                            <h3 class="text-xl font-extrabold text-slate-800 tracking-tight" id="modal-title">Detail Kinerja Organisasi</h3>
+                            <p class="text-sm text-slate-400 font-medium mt-1">Pantau performa indikator dan dokumen secara rinci</p>
                         </div>
-                    @endif
+                        <button wire:click="closeHighlightModal" class="bg-slate-50 p-2 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                        </button>
+                    </div>
 
-                    {{-- TAB 2: ISU KRITIS --}}
-                    @if($activeTab === 'isu')
-                        <div class="animate-fade-in-up">
-                            <h4 class="text-sm font-bold text-rose-600 mb-6 uppercase tracking-wider flex items-center gap-2">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                Indikator Perlu Perhatian (Capaian < 50%)
-                            </h4>
-                            @if(count($detailIsuKritis) > 0)
-                                <div class="grid grid-cols-1 gap-4">
-                                    @foreach($detailIsuKritis as $isu)
-                                    <div class="bg-rose-50 border border-rose-100 p-5 rounded-2xl flex flex-col sm:flex-row justify-between gap-6 hover:shadow-md transition-shadow">
-                                        <div class="flex-1">
-                                            <div class="inline-block px-2 py-0.5 bg-white text-rose-500 text-[10px] font-bold rounded border border-rose-200 mb-2">{{ $isu['jabatan'] }}</div>
-                                            <h5 class="text-sm font-bold text-slate-800 leading-snug">{{ $isu['indikator'] }}</h5>
-                                            <div class="flex items-center gap-4 mt-3 text-xs font-medium text-slate-500">
-                                                <span class="bg-white px-2 py-1 rounded border border-rose-100">Target: <strong class="text-slate-700">{{ $isu['target'] }}</strong></span>
-                                                <span class="bg-white px-2 py-1 rounded border border-rose-100">Realisasi: <strong class="text-slate-700">{{ $isu['realisasi'] }}</strong></span>
-                                            </div>
-                                        </div>
-                                        <div class="flex items-center justify-end min-w-[120px]">
-                                            <div class="text-right">
-                                                <span class="block text-2xl font-black text-rose-600">{{ $isu['capaian'] }}%</span>
-                                                <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Capaian</span>
-                                            </div>
-                                        </div>
-                                    </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <div class="flex flex-col items-center justify-center py-16 text-emerald-500 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-100">
-                                    <svg class="w-16 h-16 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                    <p class="font-bold text-lg">Luar Biasa!</p>
-                                    <p class="text-sm font-medium opacity-80">Tidak ada indikator kritis. Semua kinerja on-track.</p>
-                                </div>
-                            @endif
-                        </div>
-                    @endif
+                    {{-- Tab Navigation --}}
+                    <div class="bg-slate-50/80 backdrop-blur-sm px-8 pt-2 border-b border-slate-200">
+                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                            <button wire:click="switchTab('performer')" class="{{ $activeTab === 'performer' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
+                                Top Performer Ranking
+                            </button>
+                            <button wire:click="switchTab('isu')" class="{{ $activeTab === 'isu' ? 'border-rose-500 text-rose-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
+                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                Isu Kritis (Underperform)
+                            </button>
+                            <button wire:click="switchTab('dokumen')" class="{{ $activeTab === 'dokumen' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
+                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                Status Dokumen PK
+                            </button>
+                        </nav>
+                    </div>
 
-                    {{-- TAB 3: DOKUMEN --}}
-                    @if($activeTab === 'dokumen')
-                         <div class="animate-fade-in-up">
-                            <h4 class="text-sm font-bold text-emerald-600 mb-6 uppercase tracking-wider">Status Dokumen Perjanjian Kinerja</h4>
-                            @if(count($detailDokumen) > 0)
-                                <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                                    {{-- Wrapper Scroll Horizontal --}}
-                                    <div class="overflow-x-auto"> 
+                    {{-- Modal Content Body --}}
+                    <div class="p-8 min-h-[400px] bg-slate-50/30">
+                        
+                        {{-- TAB 1: PERFORMER --}}
+                        @if($activeTab === 'performer')
+                            <div class="animate-fade-in-up">
+                                <h4 class="text-sm font-bold text-slate-500 mb-6 uppercase tracking-wider">Peringkat Capaian Kinerja Unit</h4>
+                                @if(count($detailPerformers) > 0)
+                                    <div class="overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm">
                                         <table class="min-w-full divide-y divide-slate-100">
                                             <thead class="bg-slate-50/80">
                                                 <tr>
-                                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Unit / Jabatan</th>
-                                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Pejabat</th>
-                                                    <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Tahun</th>
-                                                    <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status</th>
-                                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Update Terakhir</th>
+                                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Peringkat</th>
+                                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Jabatan / Unit</th>
+                                                    <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Jumlah Indikator</th>
+                                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata Capaian</th>
                                                 </tr>
                                             </thead>
                                             <tbody class="bg-white divide-y divide-slate-100">
-                                                @foreach($detailDokumen as $doc)
+                                                @foreach($detailPerformers as $index => $item)
                                                 <tr class="hover:bg-slate-50 transition-colors">
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">{{ $doc['jabatan'] }}</td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">{{ $doc['pegawai'] }}</td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-500 font-bold">{{ $doc['tahun'] }}</td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-center">
-                                                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold {{ $doc['status'] == 'Final' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' }}">
-                                                            {{ $doc['status'] }}
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $index == 0 ? 'text-yellow-600' : 'text-slate-500' }}">
+                                                        #{{ $index + 1 }}
+                                                        @if($index == 0) <span class="ml-2 inline-block animate-bounce">👑</span> @endif
+                                                    </td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-700">{{ $item['jabatan'] }}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-500 font-medium">{{ $item['jumlah_indikator'] }}</td>
+                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
+                                                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold {{ $item['score'] >= 90 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : ($item['score'] >= 75 ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-amber-100 text-amber-700 border border-amber-200') }}">
+                                                            {{ $item['score'] }}%
                                                         </span>
                                                     </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-400 font-medium">{{ $doc['tanggal'] }}</td>
                                                 </tr>
                                                 @endforeach
                                             </tbody>
                                         </table>
                                     </div>
-                                </div>
-                            @else
-                                <div class="text-center py-16 text-slate-400">
-                                    <svg class="w-16 h-16 mx-auto text-slate-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    Belum ada dokumen Perjanjian Kinerja.
-                                </div>
-                            @endif
-                        </div>
-                    @endif
+                                @else
+                                    <div class="flex flex-col items-center justify-center py-16 text-slate-400">
+                                        <svg class="w-16 h-16 text-slate-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                        <span class="font-medium">Belum ada data kinerja yang diinput.</span>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- TAB 2: ISU KRITIS --}}
+                        @if($activeTab === 'isu')
+                            <div class="animate-fade-in-up">
+                                <h4 class="text-sm font-bold text-rose-600 mb-6 uppercase tracking-wider flex items-center gap-2">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    Indikator Perlu Perhatian (Capaian < 50%)
+                                </h4>
+                                @if(count($detailIsuKritis) > 0)
+                                    <div class="grid grid-cols-1 gap-4">
+                                        @foreach($detailIsuKritis as $isu)
+                                        <div class="bg-rose-50 border border-rose-100 p-5 rounded-2xl flex flex-col sm:flex-row justify-between gap-6 hover:shadow-md transition-shadow">
+                                            <div class="flex-1">
+                                                <div class="inline-block px-2 py-0.5 bg-white text-rose-500 text-[10px] font-bold rounded border border-rose-200 mb-2">{{ $isu['jabatan'] }}</div>
+                                                <h5 class="text-sm font-bold text-slate-800 leading-snug">{{ $isu['indikator'] }}</h5>
+                                                <div class="flex items-center gap-4 mt-3 text-xs font-medium text-slate-500">
+                                                    <span class="bg-white px-2 py-1 rounded border border-rose-100">Target: <strong class="text-slate-700">{{ $isu['target'] }}</strong></span>
+                                                    <span class="bg-white px-2 py-1 rounded border border-rose-100">Realisasi: <strong class="text-slate-700">{{ $isu['realisasi'] }}</strong></span>
+                                                </div>
+                                            </div>
+                                            <div class="flex items-center justify-end min-w-[120px]">
+                                                <div class="text-right">
+                                                    <span class="block text-2xl font-black text-rose-600">{{ $isu['capaian'] }}%</span>
+                                                    <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Capaian</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <div class="flex flex-col items-center justify-center py-16 text-emerald-500 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-100">
+                                        <svg class="w-16 h-16 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                        <p class="font-bold text-lg">Luar Biasa!</p>
+                                        <p class="text-sm font-medium opacity-80">Tidak ada indikator kritis. Semua kinerja on-track.</p>
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                        {{-- TAB 3: DOKUMEN --}}
+                        @if($activeTab === 'dokumen')
+                             <div class="animate-fade-in-up">
+                                <h4 class="text-sm font-bold text-emerald-600 mb-6 uppercase tracking-wider">Status Dokumen Perjanjian Kinerja</h4>
+                                @if(count($detailDokumen) > 0)
+                                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
+                                        {{-- Wrapper Scroll Horizontal --}}
+                                        <div class="overflow-x-auto"> 
+                                            <table class="min-w-full divide-y divide-slate-100">
+                                                <thead class="bg-slate-50/80">
+                                                    <tr>
+                                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Unit / Jabatan</th>
+                                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Pejabat</th>
+                                                        <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Tahun</th>
+                                                        <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status</th>
+                                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Update Terakhir</th>
+                                                    </tr>
+                                                </thead>
+                                                <tbody class="bg-white divide-y divide-slate-100">
+                                                    @foreach($detailDokumen as $doc)
+                                                    <tr class="hover:bg-slate-50 transition-colors">
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">{{ $doc['jabatan'] }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">{{ $doc['pegawai'] }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-500 font-bold">{{ $doc['tahun'] }}</td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-center">
+                                                            <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold {{ $doc['status'] == 'Final' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' }}">
+                                                                {{ $doc['status'] }}
+                                                            </span>
+                                                        </td>
+                                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-400 font-medium">{{ $doc['tanggal'] }}</td>
+                                                    </tr>
+                                                    @endforeach
+                                                </tbody>
+                                            </table>
+                                        </div>
+                                    </div>
+                                @else
+                                    <div class="text-center py-16 text-slate-400">
+                                        <svg class="w-16 h-16 mx-auto text-slate-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                        Belum ada dokumen Perjanjian Kinerja.
+                                    </div>
+                                @endif
+                            </div>
+                        @endif
+
+                    </div>
+
+                    {{-- Footer --}}
+                    <div class="bg-white px-8 py-5 border-t border-slate-100 flex justify-end">
+                        <button wire:click="closeHighlightModal" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-slate-800/20 transition-all active:scale-95 text-sm">
+                            Tutup Panel
+                        </button>
+                    </div>
 
                 </div>
-
-                {{-- Footer --}}
-                <div class="bg-white px-8 py-5 border-t border-slate-100 flex justify-end">
-                    <button wire:click="closeHighlightModal" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-slate-800/20 transition-all active:scale-95 text-sm">
-                        Tutup Panel
-                    </button>
-                </div>
-
             </div>
         </div>
     </div>
