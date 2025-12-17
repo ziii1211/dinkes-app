@@ -5,10 +5,10 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Tujuan;
-use App\Models\PohonKinerja as ModelPohon; // Tetap pakai Model PohonKinerja
+use App\Models\PohonKinerja as ModelPohon; 
 use App\Models\IndikatorPohonKinerja;
-use App\Models\SkpdTujuan;
-use App\Models\CrosscuttingKinerja;
+// use App\Models\SkpdTujuan; // Dihapus karena hanya dipakai di crosscutting
+// use App\Models\CrosscuttingKinerja; // Dihapus karena tabel dihapus
 
 class CascadingRenstra extends Component
 {
@@ -17,7 +17,7 @@ class CascadingRenstra extends Component
     // --- STATES ---
     public $isOpen = false; 
     public $isOpenIndikator = false; 
-    public $isOpenCrosscutting = false;
+    // $isOpenCrosscutting dihapus
     
     public $isChild = false;
     public $isEditMode = false;
@@ -35,35 +35,24 @@ class CascadingRenstra extends Component
     public $indikator_satuan;
     public $indikator_list = []; 
 
-    // --- PROPERTIES CROSSCUTTING ---
-    public $cross_sumber_id;    
-    public $cross_skpd_id;      
-    public $cross_tujuan_id;    
+    // Properties Crosscutting dihapus ($cross_sumber_id, dll)
 
     public function render()
     {
         // 1. Ambil Struktur Pohon untuk Visualisasi (Induk -> Anak -> Cucu)
         $treeData = $this->getFlatTree();
 
-        // 2. Ambil Data Master untuk Dropdown & Tabel
+        // 2. Ambil Data Master untuk Dropdown (Parent Selection)
         $masterPohons = ModelPohon::with('tujuan')
                                 ->orderBy('id', 'asc')
                                 ->get();
 
-        // 3. Data lain
-        $opsiSkpd = SkpdTujuan::orderBy('nama_skpd', 'asc')->get();
-        $crosscuttings = CrosscuttingKinerja::with(['pohonSumber', 'skpdTujuan', 'pohonTujuan'])
-                                            ->latest()
-                                            ->paginate(5);
+        // Data Crosscutting dan SKPD dihapus dari sini
 
-        // PERUBAHAN DI SINI: Memanggil view 'livewire.cascading-renstra'
         return view('livewire.cascading-renstra', [
             'pohons' => $treeData, 
             'sasaran_rpjmds' => Tujuan::select('id', 'sasaran_rpjmd')->get(),
-            'skpds' => SkpdTujuan::all(), 
-            'opsiSkpd' => $opsiSkpd, 
             'opsiPohon' => $masterPohons, 
-            'crosscuttings' => $crosscuttings
         ]);
     }
 
@@ -103,7 +92,7 @@ class CascadingRenstra extends Component
         $this->reset([
             'tujuan_id', 'nama_pohon', 'parent_id', 'pohon_id',
             'isChild', 'isEditMode', 
-            'cross_sumber_id', 'cross_skpd_id', 'cross_tujuan_id',
+            // Reset variables crosscutting dihapus
             'indikator_input', 'indikator_nilai', 'indikator_satuan', 'indikator_list'
         ]);
         $this->resetValidation();
@@ -140,7 +129,7 @@ class CascadingRenstra extends Component
     public function closeModal() {
         $this->isOpen = false; 
         $this->isOpenIndikator = false; 
-        $this->isOpenCrosscutting = false;
+        // $isOpenCrosscutting dihapus
         $this->resetValidation();
     }
 
@@ -230,41 +219,5 @@ class CascadingRenstra extends Component
         session()->flash('message', 'Indikator berhasil disimpan.');
     }
 
-    // --- CROSSCUTTING ---
-    public function openCrosscuttingModal($pohonId = null) { 
-        $this->reset(['cross_sumber_id', 'cross_skpd_id', 'cross_tujuan_id']); 
-        
-        // Jika dibuka dari tombol di diagram, otomatis isi sumbernya
-        if($pohonId) {
-            $this->cross_sumber_id = $pohonId; 
-        }
-
-        $this->isOpenCrosscutting = true; 
-    }
-
-    public function storeCrosscutting() {
-        $this->validate([
-            'cross_sumber_id' => 'required', 
-            'cross_skpd_id' => 'required', 
-            'cross_tujuan_id' => 'required'
-        ]);
-
-        // Simpan hanya ke tabel Crosscutting
-        CrosscuttingKinerja::create([
-            'pohon_sumber_id' => $this->cross_sumber_id, 
-            'skpd_tujuan_id' => $this->cross_skpd_id, 
-            'pohon_tujuan_id' => $this->cross_tujuan_id
-        ]);
-        
-        $this->closeModal();
-        session()->flash('message', 'Data Crosscutting berhasil ditambahkan.');
-    }
-
-    public function deleteCrosscutting($id) { 
-        $cc = CrosscuttingKinerja::find($id); 
-        if($cc) { 
-            $cc->delete(); 
-            session()->flash('message', 'Data Crosscutting berhasil dihapus.');
-        } 
-    }
+    // Method Crosscutting (openCrosscuttingModal, storeCrosscutting, deleteCrosscutting) TELAH DIHAPUS
 }

@@ -74,45 +74,7 @@
             </div>
         </div>
 
-        {{-- BAGIAN 2: TABEL CROSSCUTTING --}}
-        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
-            <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
-                <h3 class="font-bold text-gray-800 text-lg">Crosscutting Cascading Renstra</h3>
-                <button wire:click="openCrosscuttingModal" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm gap-2">
-                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                    Tambah Crosscutting
-                </button>
-            </div>
-            <div class="p-6">
-                <table class="w-full text-left border-collapse text-sm">
-                    <thead>
-                        <tr class="text-gray-700 font-bold border-b border-gray-200 bg-gray-50">
-                            <th class="p-3 w-4/12">Sumber</th>
-                            <th class="p-3 w-3/12">Tujuan OPD</th>
-                            <th class="p-3 w-4/12">Cascading Renstra OPD</th>
-                            <th class="p-3 w-1/12 text-center">Aksi</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-gray-100">
-                        @forelse($crosscuttings as $cc)
-                            <tr>
-                                <td class="p-3 text-gray-900">{{ $cc->pohonSumber->nama_pohon ?? '-' }}</td>
-                                <td class="p-3 text-gray-900">{{ $cc->skpdTujuan->nama_skpd ?? '-' }}</td>
-                                <td class="p-3 text-gray-900">{{ $cc->pohonTujuan->nama_pohon ?? '-' }}</td>
-                                <td class="p-3 text-center">
-                                    <button wire:click="deleteCrosscutting({{ $cc->id }})" wire:confirm="Hapus data ini?" class="p-1.5 bg-red-100 hover:bg-red-200 text-red-600 rounded text-xs">
-                                        Hapus
-                                    </button>
-                                </td>
-                            </tr>
-                        @empty
-                            <tr><td colspan="4" class="py-8 text-center text-gray-400 italic">Belum ada data Crosscutting.</td></tr>
-                        @endforelse
-                    </tbody>
-                </table>
-                <div class="mt-4">{{ $crosscuttings->links() }}</div>
-            </div>
-        </div>
+        {{-- BAGIAN 2: TABEL CROSSCUTTING TELAH DIHAPUS --}}
 
         {{-- BAGIAN 3: VISUALISASI (Diagram) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8 pb-4">
@@ -277,58 +239,5 @@
     </div>
     @endif
 
-    {{-- MODAL 3: CROSSCUTTING --}}
-    @if($isOpenCrosscutting)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
-                <h3 class="text-lg font-bold text-gray-800">Tambah Crosscutting</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="p-6 space-y-4">
-                @if($cross_sumber_id)
-                    <div class="bg-blue-50 p-3 rounded text-xs text-blue-700 mb-2 border border-blue-100">
-                        <strong>Kinerja Sumber:</strong> <span class="italic">Terpilih otomatis dari diagram.</span>
-                    </div>
-                @else
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Kinerja Sumber</label>
-                        <select wire:model="cross_sumber_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
-                            <option value="">-- Ambil dari Data Cascading Renstra --</option>
-                            @foreach($opsiPohon as $pk)
-                                <option value="{{ $pk->id }}">{{ $pk->nama_pohon }}</option>
-                            @endforeach
-                        </select>
-                        @error('cross_sumber_id') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                    </div>
-                @endif
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih SKPD Tujuan</label>
-                    <select wire:model="cross_skpd_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
-                        <option value="">-- Pilih SKPD Tujuan --</option>
-                        @foreach($opsiSkpd as $s) <option value="{{ $s->id }}">{{ $s->nama_skpd }}</option> @endforeach
-                    </select>
-                    @error('cross_skpd_id') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Kinerja Tujuan</label>
-                    <select wire:model="cross_tujuan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm">
-                        <option value="">-- Pilih Kinerja Tujuan --</option>
-                        @foreach($opsiPohon as $p) <option value="{{ $p->id }}">{{ $p->nama_pohon }}</option> @endforeach
-                    </select>
-                    <p class="text-xs text-gray-500 mt-1">*Data diambil persis sama dengan Pilih Kinerja Sumber</p>
-                    @error('cross_tujuan_id') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
-                </div>
-            </div>
-            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
-                <button wire:click="closeModal" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-lg">Batal</button>
-                <button wire:click="storeCrosscutting" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg">Simpan</button>
-            </div>
-        </div>
-    </div>
-    @endif
+    {{-- MODAL 3 CROSSCUTTING TELAH DIHAPUS --}}
 </div>
