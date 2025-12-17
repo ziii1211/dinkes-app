@@ -208,8 +208,8 @@
             </div>
             <div class="p-8 space-y-6">
                 <div><label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label><textarea wire:model="ind_keterangan" rows="3" class="w-full border rounded px-3 py-2"></textarea></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label><select wire:model="ind_satuan" class="w-full border rounded px-3 py-2"><option value="">Pilih Satuan</option><option>Dokumen</option><option>Persen</option><option>Orang</option><option>Angka</option><option>Barang</option><option>Indeks</option></select></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-2">Arah</label><select wire:model="ind_arah" class="w-full border rounded px-3 py-2"><option value="">Pilih Arah</option><option>Meningkat</option><option>Menurun</option><option>Tetap</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label><select wire:model="ind_satuan" class="w-full border rounded px-3 py-2"><option value="">Pilih Satuan</option><option>Dokumen</option><option>Persen</option><option>Inovasi</option><option>Angka</option><option>Barang</option><option>Indeks</option></select></div>
+                <div><label class="block text-sm font-medium text-gray-700 mb-2">Arah</label><select wire:model="ind_arah" class="w-full border rounded px-3 py-2"><option value="">Pilih Arah</option><option>Naik</option><option>Turun</option><option>Tetap</option></select></div>
             </div>
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl"><button wire:click="closeModal" class="px-6 py-2 bg-gray-100 rounded">Batal</button><button wire:click="storeIndikator" class="px-6 py-2 bg-blue-600 text-white rounded">Simpan</button></div>
         </div>
