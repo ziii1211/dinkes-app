@@ -318,7 +318,7 @@
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">Sub Kegiatan</label>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Program, Kegiatan & Sub Kegiatan</label>
                     <select wire:model="anggaran_sub_kegiatan_id" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="">-- Pilih --</option>
                         @foreach($sub_kegiatans as $sub)
