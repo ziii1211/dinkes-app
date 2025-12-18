@@ -126,7 +126,6 @@
 
         {{-- DAFTAR KINERJA UTAMA --}}
         <div class="space-y-6 pt-4">
-            {{-- [PERBAIKAN CRITICAL]: MENAMBAHKAN wire:key pada looping Sasaran --}}
             @forelse($pk->sasarans as $index => $sasaran)
             <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden" x-data="{ open: true }" wire:key="sasaran-{{ $sasaran->id }}">
                 <div class="px-6 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
@@ -163,7 +162,6 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
-                                {{-- [PERBAIKAN CRITICAL]: MENAMBAHKAN wire:key pada looping Indikator --}}
                                 @foreach($sasaran->indikators as $ind)
                                 <tr class="hover:bg-gray-50" wire:key="indikator-{{ $ind->id }}">
                                     <td class="px-4 py-3 text-gray-700">{{ $ind->nama_indikator }}</td>
@@ -222,20 +220,23 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 bg-white">
-                        {{-- [PERBAIKAN CRITICAL]: MENAMBAHKAN wire:key pada looping Anggaran --}}
-                        {{-- Tanpa wire:key ini, saat data kedua masuk, DOM akan stuck dan modal tidak menutup --}}
                         @forelse($pk->anggarans as $index => $ang)
                         <tr class="hover:bg-gray-50" wire:key="anggaran-{{ $ang->id }}">
                             <td class="px-6 py-4 text-center text-gray-500">{{ $index+1 }}</td>
                             <td class="px-6 py-4">
+                                {{-- PERBAIKAN: Menghapus class text-gray-500 pada kode sub kegiatan --}}
                                 @if($ang->subKegiatan)
                                     <div class="text-gray-900">
-                                        <span class="mr-2 text-gray-500">{{ $ang->subKegiatan->kode }}</span>
+                                        <span class="mr-2">{{ $ang->subKegiatan->kode }}</span>
                                         {{ $ang->subKegiatan->nama }}
                                     </div>
-                                @else <span class="text-gray-400 italic">-</span> @endif
+                                @else 
+                                    <div class="text-gray-900">
+                                        {{ $ang->nama_program_kegiatan }}
+                                    </div>
+                                @endif
                             </td>
-                            <td class="px-6 py-4 text-right font-bold text-gray-900">
+                            <td class="px-6 py-4 text-right text-gray-900">
                                 Rp {{ number_format($ang->anggaran, 0, ',', '.') }}
                             </td>
                             <td class="px-6 py-4 text-center">
@@ -319,11 +320,26 @@
             <div class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Program, Kegiatan & Sub Kegiatan</label>
-                    <select wire:model="anggaran_sub_kegiatan_id" class="w-full border border-gray-300 rounded px-3 py-2">
+                    <select wire:model="anggaran_pilihan_id" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="">-- Pilih --</option>
-                        @foreach($sub_kegiatans as $sub)
-                            <option value="{{ $sub->id }}">{{ $sub->nama }}</option>
-                        @endforeach
+                        
+                        <optgroup label="PROGRAM">
+                            @foreach($programs_dropdown as $prog)
+                                <option value="program:{{ $prog->id }}">{{ $prog->kode }} {{ $prog->nama }}</option>
+                            @endforeach
+                        </optgroup>
+
+                        <optgroup label="KEGIATAN">
+                            @foreach($kegiatans_dropdown as $keg)
+                                <option value="kegiatan:{{ $keg->id }}">{{ $keg->kode }} {{ $keg->nama }}</option>
+                            @endforeach
+                        </optgroup>
+
+                        <optgroup label="SUB KEGIATAN">
+                            @foreach($sub_kegiatans_dropdown as $sub)
+                                <option value="sub:{{ $sub->id }}">{{ $sub->kode }} {{ $sub->nama }}</option>
+                            @endforeach
+                        </optgroup>
                     </select>
                 </div>
                 <div>

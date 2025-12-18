@@ -13,6 +13,7 @@ use App\Models\Sasaran;
 use App\Models\Outcome;
 use App\Models\Kegiatan; 
 use App\Models\SubKegiatan;
+use App\Models\Program; 
 use Illuminate\Support\Facades\Auth;
 
 class PerjanjianKinerjaLihat extends Component
@@ -42,7 +43,8 @@ class PerjanjianKinerjaLihat extends Component
     public $edit_indikator_id;
     public $edit_target_nilai;
     
-    public $anggaran_sub_kegiatan_id;
+    // --- FORM ANGGARAN ---
+    public $anggaran_pilihan_id; 
     public $anggaran_nilai;
 
     public function mount($id)
@@ -96,8 +98,6 @@ class PerjanjianKinerjaLihat extends Component
         ]);
 
         session()->flash('message', 'Perjanjian Kinerja BERHASIL DIPUBLIKASIKAN.');
-        
-        // Refresh halaman agar status berubah sempurna
         return redirect(request()->header('Referer'));
     }
 
@@ -118,7 +118,6 @@ class PerjanjianKinerjaLihat extends Component
             'sumber_kinerja_id' => 'required', 
         ]);
 
-        // Memecah string "tipe:id"
         $parts = explode(':', $this->sumber_kinerja_id);
         $tipeSumber = $parts[0]; 
         $idSumber = $parts[1];
@@ -156,9 +155,8 @@ class PerjanjianKinerjaLihat extends Component
                 'nama_indikator' => $indAsli->keterangan ?? $indAsli->nama_indikator ?? '-',
                 'satuan' => $indAsli->satuan,
                 'arah' => $indAsli->arah ?? 'Naik', 
-                
                 'target_2025' => $indAsli->target_2025, 
-                'target_2026' => $indAsli->target_2026,
+                'target_2026' => $indAsli->target_2026, 
                 'target_2027' => $indAsli->target_2027, 
                 'target_2028' => $indAsli->target_2028, 
                 'target_2029' => $indAsli->target_2029, 
@@ -167,15 +165,11 @@ class PerjanjianKinerjaLihat extends Component
         }
 
         session()->flash('message', 'Kinerja Utama berhasil ditambahkan.');
-
-        // [OPSIONAL] Refresh halaman juga disini jika mau konsisten
         return redirect(request()->header('Referer'));
     }
 
-    // --- FITUR EDIT TARGET ---
     public function editTarget($id) {
         if (!$this->canEdit()) return;
-        
         $ind = PkIndikator::find($id);
         if ($ind) {
             $this->edit_indikator_id = $id;
@@ -187,17 +181,12 @@ class PerjanjianKinerjaLihat extends Component
 
     public function updateTarget() {
         if (!$this->canEdit()) return;
-        
         $this->validate(['edit_target_nilai' => 'required']);
-
         $ind = PkIndikator::find($this->edit_indikator_id);
         if ($ind) {
             $col = 'target_' . $this->pk->tahun;
-            $ind->update([
-                $col => $this->edit_target_nilai
-            ]);
+            $ind->update([$col => $this->edit_target_nilai]);
         }
-        
         session()->flash('message', 'Target berhasil diperbarui.');
         return redirect(request()->header('Referer'));
     }
@@ -206,8 +195,6 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $sasaran = PkSasaran::find($id);
         if($sasaran) { $sasaran->delete(); }
-        
-        // Refresh saat hapus agar bersih
         return redirect(request()->header('Referer'));
     }
 
@@ -215,37 +202,65 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $ind = PkIndikator::find($id);
         if($ind) { $ind->delete(); }
-        
         return redirect(request()->header('Referer'));
     }
 
     // =================================================================
-    // FITUR ANGGARAN [BAGIAN YANG DIUBAH]
+    // FITUR ANGGARAN [UPDATED: MENYIMPAN KODE + NAMA]
     // =================================================================
 
     public function openModalAnggaran() {
         if (!$this->canEdit()) return;
-        $this->reset(['anggaran_sub_kegiatan_id', 'anggaran_nilai']);
+        $this->reset(['anggaran_pilihan_id', 'anggaran_nilai']);
         $this->isOpenAnggaran = true;
     }
 
     public function storeAnggaran() {
         if (!$this->canEdit()) return;
+        
         $this->validate([
-            'anggaran_sub_kegiatan_id' => 'required', 
+            'anggaran_pilihan_id' => 'required', 
             'anggaran_nilai' => 'required|numeric|min:0'
         ]);
 
+        $parts = explode(':', $this->anggaran_pilihan_id);
+        $tipe = $parts[0];
+        $id = $parts[1];
+
+        $sub_kegiatan_id = null;
+        $nama_program_kegiatan = '-';
+
+        // [MODIFIKASI] Mengambil Kode dan Nama untuk disimpan
+        if ($tipe == 'program') {
+            $prog = Program::find($id);
+            if($prog) {
+                // Simpan format: "1.01.01 Nama Program"
+                $nama_program_kegiatan = $prog->kode . ' ' . $prog->nama;
+                $sub_kegiatan_id = null;
+            }
+        } elseif ($tipe == 'kegiatan') {
+            $keg = Kegiatan::find($id);
+            if($keg) {
+                // Simpan format: "1.01.01.2.01 Nama Kegiatan"
+                $nama_program_kegiatan = $keg->kode . ' ' . $keg->nama;
+                $sub_kegiatan_id = null;
+            }
+        } elseif ($tipe == 'sub') {
+            $sub = SubKegiatan::find($id);
+            if($sub) {
+                $nama_program_kegiatan = $sub->nama;
+                $sub_kegiatan_id = $sub->id;
+            }
+        }
+
         PkAnggaran::create([
             'perjanjian_kinerja_id' => $this->pk->id,
-            'sub_kegiatan_id' => $this->anggaran_sub_kegiatan_id,
+            'sub_kegiatan_id' => $sub_kegiatan_id,
+            'nama_program_kegiatan' => $nama_program_kegiatan,
             'anggaran' => $this->anggaran_nilai
         ]);
 
         session()->flash('message', 'Anggaran berhasil ditambahkan.');
-
-        // [SOLUSI INTI] : Paksa Refresh Halaman Browser
-        // Ini akan menghilangkan semua modal yang macet dan me-reset state javascript
         return redirect(request()->header('Referer'));
     }
 
@@ -307,11 +322,15 @@ class PerjanjianKinerjaLihat extends Component
             }
         }
 
-        $sub_kegiatans = SubKegiatan::orderBy('created_at', 'desc')->get();
+        $programs = Program::orderBy('kode', 'asc')->get();
+        $kegiatans_dropdown = Kegiatan::orderBy('kode', 'asc')->get();
+        $sub_kegiatans_dropdown = SubKegiatan::orderBy('kode', 'asc')->get();
         
         return view('livewire.perjanjian-kinerja-lihat', [
             'list_sumber' => $list_sumber, 
-            'sub_kegiatans' => $sub_kegiatans
+            'programs_dropdown' => $programs,
+            'kegiatans_dropdown' => $kegiatans_dropdown,
+            'sub_kegiatans_dropdown' => $sub_kegiatans_dropdown
         ]);
     }
 }

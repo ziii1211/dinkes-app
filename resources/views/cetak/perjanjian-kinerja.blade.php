@@ -45,7 +45,6 @@
 </head>
 <body>
 
-    <!-- Toolbar untuk Tombol -->
     <div class="toolbar">
         <a href="javascript:history.back()" class="btn btn-back">Kembali</a>
         <button onclick="window.print()" class="btn">Cetak</button>
@@ -59,7 +58,6 @@
             PROVINSI KALIMANTAN SELATAN
         </div>
 
-        <!-- TABEL 1: SASARAN & INDIKATOR -->
         <table>
             <thead>
                 <tr>
@@ -105,7 +103,6 @@
             </tbody>
         </table>
 
-        <!-- TABEL 2: ANGGARAN -->
         <table style="margin-top: 20px; border: none;">
             <thead>
                 <tr>
@@ -123,7 +120,8 @@
                             @if($anggaran->subKegiatan)
                                 {{ $anggaran->subKegiatan->nama }}
                             @else
-                                {{ $anggaran->nama_program_kegiatan }}
+                                {{-- LOGIKA PEMBERSIHAN KODE: Menghapus angka & titik di awal string --}}
+                                {{ preg_replace('/^[\d\.]+\s*/', '', $anggaran->nama_program_kegiatan) }}
                             @endif
                         </td>
                         <td style="border: none; text-align: right; padding: 4px 0;">
@@ -140,9 +138,7 @@
             </tbody>
         </table>
 
-        <!-- TANDA TANGAN -->
         <div class="signature-container">
-            <!-- PIHAK KEDUA (Pejabat Yang Bersangkutan) -->
             <div class="signature-box">
                 <p class="font-bold mb-4">PIHAK KEDUA,</p>
                 <br><br><br>
@@ -154,13 +150,11 @@
                 @endif
             </div>
 
-            <!-- PIHAK PERTAMA (Atasan) -->
             <div class="signature-box">
                 <p class="font-bold">PIHAK PERTAMA,</p>
                 <br><br><br>
                 @if($is_kepala_dinas)
                     <p class="signature-name uppercase">H. MUHIDIN</p>
-                    <!-- Gubernur biasanya tidak pakai NIP di dokumen seperti ini, atau bisa dikosongkan -->
                 @elseif($atasan_pegawai)
                     <p class="signature-name uppercase">{{ $atasan_pegawai->nama }}</p>
                     <p class="signature-nip">NIP. {{ $atasan_pegawai->nip }}</p>
