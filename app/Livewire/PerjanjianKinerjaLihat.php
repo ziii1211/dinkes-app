@@ -11,7 +11,7 @@ use App\Models\Jabatan;
 use App\Models\Pegawai;
 use App\Models\Sasaran;
 use App\Models\Outcome;
-use App\Models\Kegiatan; // IMPORT MODEL KEGIATAN
+use App\Models\Kegiatan; 
 use App\Models\SubKegiatan;
 use Illuminate\Support\Facades\Auth;
 
@@ -33,12 +33,12 @@ class PerjanjianKinerjaLihat extends Component
     // --- STATES MODAL ---
     public $isOpenKinerjaUtama = false;
     public $isOpenAnggaran = false;
-    public $isOpenEditTarget = false; // [BARU] Modal Edit Target
+    public $isOpenEditTarget = false; 
     
     // --- FORM PROPERTIES ---
     public $sumber_kinerja_id; 
     
-    // --- FORM EDIT TARGET [BARU] ---
+    // --- FORM EDIT TARGET ---
     public $edit_indikator_id;
     public $edit_target_nilai;
     
@@ -96,7 +96,9 @@ class PerjanjianKinerjaLihat extends Component
         ]);
 
         session()->flash('message', 'Perjanjian Kinerja BERHASIL DIPUBLIKASIKAN.');
-        $this->loadData();
+        
+        // Refresh halaman agar status berubah sempurna
+        return redirect(request()->header('Referer'));
     }
 
     // =================================================================
@@ -116,7 +118,7 @@ class PerjanjianKinerjaLihat extends Component
             'sumber_kinerja_id' => 'required', 
         ]);
 
-        // [LOGIKA BARU] Memecah string "tipe:id"
+        // Memecah string "tipe:id"
         $parts = explode(':', $this->sumber_kinerja_id);
         $tipeSumber = $parts[0]; 
         $idSumber = $parts[1];
@@ -164,23 +166,21 @@ class PerjanjianKinerjaLihat extends Component
             ]);
         }
 
-        $this->loadData(); 
-        $this->closeModal();
         session()->flash('message', 'Kinerja Utama berhasil ditambahkan.');
+
+        // [OPSIONAL] Refresh halaman juga disini jika mau konsisten
+        return redirect(request()->header('Referer'));
     }
 
-    // --- [BARU] EDIT TARGET ---
+    // --- FITUR EDIT TARGET ---
     public function editTarget($id) {
         if (!$this->canEdit()) return;
         
         $ind = PkIndikator::find($id);
         if ($ind) {
             $this->edit_indikator_id = $id;
-            
-            // Ambil target spesifik tahun PK ini
             $col = 'target_' . $this->pk->tahun;
             $this->edit_target_nilai = $ind->$col;
-            
             $this->isOpenEditTarget = true;
         }
     }
@@ -192,33 +192,35 @@ class PerjanjianKinerjaLihat extends Component
 
         $ind = PkIndikator::find($this->edit_indikator_id);
         if ($ind) {
-            // Update kolom tahun yang sesuai
             $col = 'target_' . $this->pk->tahun;
-            
             $ind->update([
                 $col => $this->edit_target_nilai
             ]);
         }
         
-        $this->loadData();
-        $this->closeModal();
         session()->flash('message', 'Target berhasil diperbarui.');
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteKinerjaUtama($id) {
         if (!$this->canEdit()) return;
         $sasaran = PkSasaran::find($id);
-        if($sasaran) { $sasaran->delete(); $this->loadData(); }
+        if($sasaran) { $sasaran->delete(); }
+        
+        // Refresh saat hapus agar bersih
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteIndikator($id) {
         if (!$this->canEdit()) return;
         $ind = PkIndikator::find($id);
-        if($ind) { $ind->delete(); $this->loadData(); }
+        if($ind) { $ind->delete(); }
+        
+        return redirect(request()->header('Referer'));
     }
 
     // =================================================================
-    // FITUR ANGGARAN
+    // FITUR ANGGARAN [BAGIAN YANG DIUBAH]
     // =================================================================
 
     public function openModalAnggaran() {
@@ -240,22 +242,27 @@ class PerjanjianKinerjaLihat extends Component
             'anggaran' => $this->anggaran_nilai
         ]);
 
-        $this->loadData();
-        $this->closeModal();
+        session()->flash('message', 'Anggaran berhasil ditambahkan.');
+
+        // [SOLUSI INTI] : Paksa Refresh Halaman Browser
+        // Ini akan menghilangkan semua modal yang macet dan me-reset state javascript
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteAnggaran($id) {
         if (!$this->canEdit()) return;
         $ang = PkAnggaran::find($id);
-        if($ang) { $ang->delete(); $this->loadData(); }
+        if($ang) { $ang->delete(); }
+
+        return redirect(request()->header('Referer'));
     }
 
     public function closeModal() {
         $this->isOpenKinerjaUtama = false;
         $this->isOpenAnggaran = false;
-        $this->isOpenEditTarget = false; // Reset Modal Target
+        $this->isOpenEditTarget = false; 
         $this->resetValidation();
-        $this->reset(['edit_indikator_id', 'edit_target_nilai']); // Reset Form Target
+        $this->reset(['edit_indikator_id', 'edit_target_nilai']); 
     }
 
     public function deletePk() {
@@ -267,7 +274,6 @@ class PerjanjianKinerjaLihat extends Component
 
     public function render()
     {
-        // [LOGIKA BARU] MENGGABUNGKAN DATA UTK DROPDOWN
         $list_sumber = collect();
 
         if ($this->is_kepala_dinas) {
@@ -279,7 +285,6 @@ class PerjanjianKinerjaLihat extends Component
                 ]);
             }
         } else {
-            // 1. OUTCOME
             $outcomes = Outcome::with('indikators')
                         ->where('jabatan_id', $this->pk->jabatan_id)
                         ->orderBy('created_at', 'desc')->get();
@@ -290,7 +295,6 @@ class PerjanjianKinerjaLihat extends Component
                 ]);
             }
 
-            // 2. KEGIATAN (OUTPUT)
             $kegiatans = Kegiatan::with('indikators')
                         ->where('jabatan_id', $this->pk->jabatan_id)
                         ->whereNotNull('output') 

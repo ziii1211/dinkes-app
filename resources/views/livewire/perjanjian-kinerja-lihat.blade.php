@@ -16,6 +16,20 @@
                     @endif
                 </div>
 
+                {{-- ALERT SUKSES/GAGAL --}}
+                @if (session()->has('message'))
+                    <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 mb-4 rounded shadow-sm" role="alert">
+                        <p class="font-bold">Berhasil</p>
+                        <p>{{ session('message') }}</p>
+                    </div>
+                @endif
+                @if (session()->has('error'))
+                    <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 mb-4 rounded shadow-sm" role="alert">
+                        <p class="font-bold">Gagal</p>
+                        <p>{{ session('error') }}</p>
+                    </div>
+                @endif
+
                 <nav class="flex" aria-label="Breadcrumb">
                     <ol class="inline-flex items-center space-x-2 text-sm text-gray-500 font-medium">
                         <li><a href="/" class="hover:text-blue-600 transition-colors">Dashboard</a></li>
@@ -112,8 +126,9 @@
 
         {{-- DAFTAR KINERJA UTAMA --}}
         <div class="space-y-6 pt-4">
+            {{-- [PERBAIKAN CRITICAL]: MENAMBAHKAN wire:key pada looping Sasaran --}}
             @forelse($pk->sasarans as $index => $sasaran)
-            <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden" x-data="{ open: true }">
+            <div class="bg-white rounded border border-gray-200 shadow-sm overflow-hidden" x-data="{ open: true }" wire:key="sasaran-{{ $sasaran->id }}">
                 <div class="px-6 py-3 border-b border-gray-100 flex justify-between items-center bg-gray-50/30">
                     <h4 class="text-sm font-bold text-blue-600">Kinerja Utama #{{ $index + 1 }}</h4>
                     <button @click="open = !open" class="text-gray-400 hover:text-gray-600">
@@ -148,19 +163,18 @@
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
+                                {{-- [PERBAIKAN CRITICAL]: MENAMBAHKAN wire:key pada looping Indikator --}}
                                 @foreach($sasaran->indikators as $ind)
-                                <tr class="hover:bg-gray-50">
+                                <tr class="hover:bg-gray-50" wire:key="indikator-{{ $ind->id }}">
                                     <td class="px-4 py-3 text-gray-700">{{ $ind->nama_indikator }}</td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->satuan }}</td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100 font-bold text-gray-900">
-                                        {{-- TAMPIL OTOMATIS BERDASARKAN TAHUN PK --}}
                                         @php $col = 'target_'.$pk->tahun; echo $ind->$col ?? $ind->target; @endphp
                                     </td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100">{{ $ind->arah }}</td>
                                     <td class="px-4 py-3 text-center border-l border-gray-100">
                                         @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                                         <div class="flex justify-center gap-2">
-                                            {{-- TOMBOL EDIT TARGET [BARU] --}}
                                             <button wire:click="editTarget({{ $ind->id }})" class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded hover:bg-yellow-200">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                             </button>
@@ -208,8 +222,10 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 bg-white">
+                        {{-- [PERBAIKAN CRITICAL]: MENAMBAHKAN wire:key pada looping Anggaran --}}
+                        {{-- Tanpa wire:key ini, saat data kedua masuk, DOM akan stuck dan modal tidak menutup --}}
                         @forelse($pk->anggarans as $index => $ang)
-                        <tr class="hover:bg-gray-50">
+                        <tr class="hover:bg-gray-50" wire:key="anggaran-{{ $ang->id }}">
                             <td class="px-6 py-4 text-center text-gray-500">{{ $index+1 }}</td>
                             <td class="px-6 py-4">
                                 @if($ang->subKegiatan)
@@ -323,7 +339,7 @@
     </div>
     @endif
 
-    {{-- MODAL EDIT TARGET [BARU] --}}
+    {{-- MODAL EDIT TARGET --}}
     @if($isOpenEditTarget)
     <div class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
