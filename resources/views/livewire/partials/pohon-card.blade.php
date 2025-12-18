@@ -7,13 +7,8 @@
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr>
-                        <th rowspan="2" class="bg-purple-700 text-white font-semibold text-center text-xs p-2 border-r border-purple-500 w-1/3 align-middle">Kinerja Utama</th>
-                        <th rowspan="2" class="bg-purple-700 text-white font-semibold text-center text-xs p-2 border-r border-purple-500 w-1/3 align-middle">Indikator</th>
-                        <th colspan="2" class="bg-purple-700 text-white font-semibold text-center text-xs p-2 border-b border-purple-500">Target</th>
-                    </tr>
-                    <tr>
-                        <th class="bg-purple-700 text-white font-semibold text-center text-xs p-1 border-r border-purple-500 w-16">Nilai</th>
-                        <th class="bg-purple-700 text-white font-semibold text-center text-xs p-1">Satuan</th>
+                        <th class="bg-purple-700 text-white font-semibold text-center text-xs p-2 border-r border-purple-500 w-1/2 align-middle">Kinerja Utama</th>
+                        <th class="bg-purple-700 text-white font-semibold text-center text-xs p-2 w-1/2 align-middle">Indikator</th>
                     </tr>
                 </thead>
                 <tbody class="text-gray-800 text-xs bg-white">
@@ -23,17 +18,13 @@
                             @if($index === 0)
                                 <td rowspan="{{ $node->indikators->count() }}" class="p-2 border-r border-purple-500 align-top font-medium">{{ $node->nama_pohon }}</td>
                             @endif
-                            <td class="p-2 border-r border-purple-500">{{ $ind->nama_indikator }}</td>
-                            <td class="p-2 border-r border-purple-500 text-center font-medium">{{ $ind->target ?? '-' }}</td>
-                            <td class="p-2 text-center">{{ $ind->satuan ?? '-' }}</td>
+                            <td class="p-2">{{ $ind->nama_indikator }}</td>
                         </tr>
                         @endforeach
                     @else
                         <tr class="border-b border-purple-500">
                             <td class="p-2 border-r border-purple-500 align-top font-medium">{{ $node->nama_pohon }}</td>
-                            <td class="p-2 border-r border-purple-500 italic text-gray-400">Belum ada indikator</td>
-                            <td class="p-2 border-r border-purple-500 text-center">-</td>
-                            <td class="p-2 text-center">-</td>
+                            <td class="p-2 italic text-gray-400">Belum ada indikator</td>
                         </tr>
                     @endif
                 </tbody>
