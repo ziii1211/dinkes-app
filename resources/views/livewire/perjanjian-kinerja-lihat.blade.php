@@ -160,6 +160,11 @@
                                     <td class="px-4 py-3 text-center border-l border-gray-100">
                                         @if(auth()->user()->role == 'admin' || $pk->status_verifikasi == 'draft')
                                         <div class="flex justify-center gap-2">
+                                            {{-- TOMBOL EDIT TARGET [BARU] --}}
+                                            <button wire:click="editTarget({{ $ind->id }})" class="inline-flex items-center px-2 py-1 bg-yellow-100 text-yellow-700 text-xs font-bold rounded hover:bg-yellow-200">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                            </button>
+
                                             <button wire:click="deleteIndikator({{ $ind->id }})" wire:confirm="Hapus?" class="inline-flex items-center px-2 py-1 bg-[#ffecec] text-[#dc3545] text-xs font-bold rounded hover:bg-red-100">
                                                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                             </button>
@@ -258,26 +263,22 @@
             <div class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Kinerja Utamamu</label>
-                    
-                    {{-- DROPDOWN DINAMIS (BISA SASARAN / OUTCOME) --}}
                     <select wire:model.live="sumber_kinerja_id" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="">-- Pilih Kinerja --</option>
-                        @foreach($sumber_kinerjas as $item)
-                            {{-- Tampilkan 'sasaran' jika Kadis, 'outcome' jika Bawahan --}}
-                            <option value="{{ $item->id }}">
-                                {{ $is_kepala_dinas ? $item->sasaran : $item->outcome }}
+                        @foreach($list_sumber as $item)
+                            <option value="{{ $item['value'] }}">
+                                {{ $item['label'] }}
                             </option>
                         @endforeach
                     </select>
 
-                    {{-- PESAN JIKA KOSONG --}}
-                    @if(empty($sumber_kinerjas) || $sumber_kinerjas->isEmpty())
+                    @if(empty($list_sumber) || $list_sumber->isEmpty())
                         @if($is_kepala_dinas)
                             <p class="text-xs text-red-500 mt-2 italic">*Tidak ada data Sasaran Renstra.</p>
                         @else
                             <p class="text-xs text-red-500 mt-2 italic">
-                                *Tidak ada Outcome yang ditugaskan ke jabatan ini. 
-                                <br>Silakan atur Penanggung Jawab di menu Renstra > Outcome.
+                                *Tidak ada Outcome atau Output Kegiatan yang ditugaskan ke jabatan ini. 
+                                <br>Silakan atur Penanggung Jawab di menu Renstra.
                             </p>
                         @endif
                     @endif
@@ -291,7 +292,7 @@
     </div>
     @endif
 
-    {{-- MODAL ANGGARAN (TETAP SAMA) --}}
+    {{-- MODAL ANGGARAN --}}
     @if($isOpenAnggaran)
     <div class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
@@ -317,6 +318,29 @@
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                 <button wire:click="closeModal" class="px-4 py-2 bg-white border border-gray-300 rounded text-sm font-bold text-gray-600">Batal</button>
                 <button wire:click="storeAnggaran" class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700">Simpan</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- MODAL EDIT TARGET [BARU] --}}
+    @if($isOpenEditTarget)
+    <div class="fixed inset-0 z-[99] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" x-data>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg overflow-hidden">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
+                <h3 class="text-lg font-bold text-gray-800">Edit Target ({{ $pk->tahun }})</h3>
+                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-6 space-y-4">
+                <div>
+                    <label class="block text-sm font-bold text-gray-700 mb-2">Target Tahun {{ $pk->tahun }}</label>
+                    <input type="text" wire:model="edit_target_nilai" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="Isi target baru...">
+                    @error('edit_target_nilai') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button wire:click="closeModal" class="px-4 py-2 bg-white border border-gray-300 rounded text-sm font-bold text-gray-600">Batal</button>
+                <button wire:click="updateTarget" class="px-4 py-2 bg-blue-600 text-white text-sm font-bold rounded hover:bg-blue-700">Simpan Perubahan</button>
             </div>
         </div>
     </div>
