@@ -9,9 +9,15 @@
         <span class="font-medium text-white">Cascading Renstra</span>
     </x-slot>
 
+    @if (session()->has('message'))
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+            <span class="block sm:inline">{{ session('message') }}</span>
+        </div>
+    @endif
+
     <div class="space-y-6">
         
-        {{-- BAGIAN 1: TABEL DATA (Tetap Terhubung ke Database - Tidak Diubah) --}}
+        {{-- BAGIAN 1: TABEL DATA (KODE LAMA TIDAK BERUBAH) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Data Cascading Renstra </h3>
@@ -73,7 +79,7 @@
             </div>
         </div>
 
-        {{-- BAGIAN 3: VISUALISASI MANUAL DENGAN BUTTON INPUT --}}
+        {{-- BAGIAN 2: VISUALISASI MANUAL SESUAI PERMINTAAN --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8 pb-4">
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center relative z-20">
                 <h3 class="font-bold text-gray-800 text-lg">Visualisasi Cascading Renstra</h3>
@@ -106,25 +112,26 @@
                         @forelse($manualTree as $root)
                         <div class="flex flex-col items-center">
                             
-                            {{-- CARD LEVEL 1 (ROOT) --}}
-                            @include('livewire.partials.manual-card', ['node' => $root, 'color' => 'blue', 'width' => 'w-72'])
+                            {{-- CARD LEVEL 1 (ROOT) - PANGGIL FILE PARTIAL --}}
+                            @include('livewire.partials.manual-card', ['node' => $root])
 
-                            {{-- LEVEL 2: CHILDREN --}}
+                            {{-- LOGIC REKURSIF UNTUK ANAK-ANAKNYA --}}
                             @if($root->children->count() > 0)
                                 <div class="h-12 w-px bg-gray-400"></div>
                                 <div class="flex gap-16 items-start relative">
                                     {{-- Konektor Horizontal --}}
                                     @if($root->children->count() > 1)
                                         <div class="absolute top-0 left-0 h-px bg-gray-400" 
-                                             style="left: 50%; transform: translateX(-50%); width: {{ ($root->children->count() - 1) * 320 }}px;"></div>
+                                             style="left: 50%; transform: translateX(-50%); width: {{ ($root->children->count() - 1) * 460 }}px;"></div>
+                                             {{-- Lebar konektor disesuaikan dengan lebar card (450px) + gap --}}
                                     @endif
 
                                     @foreach($root->children as $child)
-                                    <div class="flex flex-col items-center relative" style="min-width: 280px;">
+                                    <div class="flex flex-col items-center relative">
                                         <div class="h-8 w-px bg-gray-400 -mt-8 mb-0"></div> 
                                         
                                         {{-- CARD LEVEL 2 --}}
-                                        @include('livewire.partials.manual-card', ['node' => $child, 'color' => 'cyan', 'width' => 'w-64'])
+                                        @include('livewire.partials.manual-card', ['node' => $child])
 
                                         {{-- LEVEL 3: GRANDCHILDREN --}}
                                         @if($child->children->count() > 0)
@@ -132,15 +139,15 @@
                                             <div class="flex gap-8 items-start relative">
                                                 @if($child->children->count() > 1)
                                                     <div class="absolute top-0 left-0 h-px bg-gray-400" 
-                                                         style="left: 50%; transform: translateX(-50%); width: {{ ($child->children->count() - 1) * 250 }}px;"></div>
+                                                         style="left: 50%; transform: translateX(-50%); width: {{ ($child->children->count() - 1) * 460 }}px;"></div>
                                                 @endif
 
                                                 @foreach($child->children as $grandchild)
-                                                <div class="flex flex-col items-center relative" style="min-width: 220px;">
+                                                <div class="flex flex-col items-center relative">
                                                     <div class="h-8 w-px bg-gray-400 -mt-8 mb-0"></div>
                                                     
                                                     {{-- CARD LEVEL 3 --}}
-                                                    @include('livewire.partials.manual-card', ['node' => $grandchild, 'color' => 'purple', 'width' => 'w-60'])
+                                                    @include('livewire.partials.manual-card', ['node' => $grandchild])
 
                                                 </div>
                                                 @endforeach
@@ -152,7 +159,7 @@
                             @endif
                         </div>
                         @empty
-                            <div class="text-gray-400 mt-10">Belum ada data visualisasi.</div>
+                            <div class="text-gray-400 mt-10">Belum ada data visualisasi. Klik "+ Tambah Root".</div>
                         @endforelse
                     </div>
                 </div>
@@ -160,53 +167,7 @@
         </div>
     </div>
 
-    {{-- MODAL INPUT MANUAL (BARU) --}}
-    @if($isOpenManualInput)
-    <div class="fixed inset-0 z-[60] flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform transition-all">
-            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-gray-50">
-                <h3 class="text-lg font-bold text-gray-800">Input Data Kinerja</h3>
-                <button wire:click="closeManualModal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            
-            <div class="p-6 space-y-4">
-                {{-- Field Kinerja Utama --}}
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Kinerja Utama</label>
-                    <textarea wire:model="manual_kinerja" rows="3" class="w-full border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="Contoh: Meningkatnya kualitas..."></textarea>
-                    @error('manual_kinerja') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                </div>
-
-                {{-- Field Indikator --}}
-                <div>
-                    <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Indikator</label>
-                    <input type="text" wire:model="manual_indikator" class="w-full border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="Contoh: Persentase...">
-                </div>
-
-                {{-- Field Target (Grid 2 Kolom) --}}
-                <div class="grid grid-cols-2 gap-4">
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Target Nilai</label>
-                        <input type="text" wire:model="manual_target_nilai" class="w-full border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="100">
-                    </div>
-                    <div>
-                        <label class="block text-xs font-bold text-gray-700 uppercase mb-1">Satuan</label>
-                        <input type="text" wire:model="manual_target_satuan" class="w-full border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500 shadow-sm" placeholder="%, Dokumen, dll">
-                    </div>
-                </div>
-            </div>
-
-            <div class="px-6 py-4 bg-gray-50 flex justify-end gap-3 border-t border-gray-100">
-                <button wire:click="closeManualModal" class="px-4 py-2 bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-100 text-sm font-medium">Batal</button>
-                <button wire:click="updateManualNode" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-sm text-sm font-medium">Simpan Perubahan</button>
-            </div>
-        </div>
-    </div>
-    @endif
-
-    {{-- Modal Lain (Untuk Tabel Database) Tetap Ada --}}
+    {{-- MODAL DB (TETAP ADA UNTUK FITUR YANG LAMA) --}}
     @if($isOpen)
         {{-- ... Kode modal database Anda sebelumnya (tidak saya ubah) ... --}}
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
@@ -243,7 +204,6 @@
     @endif
 
     @if($isOpenIndikator)
-        {{-- ... Kode modal indikator database Anda sebelumnya ... --}}
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
