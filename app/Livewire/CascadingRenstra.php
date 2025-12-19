@@ -23,13 +23,16 @@ class CascadingRenstra extends Component
     public $isOpenIndikator = false;
     public $isChild = false;
     public $isEditMode = false;
-    public $modalPreviewOpen = false; // <--- STATE BARU UNTUK PREVIEW
+    public $modalPreviewOpen = false;
 
-    // Properties DB Lama (Legacy)
+    // Properties DB Lama (Legacy - Tabel Bawah)
     public $pohon_id, $tujuan_id, $nama_pohon, $parent_id;
-    public $indikator_input, $indikator_nilai, $indikator_satuan, $indikator_list = [];
+    
+    // Properties Indikator (UPDATED: Hapus Nilai & Satuan)
+    public $indikator_input; 
+    public $indikator_list = [];
 
-    // Properties Visualisasi (Data Utama)
+    // Properties Visualisasi (Data Utama Canvas)
     public $visualNodes = [];
 
     // ==========================================
@@ -46,7 +49,7 @@ class CascadingRenstra extends Component
         // 1. Build Tree untuk Visualisasi
         $manualTree = $this->buildVisualTreeStructure();
 
-        // 2. Data Dropdown Jabatan (Urut Level & ID)
+        // 2. Data Dropdown Jabatan
         $listJabatans = Jabatan::orderBy('level', 'asc')->orderBy('id', 'asc')->get();
 
         // 3. Data Tabel Lama (Bawah)
@@ -66,25 +69,16 @@ class CascadingRenstra extends Component
     // 3. ACTIONS: PREVIEW MODAL
     // ==========================================
 
-    public function openPreview()
-    {
-        $this->modalPreviewOpen = true;
-    }
-
-    public function closePreview()
-    {
-        $this->modalPreviewOpen = false;
-    }
+    public function openPreview() { $this->modalPreviewOpen = true; }
+    public function closePreview() { $this->modalPreviewOpen = false; }
 
     // ==========================================
-    // 4. DATA LOADING (FLAT LIST STRATEGY)
+    // 4. DATA LOADING (VISUALISASI)
     // ==========================================
 
     public function loadVisualData()
     {
-        // Load SEMUA data menjadi Flat List agar wire:model binding aman
         $allNodes = VisualisasiRenstra::orderBy('id', 'asc')->get();
-        
         $this->visualNodes = [];
 
         if ($allNodes->count() > 0) {
@@ -92,7 +86,6 @@ class CascadingRenstra extends Component
                 $this->visualNodes[] = $this->formatNodeFlat($node);
             }
         } else {
-            // Jika kosong, inisialisasi root manual
             $this->addManualRoot();
         }
     }
@@ -100,14 +93,8 @@ class CascadingRenstra extends Component
     private function formatNodeFlat($dbNode)
     {
         $items = $dbNode->content_data;
-        
-        // Safety Check JSON
-        if(is_string($items)) {
-            $items = json_decode($items, true);
-        }
-        if(empty($items) || !is_array($items)) {
-            $items = [['kinerja_utama' => '', 'indikators' => []]];
-        }
+        if(is_string($items)) { $items = json_decode($items, true); }
+        if(empty($items) || !is_array($items)) { $items = [['kinerja_utama' => '', 'indikators' => []]]; }
 
         return [
             'id' => $dbNode->id,
@@ -124,43 +111,35 @@ class CascadingRenstra extends Component
 
     public function updated($property)
     {
-        // Deteksi perubahan pada array visualNodes
         if (str_starts_with($property, 'visualNodes.')) {
             $parts = explode('.', $property);
             $index = $parts[1] ?? null;
 
             if ($index !== null && is_numeric($index)) {
-                // Hanya autosave jika data sudah ada di DB (bukan temp)
                 if (isset($this->visualNodes[$index]['id']) && is_numeric($this->visualNodes[$index]['id'])) {
-                    $this->saveNodeData($index, true); // true = silent mode
+                    $this->saveNodeData($index, true);
                 }
             }
         }
     }
 
     // ==========================================
-    // 6. SAVE & UPDATE LOGIC
+    // 6. SAVE & UPDATE LOGIC (VISUALISASI)
     // ==========================================
 
     public function saveNodeData($nodeIndex, $silent = false)
     {
         $data = $this->visualNodes[$nodeIndex];
-        
-        // Tentukan Parent
         $parentIdToSave = ($data['parent_id'] && is_numeric($data['parent_id'])) ? $data['parent_id'] : null;
-
-        // Cek ID (Numeric = Update, String/Temp = Create)
         $node = is_numeric($data['id']) ? VisualisasiRenstra::find($data['id']) : null;
 
         if($node) {
-            // UPDATE
             $node->update([
                 'jabatan' => $data['jabatan'],
                 'content_data' => $data['kinerja_items'],
                 'is_locked' => true
             ]);
         } else {
-            // CREATE
             $newNode = VisualisasiRenstra::create([
                 'parent_id' => $parentIdToSave,
                 'jabatan' => $data['jabatan'],
@@ -168,21 +147,16 @@ class CascadingRenstra extends Component
                 'is_locked' => true
             ]);
             
-            // Simpan ID lama untuk update referensi anak
             $oldId = $this->visualNodes[$nodeIndex]['id'];
-
-            // Update ID di Visual Array
             $this->visualNodes[$nodeIndex]['id'] = $newNode->id;
             $this->visualNodes[$nodeIndex]['is_locked'] = true;
 
-            // Update Parent ID pada anak-anak yang masih nge-link ke ID temp
             foreach($this->visualNodes as $key => $vNode) {
                 if($vNode['parent_id'] === $oldId) {
                     $this->visualNodes[$key]['parent_id'] = $newNode->id;
                 }
             }
         }
-
         if(!$silent) session()->flash('message', 'Data tersimpan otomatis!');
     }
 
@@ -198,28 +172,20 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // 7. TREE STRUCTURE BUILDER (VIEW HELPER)
+    // 7. TREE STRUCTURE BUILDER
     // ==========================================
 
     private function buildVisualTreeStructure()
     {
-        // 1. Mapping ke Object & Index
         $nodes = collect($this->visualNodes)->map(function($item, $key) {
             $item['original_index'] = $key;
             return (object) $item;
         });
 
-        // 2. Dictionary
         $nodesDict = $nodes->keyBy('id');
-        
-        // 3. Init Children
-        foreach($nodes as $node) {
-            $node->children = collect([]);
-        }
-
+        foreach($nodes as $node) { $node->children = collect([]); }
         $tree = collect([]);
         
-        // 4. Build Hierarchy
         foreach($nodes as $node) {
             if($node->parent_id && isset($nodesDict[$node->parent_id])) {
                 $nodesDict[$node->parent_id]->children->push($node);
@@ -227,107 +193,88 @@ class CascadingRenstra extends Component
                 $tree->push($node);
             }
         }
-        
         return $tree;
     }
 
     // ==========================================
-    // 8. CRUD ACTIONS (NODE & ITEMS)
+    // 8. CRUD ACTIONS (VISUALISASI)
     // ==========================================
 
     public function addManualRoot()
     {
-        $this->visualNodes[] = [
-            'id' => 'temp_' . uniqid(), 
-            'parent_id' => null, 
-            'jabatan' => '', 
-            'is_locked' => false,
-            'kinerja_items' => [['kinerja_utama' => '', 'indikators' => []]]
-        ];
+        $this->visualNodes[] = ['id' => 'temp_' . uniqid(), 'parent_id' => null, 'jabatan' => '', 'is_locked' => false, 'kinerja_items' => [['kinerja_utama' => '', 'indikators' => []]]];
     }
 
     public function addManualChild($parentId)
     {
-        if(!is_numeric($parentId)) {
-             session()->flash('error', 'Simpan Parent terlebih dahulu!');
-             return;
-        }
-
-        $this->visualNodes[] = [
-            'id' => 'temp_' . uniqid(), 
-            'parent_id' => $parentId, 
-            'jabatan' => '', 
-            'is_locked' => false,
-            'kinerja_items' => [['kinerja_utama' => '', 'indikators' => []]]
-        ];
+        if(!is_numeric($parentId)) { session()->flash('error', 'Simpan Parent terlebih dahulu!'); return; }
+        $this->visualNodes[] = ['id' => 'temp_' . uniqid(), 'parent_id' => $parentId, 'jabatan' => '', 'is_locked' => false, 'kinerja_items' => [['kinerja_utama' => '', 'indikators' => []]]];
     }
 
     public function deleteManualNode($id)
     {
-        if(is_numeric($id)) {
-            VisualisasiRenstra::destroy($id);
-        }
-        // Jika temp, kita perlu hapus dari array manual, tapi reload lebih aman
+        if(is_numeric($id)) { VisualisasiRenstra::destroy($id); }
         $this->loadVisualData();
     }
 
-    // --- ITEM ACTIONS (KINERJA & INDIKATOR) ---
+    // --- ITEM ACTIONS (KINERJA & INDIKATOR VISUAL) ---
+    public function addKinerjaItem($nodeIndex) { $this->visualNodes[$nodeIndex]['kinerja_items'][] = ['kinerja_utama' => '', 'indikators' => []]; if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
+    public function removeKinerjaItem($nodeIndex, $kinerjaIndex) { unset($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]); $this->visualNodes[$nodeIndex]['kinerja_items'] = array_values($this->visualNodes[$nodeIndex]['kinerja_items']); if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
+    public function addIndikatorItem($nodeIndex, $kinerjaIndex) { $this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'][] = ['nama' => '', 'nilai' => '', 'satuan' => '']; if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
+    public function removeIndikatorItem($nodeIndex, $kinerjaIndex, $indikatorIndex) { unset($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'][$indikatorIndex]); $this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'] = array_values($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators']); if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
 
-    public function addKinerjaItem($nodeIndex) 
-    { 
-        $this->visualNodes[$nodeIndex]['kinerja_items'][] = ['kinerja_utama' => '', 'indikators' => []]; 
-        if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true);
-    }
-
-    public function removeKinerjaItem($nodeIndex, $kinerjaIndex) 
-    { 
-        unset($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]); 
-        $this->visualNodes[$nodeIndex]['kinerja_items'] = array_values($this->visualNodes[$nodeIndex]['kinerja_items']); 
-        if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true);
-    }
-
-    public function addIndikatorItem($nodeIndex, $kinerjaIndex) 
-    { 
-        $this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'][] = ['nama' => '', 'nilai' => '', 'satuan' => '']; 
-        if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true);
-    }
-
-    public function removeIndikatorItem($nodeIndex, $kinerjaIndex, $indikatorIndex) 
-    { 
-        unset($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'][$indikatorIndex]); 
-        $this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'] = array_values($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators']); 
-        if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true);
-    }
 
     // ==========================================
-    // 9. LEGACY LOGIC (DB LAMA / TABEL BAWAH)
+    // 9. LOGIC DB LAMA (LEGACY - TABEL BAWAH)
     // ==========================================
-    // Bagian ini tidak diubah agar fitur lama tetap berjalan normal.
+    
+    private function getFlatTree() { $allNodes = ModelPohon::with(['tujuan', 'indikators'])->orderBy('created_at', 'asc')->get(); $roots = $allNodes->whereNull('parent_id'); $flatList = collect([]); foreach ($roots as $root) { $this->formatTree($root, $allNodes, $flatList, 0); } return $flatList; }
+    private function formatTree($node, $allNodes, &$list, $depth) { $node->depth = $depth; $list->push($node); $children = $allNodes->where('parent_id', $node->id); foreach ($children as $child) { $this->formatTree($child, $allNodes, $list, $depth + 1); } }
 
-    private function getFlatTree() { 
-        $allNodes = ModelPohon::with(['tujuan', 'indikators', 'children.indikators', 'children.children.indikators'])->orderBy('created_at', 'asc')->get(); 
-        $roots = $allNodes->whereNull('parent_id'); 
-        $flatList = collect([]); 
-        foreach ($roots as $root) { $this->formatTree($root, $allNodes, $flatList, 0); } 
-        return $flatList; 
-    }
-
-    private function formatTree($node, $allNodes, &$list, $depth) { 
-        $node->depth = $depth; 
-        $list->push($node); 
-        $children = $allNodes->where('parent_id', $node->id); 
-        foreach ($children as $child) { $this->formatTree($child, $allNodes, $list, $depth + 1); } 
-    }
-
-    private function resetForm() { $this->reset(['tujuan_id', 'nama_pohon', 'parent_id', 'pohon_id', 'isChild', 'isEditMode', 'indikator_input', 'indikator_nilai', 'indikator_satuan', 'indikator_list']); $this->resetValidation(); }
+    private function resetForm() { $this->reset(['tujuan_id', 'nama_pohon', 'parent_id', 'pohon_id', 'isChild', 'isEditMode', 'indikator_input', 'indikator_list']); $this->resetValidation(); }
     public function openModal() { $this->resetForm(); $this->isOpen = true; }
     public function addChild($parentId) { $this->resetForm(); $this->parent_id = $parentId; $this->isChild = true; $parent = ModelPohon::find($parentId); $this->tujuan_id = $parent ? $parent->tujuan_id : null; $this->isOpen = true; }
     public function edit($id) { $this->resetForm(); $pohon = ModelPohon::find($id); if ($pohon) { $this->pohon_id = $id; $this->tujuan_id = $pohon->tujuan_id; $this->nama_pohon = $pohon->nama_pohon; $this->parent_id = $pohon->parent_id; $this->isChild = $pohon->parent_id ? true : false; $this->isEditMode = true; $this->isOpen = true; } }
     public function closeModal() { $this->isOpen = false; $this->isOpenIndikator = false; $this->resetValidation(); }
     public function store() { $rules = ['nama_pohon' => 'required']; if (!$this->isChild && !$this->parent_id) { $rules['tujuan_id'] = 'required'; } $this->validate($rules); if ($this->isEditMode) { ModelPohon::find($this->pohon_id)->update(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon]); } else { ModelPohon::create(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon, 'parent_id' => $this->parent_id]); } $this->closeModal(); session()->flash('message', 'Data disimpan.'); }
     public function delete($id) { $pohon = ModelPohon::find($id); if($pohon) { $pohon->delete(); session()->flash('message', 'Dihapus.'); } }
-    public function openIndikator($pohonId) { $this->pohon_id = $pohonId; $this->reset(['indikator_input', 'indikator_nilai', 'indikator_satuan', 'indikator_list']); $existing = IndikatorPohonKinerja::where('pohon_kinerja_id', $pohonId)->get(); foreach($existing as $ind) { $this->indikator_list[] = ['id' => $ind->id, 'nama' => $ind->nama_indikator, 'nilai' => $ind->target ?? 0, 'satuan' => $ind->satuan ?? '-']; } $this->isOpenIndikator = true; }
-    public function addIndikatorToList() { $this->validate(['indikator_input' => 'required', 'indikator_nilai' => 'required', 'indikator_satuan' => 'required']); $this->indikator_list[] = ['id' => 'temp_' . uniqid(), 'nama' => $this->indikator_input, 'nilai' => $this->indikator_nilai, 'satuan' => $this->indikator_satuan]; $this->reset(['indikator_input', 'indikator_nilai', 'indikator_satuan']); }
-    public function removeIndikatorFromList($index) { unset($this->indikator_list[$index]); $this->indikator_list = array_values($this->indikator_list); }
-    public function saveIndikators() { IndikatorPohonKinerja::where('pohon_kinerja_id', $this->pohon_id)->delete(); foreach($this->indikator_list as $ind) { IndikatorPohonKinerja::create(['pohon_kinerja_id' => $this->pohon_id, 'nama_indikator' => $ind['nama'], 'target' => $ind['nilai'], 'satuan' => $ind['satuan']]); } $this->closeModal(); session()->flash('message', 'Indikator disimpan.'); }
+
+    // --- MANAGE INDIKATOR LEGACY (UPDATED: NO NILAI/SATUAN) ---
+    
+    public function openIndikator($pohonId) { 
+        $this->pohon_id = $pohonId; 
+        $this->reset(['indikator_input', 'indikator_list']); 
+        
+        $existing = IndikatorPohonKinerja::where('pohon_kinerja_id', $pohonId)->get(); 
+        foreach($existing as $ind) { 
+            $this->indikator_list[] = ['id' => $ind->id, 'nama' => $ind->nama_indikator]; 
+        } 
+        $this->isOpenIndikator = true; 
+    }
+    
+    public function addIndikatorToList() { 
+        $this->validate(['indikator_input' => 'required']); 
+        $this->indikator_list[] = ['id' => 'temp_' . uniqid(), 'nama' => $this->indikator_input]; 
+        $this->reset(['indikator_input']); 
+    }
+    
+    public function removeIndikatorFromList($index) { 
+        unset($this->indikator_list[$index]); 
+        $this->indikator_list = array_values($this->indikator_list); 
+    }
+    
+    public function saveIndikators() { 
+        IndikatorPohonKinerja::where('pohon_kinerja_id', $this->pohon_id)->delete(); 
+        
+        foreach($this->indikator_list as $ind) { 
+            IndikatorPohonKinerja::create([
+                'pohon_kinerja_id' => $this->pohon_id, 
+                'nama_indikator' => $ind['nama'],
+                'target' => 0, // Default Dummy
+                'satuan' => '-' // Default Dummy
+            ]); 
+        } 
+        $this->closeModal(); 
+        session()->flash('message', 'Indikator disimpan.'); 
+    }
 }
