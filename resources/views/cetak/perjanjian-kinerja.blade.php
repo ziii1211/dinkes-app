@@ -5,60 +5,138 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cetak Perjanjian Kinerja</title>
     <style>
-        @page { size: A4 portrait; margin: 2cm; }
-        body { font-family: 'Times New Roman', serif; color: #000; background: #fff; margin: 0; padding: 20px; }
-        .no-print { display: none; }
+        /* SETUP HALAMAN CETAK */
+        @page { 
+            size: A4 portrait; 
+            margin: 2cm 2.5cm; /* Atas-Bawah 2cm, Kiri-Kanan 2.5cm */
+        }
         
-        /* Header */
+        body { 
+            font-family: 'Times New Roman', Times, serif; 
+            font-size: 11pt; 
+            color: #000; 
+            background: #fff; 
+            margin: 0; 
+            padding: 0;
+            line-height: 1.3;
+        }
+
+        /* UTILITIES */
         .text-center { text-align: center; }
+        .text-right { text-align: right; }
+        .text-left { text-align: left; }
         .font-bold { font-weight: bold; }
         .uppercase { text-transform: uppercase; }
-        .mb-4 { margin-bottom: 1rem; }
-        .mt-4 { margin-top: 1rem; }
-        .text-lg { font-size: 14pt; line-height: 1.5; }
-        
-        /* Table */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 11pt; }
-        th, td { border: 1px solid #000; padding: 8px; vertical-align: top; }
-        th { background-color: #fff; text-align: center; font-weight: bold; }
-        
-        /* Signature */
-        .signature-container { display: flex; justify-content: space-between; margin-top: 50px; page-break-inside: avoid; }
-        .signature-box { width: 40%; text-align: center; }
-        .signature-name { margin-top: 70px; font-weight: bold; text-decoration: underline; }
-        .signature-nip { font-size: 10pt; }
+        .no-print { display: none; }
 
-        /* Toolbar Button */
+        /* HEADER SURAT */
+        .header-title {
+            font-size: 12pt;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 30px;
+            text-transform: uppercase;
+            line-height: 1.5;
+        }
+
+        /* TABEL UTAMA (SASARAN) */
+        .table-main {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+        .table-main th, 
+        .table-main td {
+            border: 1px solid #000;
+            padding: 6px 8px;
+            vertical-align: top;
+        }
+        .table-main th {
+            background-color: #eee; /* Sedikit abu saat di layar, putih saat print biasanya */
+            text-align: center;
+            font-weight: bold;
+        }
+
+        /* TABEL ANGGARAN (BORDERLESS) */
+        .table-budget {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+            margin-bottom: 40px;
+        }
+        .table-budget td {
+            padding: 4px 5px;
+            vertical-align: top;
+            border: none; /* Tidak ada garis */
+        }
+        .border-top-black {
+            border-top: 1px solid #000 !important;
+        }
+
+        /* TANDA TANGAN (MENGGUNAKAN TABEL AGAR RAPI) */
+        .table-signature {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 30px;
+            page-break-inside: avoid; /* Jangan terpotong halaman */
+        }
+        .table-signature td {
+            border: none;
+            text-align: center;
+            vertical-align: top;
+            padding: 0;
+        }
+        .sign-space {
+            height: 80px; /* Ruang untuk tanda tangan */
+        }
+        .name-underline {
+            font-weight: bold;
+            text-decoration: underline;
+        }
+
+        /* TOOLBAR TOMBOL */
         .toolbar {
-            position: fixed; top: 0; left: 0; right: 0; background: #333; padding: 10px; text-align: center;
+            position: fixed; 
+            top: 0; left: 0; right: 0; 
+            background: #333; 
+            padding: 15px; 
+            text-align: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            z-index: 1000;
         }
         .btn {
-            background: #007bff; color: white; border: none; padding: 8px 15px; cursor: pointer; border-radius: 4px; font-family: sans-serif; text-decoration: none; display: inline-block;
+            background: #007bff; color: white; border: none; padding: 10px 20px; 
+            cursor: pointer; border-radius: 5px; font-family: sans-serif; 
+            text-decoration: none; display: inline-block; font-weight: bold;
+            font-size: 14px;
         }
+        .btn:hover { background: #0056b3; }
         .btn-back { background: #6c757d; margin-right: 10px; }
-        
+        .btn-back:hover { background: #5a6268; }
+
+        /* PRINT MEDIA QUERY */
         @media print {
-            .toolbar { display: none; }
-            body { padding: 0; }
+            .toolbar { display: none !important; }
+            body { padding: 0; background-color: #fff; }
+            .table-main th { background-color: transparent !important; }
         }
     </style>
 </head>
 <body>
 
-    <div class="toolbar">
-        <a href="javascript:history.back()" class="btn btn-back">Kembali</a>
-        <button onclick="window.print()" class="btn">Cetak</button>
+    <div class="toolbar no-print">
+        <a href="javascript:history.back()" class="btn btn-back">← Kembali</a>
+        <button onclick="window.print()" class="btn">🖨️ Cetak Dokumen</button>
     </div>
 
-    <div style="margin-top: 30px;">
-        <div class="text-center font-bold text-lg uppercase mb-4">
+    <div style="margin-top: 50px;"> <div class="header-title">
             PERJANJIAN KINERJA TAHUN {{ $pk->tahun }}<br>
             {{ $jabatan->nama }}<br>
             DINAS KESEHATAN<br>
             PROVINSI KALIMANTAN SELATAN
         </div>
 
-        <table>
+        <table class="table-main">
             <thead>
                 <tr>
                     <th style="width: 5%;">No</th>
@@ -71,27 +149,34 @@
                 @php $no = 1; @endphp
                 @foreach($pk->sasarans as $sasaran)
                     @php 
-                        $rowspan = $sasaran->indikators->count() > 0 ? $sasaran->indikators->count() : 1; 
+                        $countIndikator = $sasaran->indikators->count();
+                        $rowspan = $countIndikator > 0 ? $countIndikator : 1; 
                     @endphp
                     
-                    @if($sasaran->indikators->count() > 0)
+                    @if($countIndikator > 0)
                         @foreach($sasaran->indikators as $index => $ind)
                             <tr>
+                                {{-- Kolom No & Sasaran hanya muncul di baris pertama (Rowspan) --}}
                                 @if($index === 0)
                                     <td rowspan="{{ $rowspan }}" class="text-center">{{ $no++ }}.</td>
                                     <td rowspan="{{ $rowspan }}">{{ $sasaran->sasaran }}</td>
                                 @endif
-                                <td>{{ $ind->nama_indikator }}</td>
+
+                                {{-- Indikator & Target --}}
+                                <td style="padding-left: 10px;">{{ $ind->nama_indikator }}</td>
                                 <td class="text-center">
                                     @php 
                                         $colTarget = 'target_' . $pk->tahun;
                                         $val = $ind->$colTarget ?? $ind->target; 
+                                        // Bersihkan .00 jika desimalnya 0
+                                        $val = (float)$val == (int)$val ? (int)$val : $val;
                                     @endphp
                                     {{ $val }} {{ $ind->satuan }}
                                 </td>
                             </tr>
                         @endforeach
                     @else
+                        {{-- Jika tidak ada indikator --}}
                         <tr>
                             <td class="text-center">{{ $no++ }}.</td>
                             <td>{{ $sasaran->sasaran }}</td>
@@ -103,11 +188,11 @@
             </tbody>
         </table>
 
-        <table style="margin-top: 20px; border: none;">
+        <table class="table-budget">
             <thead>
                 <tr>
-                    <th style="border: none; text-align: left; padding-left: 0; width: 70%;">Program/Kegiatan/Sub Kegiatan</th>
-                    <th style="border: none; text-align: right; width: 30%;">Anggaran</th>
+                    <th style="text-align: left; width: 70%; border:none; padding-bottom: 10px;">Program/Kegiatan/Sub Kegiatan</th>
+                    <th style="text-align: right; width: 30%; border:none; padding-bottom: 10px;">Anggaran</th>
                 </tr>
             </thead>
             <tbody>
@@ -115,54 +200,59 @@
                 @foreach($pk->anggarans as $idx => $anggaran)
                     @php $totalAnggaran += $anggaran->anggaran; @endphp
                     <tr>
-                        <td style="border: none; padding: 4px 0;">
+                        <td>
                             {{ $idx + 1 }}. 
                             @if($anggaran->subKegiatan)
                                 {{ $anggaran->subKegiatan->nama }}
                             @else
-                                {{-- LOGIKA PEMBERSIHAN KODE: Menghapus angka & titik di awal string --}}
+                                {{-- Regex Clean: Hapus angka di depan nama program agar rapi --}}
                                 {{ preg_replace('/^[\d\.]+\s*/', '', $anggaran->nama_program_kegiatan) }}
                             @endif
                         </td>
-                        <td style="border: none; text-align: right; padding: 4px 0;">
+                        <td class="text-right">
                             Rp {{ number_format($anggaran->anggaran, 0, ',', '.') }}
                         </td>
                     </tr>
                 @endforeach
+                
                 <tr style="font-weight: bold;">
-                    <td style="border: none; text-align: center; padding-top: 10px;">JUMLAH</td>
-                    <td style="border: none; text-align: right; padding-top: 10px; border-top: 1px solid #000;">
+                    <td class="text-center" style="padding-top: 10px;">JUMLAH</td>
+                    <td class="text-right border-top-black" style="padding-top: 10px;">
                         Rp {{ number_format($totalAnggaran, 0, ',', '.') }}
                     </td>
                 </tr>
             </tbody>
         </table>
 
-        <div class="signature-container">
-            <div class="signature-box">
-                <p class="font-bold mb-4">PIHAK KEDUA,</p>
-                <br><br><br>
-                @if($pegawai)
-                    <p class="signature-name uppercase">{{ $pegawai->nama }}</p>
-                    <p class="signature-nip">NIP. {{ $pegawai->nip }}</p>
-                @else
-                    <p class="signature-name">(Belum Ada Pejabat)</p>
-                @endif
-            </div>
+        <table class="table-signature">
+            <tr>
+                <td style="width: 50%;">
+                    <p class="font-bold">PIHAK KEDUA,</p>
+                    <div class="sign-space"></div> @if($pegawai)
+                        <p class="name-underline uppercase">{{ $pegawai->nama }}</p>
+                        <p>NIP. {{ $pegawai->nip }}</p>
+                    @else
+                        <p class="name-underline">(Belum Ada Pejabat)</p>
+                        <p>NIP. -</p>
+                    @endif
+                </td>
 
-            <div class="signature-box">
-                <p class="font-bold">PIHAK PERTAMA,</p>
-                <br><br><br>
-                @if($is_kepala_dinas)
-                    <p class="signature-name uppercase">H. MUHIDIN</p>
-                @elseif($atasan_pegawai)
-                    <p class="signature-name uppercase">{{ $atasan_pegawai->nama }}</p>
-                    <p class="signature-nip">NIP. {{ $atasan_pegawai->nip }}</p>
-                @else
-                    <p class="signature-name">(Atasan Belum Diset)</p>
-                @endif
-            </div>
-        </div>
+                <td style="width: 50%;">
+                    <p class="font-bold">PIHAK PERTAMA,</p>
+                    <div class="sign-space"></div> @if($is_kepala_dinas)
+                        {{-- Jika Jabatan Kepala Dinas, Pihak Pertama biasanya Gubernur/Sekda --}}
+                        <p class="name-underline uppercase">H. MUHIDIN</p>
+                        {{-- <p>NIP. ...</p> (Opsional jika Gubernur) --}}
+                    @elseif($atasan_pegawai)
+                        <p class="name-underline uppercase">{{ $atasan_pegawai->nama }}</p>
+                        <p>NIP. {{ $atasan_pegawai->nip }}</p>
+                    @else
+                        <p class="name-underline">(Atasan Belum Diset)</p>
+                        <p>NIP. -</p>
+                    @endif
+                </td>
+            </tr>
+        </table>
 
     </div>
 

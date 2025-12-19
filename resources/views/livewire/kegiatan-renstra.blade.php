@@ -1,8 +1,4 @@
 <div>
-    <div class="relative -mt-20 mb-8 z-20">
-        <h2 class="text-3xl font-bold text-white tracking-wide">Kegiatan</h2>
-        <p class="text-blue-100 text-sm mt-1">Master Data / Matrik Renstra / Program, Kegiatan & Sub Kegiatan / Program / Kegiatan</p>
-    </div>
 
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6 relative z-10">
         <h4 class="text-sm font-bold text-gray-800 mb-1">Perangkat Daerah</h4>

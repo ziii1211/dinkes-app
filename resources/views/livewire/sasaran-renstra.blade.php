@@ -1,9 +1,4 @@
 <div>
-    <!-- HEADER HALAMAN -->
-    <div class="relative -mt-20 mb-8 z-20">
-        <h2 class="text-3xl font-bold text-white tracking-wide">Sasaran Renstra</h2>
-        <p class="text-blue-100 text-sm mt-1">Master Data / Renstra / Sasaran</p>
-    </div>
 
     <div class="space-y-8 relative z-10">
         

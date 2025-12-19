@@ -1,9 +1,4 @@
 <div>
-    <!-- HEADER HALAMAN -->
-    <div class="relative -mt-20 mb-8 z-20">
-        <h2 class="text-3xl font-bold text-white tracking-wide">Sub Kegiatan</h2>
-        <p class="text-blue-100 text-sm mt-1">Master Data / Matrik Renstra / Program, Kegiatan & Sub Kegiatan / Kegiatan / Sub Kegiatan</p>
-    </div>
 
     <!-- INFO BOX -->
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 relative z-10">
