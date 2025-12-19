@@ -5,8 +5,8 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Tujuan;
-use App\Models\PohonKinerja as ModelPohon;
-use App\Models\VisualisasiRenstra;
+use App\Models\PohonKinerja as ModelPohon;      // Model Lama (Tabel Bawah)
+use App\Models\VisualisasiRenstra;              // Model Baru (Visualisasi)
 use App\Models\IndikatorPohonKinerja;
 use App\Models\Jabatan;
 
@@ -14,19 +14,27 @@ class CascadingRenstra extends Component
 {
     use WithPagination;
 
-    // --- STATES ---
+    // ==========================================
+    // 1. STATES & PROPERTIES
+    // ==========================================
+
+    // UI States
     public $isOpen = false;
     public $isOpenIndikator = false;
     public $isChild = false;
     public $isEditMode = false;
+    public $modalPreviewOpen = false; // <--- STATE BARU UNTUK PREVIEW
 
-    // --- DB PROPERTIES (LAMA) ---
+    // Properties DB Lama (Legacy)
     public $pohon_id, $tujuan_id, $nama_pohon, $parent_id;
     public $indikator_input, $indikator_nilai, $indikator_satuan, $indikator_list = [];
 
-    // --- DATA VISUALISASI ---
-    // Array ini sekarang akan berisi SEMUA node secara datar (Flat List)
+    // Properties Visualisasi (Data Utama)
     public $visualNodes = [];
+
+    // ==========================================
+    // 2. LIFECYCLE: MOUNT & RENDER
+    // ==========================================
 
     public function mount()
     {
@@ -35,14 +43,13 @@ class CascadingRenstra extends Component
 
     public function render()
     {
-        // 1. Build Tree Structure untuk View
-        // Mengubah Flat List $visualNodes menjadi Struktur Pohon
+        // 1. Build Tree untuk Visualisasi
         $manualTree = $this->buildVisualTreeStructure();
 
-        // 2. Data Dropdown Jabatan
+        // 2. Data Dropdown Jabatan (Urut Level & ID)
         $listJabatans = Jabatan::orderBy('level', 'asc')->orderBy('id', 'asc')->get();
 
-        // 3. Data Tabel Bawah (Legacy)
+        // 3. Data Tabel Lama (Bawah)
         $treeData = $this->getFlatTree(); 
         $masterPohons = ModelPohon::with('tujuan')->orderBy('id', 'asc')->get();
 
@@ -56,13 +63,26 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // LOGIC LOAD DATA (PERBAIKAN UTAMA DISINI)
+    // 3. ACTIONS: PREVIEW MODAL
+    // ==========================================
+
+    public function openPreview()
+    {
+        $this->modalPreviewOpen = true;
+    }
+
+    public function closePreview()
+    {
+        $this->modalPreviewOpen = false;
+    }
+
+    // ==========================================
+    // 4. DATA LOADING (FLAT LIST STRATEGY)
     // ==========================================
 
     public function loadVisualData()
     {
-        // UBAH LOGIC: Ambil SEMUA data (bukan cuma root) agar jadi Flat List
-        // Ini memastikan node anak (ID 21, 22, dst) ikut termuat ke visualNodes
+        // Load SEMUA data menjadi Flat List agar wire:model binding aman
         $allNodes = VisualisasiRenstra::orderBy('id', 'asc')->get();
         
         $this->visualNodes = [];
@@ -72,17 +92,16 @@ class CascadingRenstra extends Component
                 $this->visualNodes[] = $this->formatNodeFlat($node);
             }
         } else {
-            // Jika kosong, baru buat root manual
+            // Jika kosong, inisialisasi root manual
             $this->addManualRoot();
         }
     }
 
-    // Helper Format Flat (Tanpa Rekursi Children)
     private function formatNodeFlat($dbNode)
     {
         $items = $dbNode->content_data;
         
-        // Safety check untuk JSON decoding
+        // Safety Check JSON
         if(is_string($items)) {
             $items = json_decode($items, true);
         }
@@ -96,39 +115,41 @@ class CascadingRenstra extends Component
             'jabatan' => $dbNode->jabatan,
             'is_locked' => $dbNode->is_locked,
             'kinerja_items' => $items,
-            // Note: Kita TIDAK set 'children' disini. 
-            // 'children' akan dibuat otomatis oleh buildVisualTreeStructure di render()
         ];
     }
 
     // ==========================================
-    // REAL-TIME AUTO SAVE
+    // 5. REAL-TIME AUTO SAVE
     // ==========================================
-    
+
     public function updated($property)
     {
+        // Deteksi perubahan pada array visualNodes
         if (str_starts_with($property, 'visualNodes.')) {
             $parts = explode('.', $property);
             $index = $parts[1] ?? null;
 
             if ($index !== null && is_numeric($index)) {
-                // Autosave hanya jika node sudah ada di DB (bukan temp)
+                // Hanya autosave jika data sudah ada di DB (bukan temp)
                 if (isset($this->visualNodes[$index]['id']) && is_numeric($this->visualNodes[$index]['id'])) {
-                    $this->saveNodeData($index, true); // true = silent mode (no flash msg)
+                    $this->saveNodeData($index, true); // true = silent mode
                 }
             }
         }
     }
 
     // ==========================================
-    // LOGIC SIMPAN & UPDATE
+    // 6. SAVE & UPDATE LOGIC
     // ==========================================
 
     public function saveNodeData($nodeIndex, $silent = false)
     {
         $data = $this->visualNodes[$nodeIndex];
+        
+        // Tentukan Parent
         $parentIdToSave = ($data['parent_id'] && is_numeric($data['parent_id'])) ? $data['parent_id'] : null;
 
+        // Cek ID (Numeric = Update, String/Temp = Create)
         $node = is_numeric($data['id']) ? VisualisasiRenstra::find($data['id']) : null;
 
         if($node) {
@@ -139,7 +160,7 @@ class CascadingRenstra extends Component
                 'is_locked' => true
             ]);
         } else {
-            // CREATE NEW
+            // CREATE
             $newNode = VisualisasiRenstra::create([
                 'parent_id' => $parentIdToSave,
                 'jabatan' => $data['jabatan'],
@@ -147,24 +168,22 @@ class CascadingRenstra extends Component
                 'is_locked' => true
             ]);
             
-            // Simpan ID lama (temp_xxx)
+            // Simpan ID lama untuk update referensi anak
             $oldId = $this->visualNodes[$nodeIndex]['id'];
 
-            // Update Array Visual dengan ID Baru dari DB
+            // Update ID di Visual Array
             $this->visualNodes[$nodeIndex]['id'] = $newNode->id;
             $this->visualNodes[$nodeIndex]['is_locked'] = true;
 
-            // PENTING: Update Parent ID anak-anaknya yang masih pakai ID temp
-            // Agar rantai pohon tidak putus setelah parent disimpan
+            // Update Parent ID pada anak-anak yang masih nge-link ke ID temp
             foreach($this->visualNodes as $key => $vNode) {
                 if($vNode['parent_id'] === $oldId) {
                     $this->visualNodes[$key]['parent_id'] = $newNode->id;
-                    // Kita bisa autosave anak disini jika mau, tapi update array cukup utk visual
                 }
             }
         }
 
-        if(!$silent) session()->flash('message', 'Data tersimpan!');
+        if(!$silent) session()->flash('message', 'Data tersimpan otomatis!');
     }
 
     public function lockNode($nodeIndex) 
@@ -179,35 +198,32 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // LOGIC PENYUSUN POHON (TREE BUILDER)
+    // 7. TREE STRUCTURE BUILDER (VIEW HELPER)
     // ==========================================
 
     private function buildVisualTreeStructure()
     {
-        // 1. Mapping ke Object dan simpan Index Asli
-        // Index asli penting agar wire:model="visualNodes.INDEX..." tetap akurat
+        // 1. Mapping ke Object & Index
         $nodes = collect($this->visualNodes)->map(function($item, $key) {
             $item['original_index'] = $key;
             return (object) $item;
         });
 
-        // 2. Dictionary Key by ID untuk akses cepat
+        // 2. Dictionary
         $nodesDict = $nodes->keyBy('id');
         
-        // 3. Siapkan container children
+        // 3. Init Children
         foreach($nodes as $node) {
             $node->children = collect([]);
         }
 
         $tree = collect([]);
         
-        // 4. Susun Hirarki
+        // 4. Build Hierarchy
         foreach($nodes as $node) {
             if($node->parent_id && isset($nodesDict[$node->parent_id])) {
-                // Jika punya parent valid, masukkan ke children parent tersebut
                 $nodesDict[$node->parent_id]->children->push($node);
             } else {
-                // Jika tidak punya parent (atau parent tidak ketemu), anggap sebagai Root
                 $tree->push($node);
             }
         }
@@ -216,7 +232,7 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // CRUD ARRAY MANIPULATION
+    // 8. CRUD ACTIONS (NODE & ITEMS)
     // ==========================================
 
     public function addManualRoot()
@@ -232,9 +248,8 @@ class CascadingRenstra extends Component
 
     public function addManualChild($parentId)
     {
-        // Pastikan Parent bukan temp (harus saved) agar relasi aman
         if(!is_numeric($parentId)) {
-             session()->flash('error', 'Mohon Simpan (Lock) Parent terlebih dahulu sebelum menambah cabang!');
+             session()->flash('error', 'Simpan Parent terlebih dahulu!');
              return;
         }
 
@@ -245,43 +260,18 @@ class CascadingRenstra extends Component
             'is_locked' => false,
             'kinerja_items' => [['kinerja_utama' => '', 'indikators' => []]]
         ];
-        
-        // Tidak perlu reload visual data, karena kita push ke array. 
-        // View akan otomatis re-render via buildVisualTreeStructure
     }
 
     public function deleteManualNode($id)
     {
         if(is_numeric($id)) {
-            // Hapus dari DB (Cascade delete anak-anak di DB)
             VisualisasiRenstra::destroy($id);
         }
-
-        // Hapus dari Array Visual (Manual Recursion untuk membersihkan Array)
-        // Cara paling aman & bersih: Reload dari DB
-        // Tapi jika node itu temp, kita harus hapus manual dari array
-        
-        if(is_numeric($id)) {
-            $this->loadVisualData(); // Reload clean dari DB
-        } else {
-            // Hapus temp node dari array
-            // Cari index
-            $indexToDelete = null;
-            foreach($this->visualNodes as $key => $node) {
-                if($node['id'] === $id) {
-                    $indexToDelete = $key;
-                    break;
-                }
-            }
-            if($indexToDelete !== null) {
-                unset($this->visualNodes[$indexToDelete]);
-                $this->visualNodes = array_values($this->visualNodes);
-            }
-        }
+        // Jika temp, kita perlu hapus dari array manual, tapi reload lebih aman
+        $this->loadVisualData();
     }
 
-    // --- ITEM HANDLERS (KINERJA & INDIKATOR) ---
-    // Ditambahkan autosave check
+    // --- ITEM ACTIONS (KINERJA & INDIKATOR) ---
 
     public function addKinerjaItem($nodeIndex) 
     { 
@@ -310,9 +300,10 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // FUNGSI DB LAMA (LEGACY)
+    // 9. LEGACY LOGIC (DB LAMA / TABEL BAWAH)
     // ==========================================
-    
+    // Bagian ini tidak diubah agar fitur lama tetap berjalan normal.
+
     private function getFlatTree() { 
         $allNodes = ModelPohon::with(['tujuan', 'indikators', 'children.indikators', 'children.children.indikators'])->orderBy('created_at', 'asc')->get(); 
         $roots = $allNodes->whereNull('parent_id'); 
