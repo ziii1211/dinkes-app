@@ -1,6 +1,7 @@
 <div>
     <x-slot:title>Cascading Renstra</x-slot>
 
+    {{-- BREADCRUMB --}}
     <x-slot:breadcrumb>
         <a href="/" class="hover:text-white transition-colors">Dashboard</a>
         <span class="mx-2">/</span>
@@ -9,18 +10,28 @@
         <span class="font-medium text-white">Cascading Renstra</span>
     </x-slot>
 
+    {{-- ALERT MESSAGES --}}
     @if (session()->has('message'))
-        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4" role="alert">
+        <div class="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative mb-4 shadow-sm z-50">
             <span class="block sm:inline">{{ session('message') }}</span>
+        </div>
+    @endif
+    
+    @if (session()->has('error'))
+        <div class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-4 shadow-sm z-50">
+            <span class="block sm:inline">{{ session('error') }}</span>
         </div>
     @endif
 
     <div class="space-y-6">
         
-        {{-- BAGIAN 1: TABEL DATA (KODE LAMA TIDAK BERUBAH) --}}
+        {{-- ======================================================================== --}}
+        {{-- BAGIAN 1: TABEL DATA LAMA (DATABASE DATA CASCADING RENSTRA) --}}
+        {{-- ======================================================================== --}}
+        {{-- Bagian ini tetap dipertahankan agar fitur list data di bawah tetap jalan --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-4 border-b border-gray-200 flex justify-between items-center bg-white">
-                <h3 class="font-bold text-gray-800 text-lg">Data Cascading Renstra </h3>
+                <h3 class="font-bold text-gray-800 text-lg">Data Cascading Renstra</h3>
                 <button wire:click="openModal" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Buat Cascading Baru
@@ -40,11 +51,12 @@
                             @forelse($pohons as $pohon)
                                 <tr class="border-b border-gray-100 last:border-0 group hover:bg-gray-50">
                                     <td class="py-4 align-top text-gray-800">
+                                        {{-- Logic Indentasi untuk tampilan Tabel --}}
                                         @if($pohon->depth == 0)
                                             @if($pohon->tujuan)
                                                 <div class="font-bold text-gray-900 text-base mb-2">{{ $pohon->tujuan->sasaran_rpjmd }}</div>
                                             @endif
-                                            <div class="text-gray-600">{{ $pohon->nama_pohon }}</div>
+                                            <div class="text-gray-600 font-medium">{{ $pohon->nama_pohon }}</div>
                                         @else
                                             <div class="flex items-start text-gray-600" style="padding-left: {{ $pohon->depth * 1.5 }}rem;">
                                                 <span class="text-gray-400 mr-2 font-bold">@for($i = 0; $i < $pohon->depth; $i++)↳@endfor</span>
@@ -64,7 +76,7 @@
                                     <td class="py-4 align-top text-right">
                                         <div class="flex justify-end gap-1">
                                             <button wire:click="openIndikator({{ $pohon->id }})" class="px-3 py-1.5 bg-blue-500 hover:bg-blue-600 text-white text-xs rounded">Indikator</button>
-                                            <button wire:click="addChild({{ $pohon->id }})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">Tambah Indikator</button>
+                                            <button wire:click="addChild({{ $pohon->id }})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs rounded">Tambah</button>
                                             <button wire:click="edit({{ $pohon->id }})" class="px-3 py-1.5 bg-yellow-400 hover:bg-yellow-500 text-white text-xs rounded">Edit</button>
                                             <button wire:click="delete({{ $pohon->id }})" wire:confirm="Hapus? Anak-anaknya juga akan terhapus." class="px-3 py-1.5 bg-red-500 hover:bg-red-600 text-white text-xs rounded">Hapus</button>
                                         </div>
@@ -79,97 +91,77 @@
             </div>
         </div>
 
-        {{-- BAGIAN 2: VISUALISASI MANUAL SESUAI PERMINTAAN --}}
+        {{-- ======================================================================== --}}
+        {{-- BAGIAN 2: VISUALISASI POHON KINERJA (HORIZONTAL TREE) --}}
+        {{-- ======================================================================== --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-8 pb-4">
+            
+            {{-- Header Visualisasi --}}
             <div class="px-6 py-4 border-b border-gray-200 bg-gray-50 flex justify-between items-center relative z-20">
-                <h3 class="font-bold text-gray-800 text-lg">Visualisasi Cascading Renstra</h3>
-                <div class="flex gap-2">
-                    <button wire:click="addManualRoot" class="text-xs bg-green-600 hover:bg-green-700 text-white px-3 py-1.5 rounded transition-colors shadow flex items-center gap-1">
-                        <span>+</span> Tambah Root
-                    </button>
+                <h3 class="font-bold text-gray-800 text-lg">Visualisasi Pohon Kinerja (Struktur)</h3>
+                <div class="text-xs text-gray-500 italic">
+                    Gunakan scroll mouse untuk Zoom, klik & tahan untuk Geser (Pan).
                 </div>
             </div>
 
-            {{-- AREA CANVAS --}}
-            <div x-data="{ zoom: 1, panning: false, pointX: 0, pointY: 0, startX: 0, startY: 0 }" 
+            {{-- AREA CANVAS (Infinite Canvas Logic) --}}
+            {{-- x-data mengatur zoom dan panning --}}
+            <div x-data="{ zoom: 0.8, panning: false, pointX: 0, pointY: 50, startX: 0, startY: 0 }" 
                  class="relative w-full h-[800px] bg-gray-100 overflow-hidden cursor-grab active:cursor-grabbing border-b border-gray-200"
                  @mousedown="panning = true; startX = $event.clientX - pointX; startY = $event.clientY - pointY"
                  @mousemove="if(panning) { pointX = $event.clientX - startX; pointY = $event.clientY - startY }"
                  @mouseup="panning = false" @mouseleave="panning = false" @wheel.prevent="zoom += $event.deltaY * -0.001">
                 
-                {{-- Zoom Controls --}}
-                <div class="absolute top-4 right-4 z-30 flex flex-col gap-2 bg-white p-2 rounded shadow border border-gray-200">
-                    <button @click="zoom += 0.1" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-blue-100 font-bold text-gray-600 rounded">+</button>
-                    <button @click="zoom -= 0.1" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-blue-100 font-bold text-gray-600 rounded">-</button>
-                    <button @click="zoom = 1; pointX = 0; pointY = 0" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-blue-100 font-bold text-xs text-gray-600 rounded">R</button>
+                {{-- Background Pattern Grid --}}
+                <div class="absolute inset-0 pointer-events-none opacity-10" 
+                     style="background-image: radial-gradient(#6b7280 1px, transparent 1px); background-size: 20px 20px;">
                 </div>
 
-                {{-- Tree Container --}}
-                <div class="w-full min-h-full flex justify-center p-10 origin-top" 
+                {{-- Zoom Controls --}}
+                <div class="absolute top-4 right-4 z-30 flex flex-col gap-2 bg-white p-2 rounded shadow border border-gray-200">
+                    <button @click="zoom += 0.1" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-blue-100 font-bold text-gray-600 rounded" title="Zoom In">+</button>
+                    <button @click="zoom -= 0.1" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-blue-100 font-bold text-gray-600 rounded" title="Zoom Out">-</button>
+                    <button @click="zoom = 0.8; pointX = 0; pointY = 50" class="w-8 h-8 flex items-center justify-center bg-gray-100 hover:bg-blue-100 font-bold text-xs text-gray-600 rounded" title="Reset View">R</button>
+                </div>
+
+                {{-- MAIN TREE CONTAINER --}}
+                <div class="w-full min-h-full flex justify-center items-start pt-20 origin-top" 
                      :style="`transform: translate(${pointX}px, ${pointY}px) scale(${zoom}); transition: transform 0.1s linear;`">
                     
-                    <div class="flex flex-col gap-16 items-center">
+                    {{-- Container Root (Berjajar ke samping jika ada multi-root) --}}
+                    <div class="flex flex-row gap-32">
                         @forelse($manualTree as $root)
-                        <div class="flex flex-col items-center">
                             
-                            {{-- CARD LEVEL 1 (ROOT) - PANGGIL FILE PARTIAL --}}
-                            @include('livewire.partials.manual-card', ['node' => $root])
+                            {{-- PANGGIL PARTIAL REKURSIF (TREE-NODE) --}}
+                            {{-- Ini akan memanggil dirinya sendiri sampai anak terakhir --}}
+                            @include('livewire.partials.tree-node', ['node' => $root, 'isRoot' => true])
 
-                            {{-- LOGIC REKURSIF UNTUK ANAK-ANAKNYA --}}
-                            @if($root->children->count() > 0)
-                                <div class="h-12 w-px bg-gray-400"></div>
-                                <div class="flex gap-16 items-start relative">
-                                    {{-- Konektor Horizontal --}}
-                                    @if($root->children->count() > 1)
-                                        <div class="absolute top-0 left-0 h-px bg-gray-400" 
-                                             style="left: 50%; transform: translateX(-50%); width: {{ ($root->children->count() - 1) * 460 }}px;"></div>
-                                             {{-- Lebar konektor disesuaikan dengan lebar card (450px) + gap --}}
-                                    @endif
-
-                                    @foreach($root->children as $child)
-                                    <div class="flex flex-col items-center relative">
-                                        <div class="h-8 w-px bg-gray-400 -mt-8 mb-0"></div> 
-                                        
-                                        {{-- CARD LEVEL 2 --}}
-                                        @include('livewire.partials.manual-card', ['node' => $child])
-
-                                        {{-- LEVEL 3: GRANDCHILDREN --}}
-                                        @if($child->children->count() > 0)
-                                            <div class="h-12 w-px bg-gray-400"></div> 
-                                            <div class="flex gap-8 items-start relative">
-                                                @if($child->children->count() > 1)
-                                                    <div class="absolute top-0 left-0 h-px bg-gray-400" 
-                                                         style="left: 50%; transform: translateX(-50%); width: {{ ($child->children->count() - 1) * 460 }}px;"></div>
-                                                @endif
-
-                                                @foreach($child->children as $grandchild)
-                                                <div class="flex flex-col items-center relative">
-                                                    <div class="h-8 w-px bg-gray-400 -mt-8 mb-0"></div>
-                                                    
-                                                    {{-- CARD LEVEL 3 --}}
-                                                    @include('livewire.partials.manual-card', ['node' => $grandchild])
-
-                                                </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
-                                    </div>
-                                    @endforeach
-                                </div>
-                            @endif
-                        </div>
                         @empty
-                            <div class="text-gray-400 mt-10">Belum ada data visualisasi. Klik "+ Tambah Root".</div>
+                            {{-- State Kosong --}}
+                            <div class="flex flex-col items-center mt-20 opacity-60">
+                                <div class="bg-gray-200 p-6 rounded-full mb-4">
+                                    <svg class="w-12 h-12 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                                </div>
+                                <h4 class="text-xl font-bold text-gray-600">Visualisasi Kosong</h4>
+                                <p class="text-gray-500 mt-2 text-sm text-center max-w-md">
+                                    Belum ada data visualisasi yang dibuat.<br>
+                                    Data akan muncul otomatis jika ada data di tabel "visualisasi_renstras".
+                                </p>
+                            </div>
                         @endforelse
                     </div>
+
                 </div>
             </div>
         </div>
     </div>
 
-    {{-- MODAL DB (TETAP ADA UNTUK FITUR YANG LAMA) --}}
+    {{-- ======================================================================== --}}
+    {{-- MODAL - MODAL (DIPERTAHANKAN UNTUK FITUR TABEL LAMA) --}}
+    {{-- ======================================================================== --}}
+    
+    {{-- Modal Create/Edit Data DB Lama --}}
     @if($isOpen)
-        {{-- ... Kode modal database Anda sebelumnya (tidak saya ubah) ... --}}
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4">
                 <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center">
@@ -203,6 +195,7 @@
         </div>
     @endif
 
+    {{-- Modal Kelola Indikator DB Lama --}}
     @if($isOpenIndikator)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 overflow-hidden">
