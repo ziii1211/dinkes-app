@@ -47,14 +47,6 @@
             </div>
         </div>
 
-        <div class="flex gap-3 w-full lg:w-auto">
-            <button class="flex-1 lg:flex-none bg-slate-800 hover:bg-slate-900 text-white px-6 py-3 rounded-2xl text-sm font-bold transition-all shadow-lg shadow-slate-800/20 hover:-translate-y-0.5 active:scale-95">
-                Terapkan Filter
-            </button>
-            <button class="flex-1 lg:flex-none bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 px-6 py-3 rounded-2xl text-sm font-bold transition-colors hover:text-indigo-600 shadow-sm">
-                Reset
-            </button>
-        </div>
     </div>
 
     {{-- Section 3: Charts & Highlights --}}
