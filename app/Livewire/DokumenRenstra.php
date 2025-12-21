@@ -28,111 +28,94 @@ class DokumenRenstra extends Component
         // =================================================================================
         // 1. PERSIAPAN DATA (EAGER LOADING)
         // =================================================================================
-        // Ambil semua node pohon kinerja beserta indikatornya dalam satu query agar performa cepat
+        // Ambil indikator langsung dari eager loading
         $all_pohons = PohonKinerja::with('indikators')->get();
 
+        // Helper: Normalisasi Teks untuk pencarian dan filter unik
+        $normalizeText = function ($text) {
+            if (empty($text)) return '';
+            return strtolower(trim(preg_replace('/\s+/', ' ', $text)));
+        };
+
         // =================================================================================
-        // 2. FUNGSI REKURSIF PENGAMBIL INDIKATOR (CASCADING & UNIK)
+        // 2. FUNGSI PENGAMBIL INDIKATOR (LANGSUNG / DIRECT ONLY)
         // =================================================================================
-        // Mengambil indikator node saat ini + semua indikator anak-anaknya di bawahnya
+        // PERBAIKAN: Tidak lagi mengambil indikator dari child (rekursif dihapus)
+        // Agar data kolom 2 (Sasaran) tidak naik ke kolom 1 (Tujuan)
         
-        $getRecursiveIndicators = null;
-        $getRecursiveIndicators = function($node) use ($all_pohons, &$getRecursiveIndicators) {
+        $getIndicatorsForNode = function($node) use ($normalizeText) {
             if (!$node) return collect([]);
 
-            // A. Ambil indikator milik node ini sendiri
-            $indicators = $node->indikators ?? collect([]);
+            // Hanya ambil indikator yang menempel langsung pada node ini
+            $rawIndicators = $node->indikators ? collect($node->indikators) : collect([]);
 
-            // B. Cari anak-anak dari node ini (menggunakan filter collection, bukan query DB)
-            $children = $all_pohons->where('parent_id', $node->id);
-
-            // C. Loop setiap anak dan ambil indikatornya secara rekursif (turunan)
-            foreach ($children as $child) {
-                $indicators = $indicators->merge($getRecursiveIndicators($child));
-            }
-
-            return $indicators;
-        };
-
-        // Wrapper utama untuk digunakan di map
-        $getIndicatorsForNode = function($node) use ($getRecursiveIndicators) {
-            if (!$node) return collect([]);
-
-            // Ambil semua indikator (Induk + Turunan)
-            $rawIndicators = $getRecursiveIndicators($node);
-
-            // Filter Duplikat dengan Normalisasi Teks
-            // (Mengatasi beda spasi atau huruf besar kecil)
-            return $rawIndicators->unique(function ($item) {
-                return strtolower(trim($item->nama_indikator));
-            })->values(); // Reset key array
+            // Tetap lakukan filter duplikat untuk berjaga-jaga jika ada data kotor di node yang sama
+            return $rawIndicators
+                ->filter(function($item) {
+                    return !empty($item->nama_indikator);
+                })
+                ->map(function($item) use ($normalizeText) {
+                    $item->temp_normalized_name = $normalizeText($item->nama_indikator);
+                    return $item;
+                })
+                ->unique('temp_normalized_name') // Filter unik
+                ->values(); // Reset index
         };
 
         // =================================================================================
-        // 3. FUNGSI PENCARIAN NODE (MATCHING YANG LEBIH KETAT)
+        // 3. FUNGSI PENCARIAN NODE (MATCHING DATA MASTER <-> CASCADING)
         // =================================================================================
-        // Mencari node PohonKinerja yang cocok dengan data dokumen (Tujuan/Sasaran/dll)
 
-        $findPohonNode = function($item, $type) use ($all_pohons) {
+        $findPohonNode = function($item, $type) use ($all_pohons, $normalizeText) {
             
-            // --- PRIORITAS 1: PENCARIAN BY ID (KHUSUS TUJUAN) ---
-            // Jika ada relasi ID yang jelas (seperti di model Tujuan), gunakan itu.
+            // Prioritas 1: Pencarian by ID
             if ($type === 'tujuan' && isset($item->id)) {
                 $matchById = $all_pohons->where('tujuan_id', $item->id)->first();
                 if ($matchById) return $matchById;
             }
 
-            // --- PERSIAPAN TEKS ---
-            // Bersihkan teks dari simbol dan ubah ke huruf kecil
-            $cleaner = function($str) {
-                return strtolower(trim(preg_replace('/[^a-zA-Z0-9 ]/', ' ', $str ?? '')));
-            };
-
+            // Siapkan teks target
             $targetText = '';
             if ($type === 'tujuan') {
-                $targetText = $cleaner($item->tujuan ?? $item->sasaran_rpjmd);
+                $targetText = $normalizeText($item->tujuan ?? $item->sasaran_rpjmd);
             } elseif ($type === 'sasaran') {
-                $targetText = $cleaner($item->sasaran);
+                $targetText = $normalizeText($item->sasaran);
             } elseif ($type === 'outcome') {
-                $targetText = $cleaner($item->outcome);
+                $targetText = $normalizeText($item->outcome);
             } elseif ($type === 'kegiatan' || $type === 'sub_kegiatan') {
-                $targetText = $cleaner($item->nama);
+                $targetText = $normalizeText($item->nama);
             }
 
             if (empty($targetText)) return null;
 
-            // --- PRIORITAS 2: EXACT MATCH (TEKS PERSIS SAMA) ---
-            // Cari node yang namanya persis sama dengan target
-            $exactMatch = $all_pohons->first(function($pohon) use ($cleaner, $targetText) {
-                return $cleaner($pohon->nama_pohon) === $targetText;
+            // Prioritas 2: Exact Match
+            $exactMatch = $all_pohons->first(function($pohon) use ($normalizeText, $targetText) {
+                return $normalizeText($pohon->nama_pohon) === $targetText;
             });
             if ($exactMatch) return $exactMatch;
 
-            // --- PRIORITAS 3: FUZZY MATCH (KEMIRIPAN KATA) ---
-            // Jika tidak ada yang persis, cari yang paling mirip (Skor Dice Coefficient)
+            // Prioritas 3: Fuzzy Match (Dice Coefficient) untuk typo dikit
             $bestMatch = null;
             $bestScore = 0;
-            $targetWords = array_filter(explode(' ', $targetText)); // Pecah jadi kata-kata
+            $targetWords = array_filter(explode(' ', $targetText));
 
-            foreach ($all_pohons as $pohon) {
-                $pohonName = $cleaner($pohon->nama_pohon);
-                $pohonWords = array_filter(explode(' ', $pohonName));
+            if (count($targetWords) > 0) {
+                foreach ($all_pohons as $pohon) {
+                    $pohonName = $normalizeText($pohon->nama_pohon);
+                    $pohonWords = array_filter(explode(' ', $pohonName));
 
-                if (count($pohonWords) == 0 || count($targetWords) == 0) continue;
+                    if (count($pohonWords) == 0) continue;
 
-                // Hitung kemiripan kata (Dice Coefficient)
-                $intersection = array_intersect($pohonWords, $targetWords);
-                $diceScore = (2 * count($intersection)) / (count($pohonWords) + count($targetWords));
+                    $intersection = array_intersect($pohonWords, $targetWords);
+                    $diceScore = (2 * count($intersection)) / (count($pohonWords) + count($targetWords));
 
-                // Simpan skor tertinggi
-                if ($diceScore > $bestScore) {
-                    $bestScore = $diceScore;
-                    $bestMatch = $pohon;
+                    if ($diceScore > $bestScore) {
+                        $bestScore = $diceScore;
+                        $bestMatch = $pohon;
+                    }
                 }
             }
 
-            // Hanya kembalikan jika kemiripan minimal 75% (0.75) agar kotak tidak salah
-            // Sebelumnya 0.6, dinaikkan agar lebih akurat
             if ($bestScore >= 0.75) {
                 return $bestMatch;
             }
@@ -143,10 +126,10 @@ class DokumenRenstra extends Component
         // =================================================================================
         // 4. MAPPING DATA KE VIEW
         // =================================================================================
-        // Loop setiap data master dan cari pasangannya di Pohon Kinerja
 
         $tujuans = Tujuan::all()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
             $node = $findPohonNode($item, 'tujuan');
+            // Hanya ambil indikator milik node ini, tidak termasuk anak-anaknya
             $item->indikators_from_pohon = $getIndicatorsForNode($node);
             return $item;
         });
@@ -169,22 +152,35 @@ class DokumenRenstra extends Component
             return $item;
         }); 
 
-        $sub_kegiatans = SubKegiatan::with('indikators')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
-            // Prioritaskan indikator manual dari DB sub_kegiatan jika ada
+        $sub_kegiatans = SubKegiatan::with('indikators')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode, $normalizeText) {
+            
+            // 1. Ambil Indikator Manual (dari DB SubKegiatan langsung)
+            $manualIndicators = collect([]);
             if($item->indikators && $item->indikators->isNotEmpty()) {
-                // Konversi format indikator manual agar sama strukturnya dengan indikator pohon
-                // Asumsi indikator manual punya properti 'keterangan' yang dipetakan ke 'nama_indikator'
-                $manualIndikators = $item->indikators->map(function($ind) {
+                $manualIndicators = $item->indikators->map(function($ind) {
                     $obj = new \stdClass();
-                    $obj->nama_indikator = $ind->keterangan ?? $ind->nama_indikator;
+                    $obj->nama_indikator = $ind->keterangan ?? $ind->nama_indikator ?? '-';
                     return $obj;
                 });
-                $item->indikators_from_pohon = $manualIndikators;
-            } else {
-                // Jika manual kosong, baru cari di pohon
-                $node = $findPohonNode($item, 'sub_kegiatan');
-                $item->indikators_from_pohon = $getIndicatorsForNode($node);
             }
+
+            // 2. Ambil Indikator dari Pohon (Node SubKegiatan saja)
+            $node = $findPohonNode($item, 'sub_kegiatan');
+            $cascadingIndicators = $getIndicatorsForNode($node);
+
+            // 3. Gabungkan Keduanya
+            $mergedIndicators = $manualIndicators->concat($cascadingIndicators);
+
+            // 4. Filter Duplikat (Manual vs Pohon)
+            $item->indikators_from_pohon = $mergedIndicators
+                ->filter(function($ind) { return !empty($ind->nama_indikator); })
+                ->map(function($ind) use ($normalizeText) {
+                    $ind->temp_normalized_name = $normalizeText($ind->nama_indikator);
+                    return $ind;
+                })
+                ->unique('temp_normalized_name')
+                ->values();
+
             return $item;
         });
 
@@ -198,7 +194,7 @@ class DokumenRenstra extends Component
     }
 
     // =================================================================================
-    // 5. FUNGSI MODAL EDIT (DATA DOKUMEN)
+    // 5. MODAL EDIT
     // =================================================================================
 
     public function openEditModal()

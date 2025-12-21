@@ -69,18 +69,19 @@
                                 <th class="p-4 border-b border-gray-200 w-1/6">Sasaran</th>
                                 <th class="p-4 border-b border-gray-200 w-1/6">Outcome</th>
                                 <th class="p-4 border-b border-gray-200 w-1/6">Output</th>
-                                <th class="p-4 border-b border-gray-200 w-1/6">Indikator</th>
+                                <th class="p-4 border-b border-gray-200 w-1/6 bg-blue-50">Indikator</th>
                                 <th class="p-4 border-b border-gray-200 w-1/6 bg-gray-50">Program / Kegiatan / Sub Kegiatan</th>
                             </tr>
                         </thead>
                         <tbody class="text-sm text-gray-600 divide-y divide-gray-100">
                             
+                            {{-- TUJUAN --}}
                             @foreach($tujuans as $tujuan)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4 font-medium text-gray-800">{{ $tujuan->tujuan ?? $tujuan->sasaran_rpjmd }}</td>
                                 <td class="p-4"></td><td class="p-4"></td><td class="p-4"></td>
                                 
-                                <td class="p-4">
+                                <td class="p-4 bg-blue-50/20">
                                     @if(isset($tujuan->indikators_from_pohon) && $tujuan->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
                                             @foreach($tujuan->indikators_from_pohon as $ind)
@@ -96,13 +97,14 @@
                             </tr>
                             @endforeach
 
+                            {{-- SASARAN --}}
                             @foreach($sasarans as $sasaran)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td>
                                 <td class="p-4 font-medium text-gray-800">{{ $sasaran->sasaran }}</td>
                                 <td class="p-4"></td><td class="p-4"></td>
                                 
-                                <td class="p-4">
+                                <td class="p-4 bg-blue-50/20">
                                     @if(isset($sasaran->indikators_from_pohon) && $sasaran->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
                                             @foreach($sasaran->indikators_from_pohon as $ind)
@@ -118,13 +120,14 @@
                             </tr>
                             @endforeach
 
+                            {{-- OUTCOME --}}
                             @foreach($outcomes as $outcome)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td><td class="p-4"></td>
                                 <td class="p-4 font-medium text-gray-800">{{ $outcome->outcome }}</td>
                                 <td class="p-4"></td>
                                 
-                                <td class="p-4">
+                                <td class="p-4 bg-blue-50/20">
                                     @if(isset($outcome->indikators_from_pohon) && $outcome->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
                                             @foreach($outcome->indikators_from_pohon as $ind)
@@ -143,12 +146,13 @@
                             </tr>
                             @endforeach
 
+                            {{-- KEGIATAN --}}
                             @foreach($kegiatans as $kegiatan)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td><td class="p-4"></td><td class="p-4"></td>
                                 <td class="p-4 font-medium text-gray-800">{{ $kegiatan->output }}</td>
                                 
-                                <td class="p-4">
+                                <td class="p-4 bg-blue-50/20">
                                     @if(isset($kegiatan->indikators_from_pohon) && $kegiatan->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
                                             @foreach($kegiatan->indikators_from_pohon as $ind)
@@ -167,20 +171,15 @@
                             </tr>
                             @endforeach
 
+                            {{-- SUB KEGIATAN --}}
                             @foreach($sub_kegiatans as $sub)
                             <tr class="hover:bg-gray-50 align-top">
                                 <td class="p-4"></td><td class="p-4"></td><td class="p-4"></td>
                                 
                                 <td class="p-4 font-medium text-gray-800">{{ $sub->output ?? '-' }}</td>
                                 
-                                <td class="p-4">
-                                    @if($sub->indikators->isNotEmpty())
-                                        <ul class="list-disc list-inside space-y-1 text-gray-700 font-medium">
-                                            @foreach($sub->indikators as $ind)
-                                                <li>{{ $ind->keterangan }}</li>
-                                            @endforeach
-                                        </ul>
-                                    @elseif(isset($sub->indikators_from_pohon) && $sub->indikators_from_pohon->isNotEmpty())
+                                <td class="p-4 bg-blue-50/20">
+                                    @if(isset($sub->indikators_from_pohon) && $sub->indikators_from_pohon->isNotEmpty())
                                         <ul class="list-disc list-inside space-y-1 text-gray-700">
                                             @foreach($sub->indikators_from_pohon as $ind)
                                                 <li>{{ $ind->nama_indikator }}</li>
@@ -217,12 +216,10 @@
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">No Dokumen</label>
                     <input type="text" wire:model="edit_nomor_dokumen" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none">
-                    @error('edit_nomor_dokumen') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Penetapan</label>
                     <input type="text" wire:model="edit_tanggal_penetapan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-800 focus:ring-2 focus:ring-blue-500 outline-none">
-                    @error('edit_tanggal_penetapan') <span class="text-red-500 text-xs mt-1">{{ $message }}</span> @enderror
                 </div>
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
