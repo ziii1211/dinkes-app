@@ -56,7 +56,7 @@
                     {{-- UPDATED: Logo Kalsel & GERMAS Berdampingan --}}
                     <div class="flex items-center justify-center gap-6 mb-6">
                         {{-- 1. Logo Provinsi Kalsel --}}
-                        <img src="{{ asset('logo-prov-kalsel.png') }}" 
+                        <img src="{{ asset('logo pemprov.png') }}" 
                              class="h-20 w-auto drop-shadow-[0_0_15px_rgba(255,255,255,0.15)] transition-transform hover:scale-110 duration-300" 
                              alt="Pemprov Kalsel">
                         

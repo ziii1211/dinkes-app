@@ -9,7 +9,7 @@
             
             <!-- Header Card & Tombol Tambah -->
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
-                <h3 class="font-bold text-gray-800 text-lg">Daftar Tujuan Renstra</h3>
+                <h3 class="font-bold text-gray-800 text-lg">Tujuan Renstra</h3>
                 
                 <!-- Tombol Tambah (Memicu Modal Utama) -->
                 <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
