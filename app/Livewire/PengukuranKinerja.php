@@ -21,6 +21,9 @@ class PengukuranKinerja extends Component
     public $tahun;
     public $selectedMonth;
     
+    // INI YANG SEBELUMNYA HILANG:
+    public $availableYears = []; 
+
     public $pk = null;
     public $rencanaAksis = []; 
 
@@ -48,16 +51,27 @@ class PengukuranKinerja extends Component
         $this->jabatan = Jabatan::with('pegawai')->findOrFail($jabatanId);
         $this->pegawai = $this->jabatan->pegawai;
 
-        // PERBAIKAN: Ambil PK terakhir yang status_verifikasi = 'disetujui'
+        // Ambil PK terakhir yang disetujui
         $lastPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
-                    ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
+                    ->where('status_verifikasi', 'disetujui')
                     ->latest('tahun')
                     ->first();
 
         $this->tahun = $lastPk ? $lastPk->tahun : date('Y');
         $this->selectedMonth = (int) date('n');
 
+        // MEMBUAT LIST TAHUN (Wajib ada untuk dropdown)
+        $currentYear = date('Y');
+        $this->availableYears = range($currentYear - 2, $currentYear + 5);
+
         $this->loadData();
+    }
+
+    // FUNGSI UNTUK MENGUBAH TAHUN
+    public function setTahun($year)
+    {
+        $this->tahun = $year;
+        $this->loadData(); // Reload data sesuai tahun baru
     }
 
     public function selectMonth($month)
@@ -70,11 +84,11 @@ class PengukuranKinerja extends Component
     {
         $this->checkScheduleStatus();
 
-        // PERBAIKAN: Ambil PK yang status_verifikasi = 'disetujui'
+        // Ambil PK sesuai tahun yang dipilih ($this->tahun)
         $this->pk = PerjanjianKinerja::with(['sasarans.indikators'])
             ->where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
-            ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
+            ->where('status_verifikasi', 'disetujui')
             ->first();
             
         if ($this->pk) {
@@ -167,7 +181,6 @@ class PengukuranKinerja extends Component
         }
     }
 
-    // --- FITUR ADMIN: ATUR JADWAL ---
     public function openAturJadwal()
     {
         $jadwal = JadwalPengukuran::where('tahun', $this->tahun)

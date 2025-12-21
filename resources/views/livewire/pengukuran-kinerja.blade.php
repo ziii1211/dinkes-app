@@ -21,9 +21,49 @@
 
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
+                
+                <div class="border border-gray-100 rounded-lg p-4 bg-gray-50 relative" x-data="{ open: false, search: '' }">
                     <label class="text-xs text-gray-400 uppercase font-bold mb-1 block">Tahun</label>
-                    <div class="text-lg font-bold text-gray-800">{{ $tahun }}</div>
+                    
+                    <button @click="open = !open" @click.outside="open = false" type="button" class="flex items-center justify-between w-full bg-white border border-gray-200 text-gray-800 text-lg font-bold py-1 px-3 rounded hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all">
+                        <span>{{ $tahun }}</span>
+                        <svg class="w-4 h-4 text-gray-400 ml-2 transition-transform duration-200" :class="{'rotate-180': open}" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                    </button>
+                
+                    <div x-show="open" 
+                         x-transition:enter="transition ease-out duration-100"
+                         x-transition:enter-start="transform opacity-0 scale-95"
+                         x-transition:enter-end="transform opacity-100 scale-100"
+                         x-transition:leave="transition ease-in duration-75"
+                         x-transition:leave-start="transform opacity-100 scale-100"
+                         x-transition:leave-end="transform opacity-0 scale-95"
+                         class="absolute left-0 mt-1 w-full bg-white border border-gray-200 rounded-lg shadow-xl z-50 overflow-hidden">
+                        
+                        <div class="p-2 border-b border-gray-100">
+                            <input x-model="search" type="text" placeholder="Cari tahun..." class="w-full px-2 py-1 text-sm border border-gray-200 rounded focus:outline-none focus:border-blue-400 text-gray-600">
+                        </div>
+                
+                        <div class="max-h-48 overflow-y-auto">
+                            @foreach($availableYears as $y)
+                                <button 
+                                    x-show="'{{ $y }}'.includes(search)"
+                                    wire:click="setTahun({{ $y }}); open = false" 
+                                    type="button" 
+                                    class="w-full text-left px-4 py-2 text-sm hover:bg-blue-50 transition-colors {{ $tahun == $y ? 'text-blue-600 font-bold bg-blue-50' : 'text-gray-700' }}">
+                                    
+                                    <div class="flex justify-between items-center">
+                                        <span>{{ $y }}</span>
+                                        @if($tahun == $y)
+                                            <svg class="w-4 h-4 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                                        @endif
+                                    </div>
+                                </button>
+                            @endforeach
+                            <div x-show="!$el.parentNode.querySelectorAll('button[x-show]').length" class="px-4 py-2 text-xs text-gray-400 italic text-center" style="display: none;">
+                                Tahun tidak ditemukan
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
                     <label class="text-xs text-gray-400 uppercase font-bold mb-1 block">Perangkat Daerah</label>
@@ -188,7 +228,6 @@
                             </button>
                         @endif
                     @endif
-                    {{-- TOMBOL SINKRON DARI E-DIALOG SUDAH DIHAPUS --}}
                 </div>
             </div>
             <div class="p-6">
