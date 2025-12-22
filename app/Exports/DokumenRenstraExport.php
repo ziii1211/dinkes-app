@@ -20,54 +20,69 @@ class DokumenRenstraExport implements FromView, WithColumnWidths, WithStyles
         $this->data = $data;
     }
 
+    // PENTING: Kita arahkan ke view khusus Excel (bukan PDF)
     public function view(): View
     {
-        return view('cetak.dokumen-renstra', $this->data);
+        // Pastikan Anda membuat file view ini (lihat Langkah 2)
+        return view('cetak.dokumen-renstra-excel', $this->data);
     }
 
     /**
-     * 1. Atur Lebar Kolom (Proporsional sesuai konten)
+     * 1. Atur Lebar Kolom (Disesuaikan dengan konten Renstra)
      */
     public function columnWidths(): array
     {
         return [
-            'A' => 20, // Tujuan
-            'B' => 20, // Sasaran
-            'C' => 30, // Outcome
-            'D' => 30, // Output
-            'E' => 50, // Indikator (Paling lebar karena list)
-            'F' => 45, // Program (Lebar sedang)
+            'A' => 25, // Tujuan (Narasi cukup panjang)
+            'B' => 25, // Sasaran
+            'C' => 30, // Outcome (Program)
+            'D' => 30, // Output (Kegiatan)
+            'E' => 50, // Indikator (Paling butuh ruang karena list)
+            'F' => 40, // Nama Program/Kegiatan (Kode + Nama)
         ];
     }
 
     /**
-     * 2. Styling Lengkap
+     * 2. Styling Lengkap Agar Rapi
      */
     public function styles(Worksheet $sheet)
     {
-        // Hitung baris terakhir data
+        // Ambil baris terakhir data
         $lastRow = $sheet->getHighestRow();
 
-        // --- A. GLOBAL STYLE (Seluruh Halaman) ---
-        // Font Arial, Size 10, Wrap Text (Turun baris), Rata Atas
+        // --- A. GLOBAL STYLE (Seluruh Sel) ---
         $sheet->getStyle('A1:F' . $lastRow)->applyFromArray([
             'font' => [
                 'name' => 'Arial',
-                'size' => 10, 
+                'size' => 10,
             ],
             'alignment' => [
-                'vertical' => Alignment::VERTICAL_TOP, // Data dimulai dari atas sel
-                'wrapText' => true, // Teks panjang otomatis turun ke bawah
+                'vertical' => Alignment::VERTICAL_TOP, // PENTING: Teks mulai dari atas
+                'wrapText' => true, // PENTING: Teks turun ke bawah jika panjang
             ],
         ]);
 
-        // --- B. JUDUL UTAMA (Baris 1) ---
-        $sheet->mergeCells('A1:F1'); // Gabung kolom A-F
-        $sheet->getRowDimension(1)->setRowHeight(30); // Tinggi baris judul
-        $sheet->getStyle('A1')->applyFromArray([
+        // --- B. JUDUL (Baris 1 & 2) ---
+        // Kita asumsikan Baris 1: Unit Kerja, Baris 2: Periode
+        $sheet->getStyle('A1:A2')->applyFromArray([
+            'font' => ['bold' => true, 'size' => 12],
+            'alignment' => ['horizontal' => Alignment::HORIZONTAL_LEFT],
+        ]);
+        
+        // --- C. HEADER TABEL (Baris 4) ---
+        // (Baris 3 kita kasih jeda kosong biar rapi)
+        $headerRow = 4; 
+        
+        $sheet->getRowDimension($headerRow)->setRowHeight(30); 
+        $sheet->getStyle("A{$headerRow}:F{$headerRow}")->applyFromArray([
             'font' => [
-                'bold' => true, 
-                'size' => 14
+                'bold' => true,
+                'color' => ['argb' => 'FFFFFFFF'], // Teks Putih
+                'size' => 10
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['argb' => 'FF1A2C42'], // Background Navy
             ],
             'alignment' => [
                 'horizontal' => Alignment::HORIZONTAL_CENTER,
@@ -75,28 +90,12 @@ class DokumenRenstraExport implements FromView, WithColumnWidths, WithStyles
             ],
         ]);
 
-        // --- C. HEADER TABEL (Baris 2) ---
-        // Background Navy, Teks Putih, Bold, Rata Tengah
-        $sheet->getRowDimension(2)->setRowHeight(35); // Tinggi baris header lebih lega
-        $sheet->getStyle('A2:F2')->applyFromArray([
-            'font' => [
-                'bold' => true,
-                'color' => ['argb' => 'FFFFFFFF'], // Warna Putih
-                'size' => 10
-            ],
-            'fill' => [
-                'fillType' => Fill::FILL_SOLID,
-                'startColor' => ['argb' => 'FF1A2C42'], // Warna Navy Blue
-            ],
-            'alignment' => [
-                'horizontal' => Alignment::HORIZONTAL_CENTER, // Kiri-Kanan Tengah
-                'vertical' => Alignment::VERTICAL_CENTER,   // Atas-Bawah Tengah (FIX ERROR DISINI)
-            ],
-        ]);
-
-        // --- D. BORDER TABEL (Garis Hitam Tipis) ---
-        // Terapkan border dari Header (A2) sampai Data Terakhir
-        $sheet->getStyle('A2:F' . $lastRow)->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+        // --- D. BORDER TABEL ---
+        // Beri garis hanya pada area Tabel (Mulai dari Header sampai bawah)
+        $sheet->getStyle("A{$headerRow}:F{$lastRow}")
+              ->getBorders()
+              ->getAllBorders()
+              ->setBorderStyle(Border::BORDER_THIN);
 
         return [];
     }

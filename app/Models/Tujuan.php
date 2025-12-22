@@ -32,4 +32,9 @@ class Tujuan extends Model
     {
         return $this->hasMany(Sasaran::class);
     }
+
+    public function pohonKinerja()
+    {
+        return $this->hasOne(PohonKinerja::class, 'tujuan_id');
+    }
 }

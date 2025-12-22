@@ -38,4 +38,9 @@ class Sasaran extends Model
     {
         return $this->hasMany(Outcome::class);
     }
+
+    public function pohonKinerja()
+    {
+        return $this->hasOne(PohonKinerja::class, 'sasaran_id');
+    }
 }

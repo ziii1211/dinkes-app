@@ -53,4 +53,9 @@ class Outcome extends Model
     // SEMENTARA KITA GUNAKAN LOGIKA MANUAL DI CONTROLLER AGAR AMAN
     // (Silakan lewati edit model ini jika ragu struktur DB-nya)
 }
+
+public function pohonKinerja()
+    {
+        return $this->hasOne(PohonKinerja::class, 'outcome_id');
+    }
 }

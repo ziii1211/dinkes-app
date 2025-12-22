@@ -35,4 +35,9 @@ class SubKegiatan extends Model
     {
         return $this->hasMany(IndikatorSubKegiatan::class, 'sub_kegiatan_id');
     }
+
+    public function pohonKinerja()
+    {
+        return $this->hasOne(PohonKinerja::class, 'sub_kegiatan_id');
+    }
 }

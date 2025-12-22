@@ -35,4 +35,9 @@ class Kegiatan extends Model
     {
         return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
+
+    public function pohonKinerja()
+    {
+        return $this->hasOne(PohonKinerja::class, 'kegiatan_id');
+    }
 }
