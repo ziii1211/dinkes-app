@@ -11,6 +11,9 @@ use App\Models\SubKegiatan;
 use App\Models\PohonKinerja;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
+use Maatwebsite\Excel\Facades\Excel; // Pastikan package excel sudah install
+use App\Exports\DokumenRenstraExport;
+use Barryvdh\DomPDF\Facade\Pdf; // Pastikan package dompdf sudah install
 
 class DokumenRenstra extends Component
 {
@@ -23,186 +26,229 @@ class DokumenRenstra extends Component
     public $edit_nomor_dokumen;
     public $edit_tanggal_penetapan;
 
-    public function render()
+    // Cache data pohon untuk optimasi
+    protected $all_pohons;
+
+    // =================================================================================
+    // 1. CORE LOGIC (DIPISAHKAN AGAR BISA DIPAKAI EXPORT)
+    // =================================================================================
+
+    public function getDataRenstra()
     {
-        // =================================================================================
-        // 1. PERSIAPAN DATA
-        // =================================================================================
-        // Hapus 'children' dari eager loading untuk mencegah kebocoran data anak ke induk
-        $all_pohons = PohonKinerja::with('indikators')->get();
+        // Load data pohon sekali saja
+        $this->all_pohons = PohonKinerja::with(['indikators', 'children'])->get();
 
-        // Helper: Normalisasi Teks (Pembersihan tanda baca & spasi)
-        $normalizeText = function ($text) {
-            if (empty($text)) return '';
-            // Hapus karakter aneh, sisakan huruf dan angka, lalu lowercase
-            $text = preg_replace('/[^a-zA-Z0-9\s]/', '', $text);
-            return strtolower(trim(preg_replace('/\s+/', ' ', $text)));
-        };
+        // 1. Identifikasi Stop Points
+        $stopForSasaran = $this->getStopIds(Outcome::all(), 'outcome');  
+        $stopForOutcome = $this->getStopIds(Kegiatan::all(), 'kegiatan'); 
+        $stopForKegiatan = $this->getStopIds(SubKegiatan::all(), 'sub_kegiatan');
 
-        // =================================================================================
-        // 2. FUNGSI PENGAMBIL INDIKATOR (STRICT / DIRECT ONLY)
-        // =================================================================================
-        // PERBAIKAN UTAMA:
-        // Fungsi ini hanya mengambil indikator yang menempel LANGSUNG pada node tersebut.
-        // Tidak ada looping ke children/anak. Ini menjamin data tidak naik ke atas (tidak duplikat).
-
-        $getIndicatorsForNode = function($node) {
-            if (!$node) return collect([]);
-
-            // Ambil relasi indikator langsung
-            $indicators = $node->indikators ? collect($node->indikators) : collect([]);
-
-            return $indicators
-                ->filter(function($item) {
-                    return !empty($item->nama_indikator);
-                })
-                // Pastikan unik berdasarkan nama (case insensitive) dalam satu kotak
-                ->unique(function($item) {
-                    return strtolower(trim($item->nama_indikator));
-                })
-                ->values();
-        };
-
-        // =================================================================================
-        // 3. FUNGSI PENCARIAN NODE (SIMILAR TEXT MATCHING)
-        // =================================================================================
-        // Logika ini dipertahankan karena sudah berhasil menemukan node yang typo/mirip.
-
-        $findPohonNode = function($item, $type) use ($all_pohons, $normalizeText) {
-            
-            // A. Coba cari berdasarkan ID (Paling Akurat)
-            if ($type === 'tujuan' && isset($item->id)) {
-                $matchById = $all_pohons->where('tujuan_id', $item->id)->first();
-                if ($matchById) return $matchById;
-            }
-
-            // B. Siapkan teks target dari Tabel Master
-            $targetText = '';
-            if ($type === 'tujuan') {
-                $targetText = $normalizeText($item->tujuan ?? $item->sasaran_rpjmd);
-            } elseif ($type === 'sasaran') {
-                $targetText = $normalizeText($item->sasaran);
-            } elseif ($type === 'outcome') {
-                $targetText = $normalizeText($item->outcome);
-            } elseif ($type === 'kegiatan' || $type === 'sub_kegiatan') {
-                $targetText = $normalizeText($item->nama);
-            }
-
-            if (empty($targetText) || strlen($targetText) < 3) return null;
-
-            // C. Pencarian Cerdas (Looping & Scoring)
-            $bestMatch = null;
-            $highestPercent = 0;
-
-            foreach ($all_pohons as $pohon) {
-                $pohonName = $normalizeText($pohon->nama_pohon);
-                
-                // 1. Exact Match (Persis Sama) - Prioritas Tertinggi
-                if ($pohonName === $targetText) {
-                    return $pohon;
-                }
-
-                // 2. Contains (Saling Mengandung Kata)
-                if (Str::contains($pohonName, $targetText) || Str::contains($targetText, $pohonName)) {
-                    $percent = 95; 
-                    if ($percent > $highestPercent) {
-                        $highestPercent = $percent;
-                        $bestMatch = $pohon;
-                    }
-                }
-
-                // 3. Similar Text (Cek Typo)
-                similar_text($targetText, $pohonName, $percent);
-
-                if ($percent > $highestPercent) {
-                    $highestPercent = $percent;
-                    $bestMatch = $pohon;
-                }
-            }
-
-            // Threshold 70%: Cukup ketat agar tidak salah ambil, tapi toleran terhadap typo kecil
-            if ($highestPercent >= 70) {
-                return $bestMatch;
-            }
-
-            return null;
-        };
-
-        // =================================================================================
-        // 4. MAPPING DATA KE VIEW
-        // =================================================================================
+        // 2. Mapping Data
 
         // TUJUAN
-        $tujuans = Tujuan::all()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
-            $node = $findPohonNode($item, 'tujuan');
-            // Hanya ambil indikator milik TUJUAN itu sendiri
-            $item->indikators_from_pohon = $getIndicatorsForNode($node);
+        $tujuans = Tujuan::all()->map(function($item) {
+            $node = $this->findPohonNode($item, 'tujuan');
+            $item->indikators_from_pohon = $this->getDirectIndicators($node);
             return $item;
         });
 
-        // SASARAN
-        $sasarans = Sasaran::all()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
-            $node = $findPohonNode($item, 'sasaran');
-            // Hanya ambil indikator milik SASARAN itu sendiri
-            $item->indikators_from_pohon = $getIndicatorsForNode($node);
-            return $item;
-        });
+        // SASARAN (Flattening Level 3)
+        $finalSasarans = collect([]);
+        foreach (Sasaran::all() as $item) {
+            $node = $this->findPohonNode($item, 'sasaran');
+            $item->indikators_from_pohon = $this->getDirectIndicators($node); 
+            $finalSasarans->push($item);
 
-        // OUTCOME (PROGRAM)
-        $outcomes = Outcome::with('program')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
-            $node = $findPohonNode($item, 'outcome');
-            // Hanya ambil indikator milik OUTCOME/PROGRAM itu sendiri
-            $item->indikators_from_pohon = $getIndicatorsForNode($node);
-            return $item;
-        });
+            if ($node) {
+                $virtualChildren = $this->createVirtualRows($node, $stopForSasaran, 'sasaran');
+                $finalSasarans = $finalSasarans->concat($virtualChildren);
+            }
+        }
+
+        // OUTCOME
+        $finalOutcomes = collect([]);
+        foreach (Outcome::with('program')->get() as $item) {
+            $node = $this->findPohonNode($item, 'outcome');
+            $item->indikators_from_pohon = $this->getDirectIndicators($node);
+            $finalOutcomes->push($item);
+
+            if ($node) {
+                $virtualChildren = $this->createVirtualRows($node, $stopForOutcome, 'outcome');
+                $finalOutcomes = $finalOutcomes->concat($virtualChildren);
+            }
+        }
         
-        // KEGIATAN (OUTPUT)
-        $kegiatans = Kegiatan::whereNotNull('output')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode) {
-            $node = $findPohonNode($item, 'kegiatan');
-            $item->indikators_from_pohon = $getIndicatorsForNode($node);
-            return $item;
-        }); 
+        // KEGIATAN
+        $finalKegiatans = collect([]);
+        foreach (Kegiatan::whereNotNull('output')->get() as $item) {
+            $node = $this->findPohonNode($item, 'kegiatan');
+            $item->indikators_from_pohon = $this->getDirectIndicators($node);
+            $finalKegiatans->push($item);
+
+            if ($node) {
+                $virtualChildren = $this->createVirtualRows($node, $stopForKegiatan, 'output');
+                $virtualChildren->transform(function($v) {
+                    $v->kode = ''; $v->nama = ''; return $v;
+                });
+                $finalKegiatans = $finalKegiatans->concat($virtualChildren);
+            }
+        }
 
         // SUB KEGIATAN
-        $sub_kegiatans = SubKegiatan::with('indikators')->get()->map(function($item) use ($findPohonNode, $getIndicatorsForNode, $normalizeText) {
-            // 1. Indikator Manual (dari Input Subkegiatan)
-            $manualIndicators = collect([]);
-            if($item->indikators && $item->indikators->isNotEmpty()) {
-                $manualIndicators = $item->indikators->map(function($ind) {
-                    $obj = new \stdClass();
-                    $obj->nama_indikator = $ind->keterangan ?? $ind->nama_indikator ?? '-';
-                    return $obj;
-                });
-            }
-
-            // 2. Indikator Pohon (dari Cascading)
-            $node = $findPohonNode($item, 'sub_kegiatan');
-            $cascadingIndicators = $getIndicatorsForNode($node);
-
-            // 3. Gabungkan (Manual + Pohon)
-            $mergedIndicators = $manualIndicators->concat($cascadingIndicators);
+        $sub_kegiatans = SubKegiatan::with('indikators')->get()->map(function($item) {
+            $manual = $item->indikators ? $item->indikators->map(fn($ind) => (object)['nama_indikator' => $ind->keterangan ?? $ind->nama_indikator ?? '-']) : collect([]);
             
-            $item->indikators_from_pohon = $mergedIndicators
-                ->filter(function($ind) { return !empty($ind->nama_indikator); })
-                ->unique(function($ind) use ($normalizeText) {
-                     return $normalizeText($ind->nama_indikator);
-                })
-                ->values();
+            $node = $this->findPohonNode($item, 'sub_kegiatan');
+            $pohonInd = $this->getDirectIndicators($node);
 
+            $item->indikators_from_pohon = $manual->concat($pohonInd)
+                ->filter(fn($i) => !empty($i->nama_indikator))
+                ->unique(fn($i) => $this->normalizeText($i->nama_indikator))
+                ->values();
             return $item;
         });
 
-        return view('livewire.dokumen-renstra', [
+        // KEMBALIKAN DATA MENTAH
+        return [
+            'unit_kerja'    => $this->unit_kerja,
+            'nomor_dokumen' => $this->nomor_dokumen,
+            'tanggal_dokumen' => $this->tanggal_dokumen,
+            'periode'       => $this->periode,
             'tujuans'       => $tujuans,
-            'sasarans'      => $sasarans,
-            'outcomes'      => $outcomes,
-            'kegiatans'     => $kegiatans,
+            'sasarans'      => $finalSasarans,
+            'outcomes'      => $finalOutcomes,
+            'kegiatans'     => $finalKegiatans,
             'sub_kegiatans' => $sub_kegiatans,
-        ]);
+        ];
     }
 
     // =================================================================================
-    // 5. MODAL EDIT & UPDATE (Tidak Berubah)
+    // 2. HELPER FUNCTIONS (PRIVATE METHODS)
+    // =================================================================================
+
+    private function normalizeText($text) {
+        if (empty($text)) return '';
+        $text = preg_replace('/[^a-zA-Z0-9\s]/', '', $text);
+        return strtolower(trim(preg_replace('/\s+/', ' ', $text)));
+    }
+
+    private function findPohonNode($item, $type) {
+        // A. Coba by ID
+        if ($type === 'tujuan' && isset($item->id)) {
+            $matchById = $this->all_pohons->where('tujuan_id', $item->id)->first();
+            if ($matchById) return $matchById;
+        }
+
+        // B. Siapkan teks
+        $targetText = '';
+        if ($type === 'tujuan') {
+            $targetText = $this->normalizeText($item->tujuan ?? $item->sasaran_rpjmd);
+        } elseif ($type === 'sasaran') {
+            $targetText = $this->normalizeText($item->sasaran);
+        } elseif ($type === 'outcome') {
+            $targetText = $this->normalizeText($item->outcome);
+        } elseif ($type === 'kegiatan' || $type === 'sub_kegiatan') {
+            $targetText = $this->normalizeText($item->nama);
+        }
+
+        if (empty($targetText) || strlen($targetText) < 3) return null;
+
+        // C. Matching
+        $bestMatch = null;
+        $highestPercent = 0;
+
+        foreach ($this->all_pohons as $pohon) {
+            $pohonName = $this->normalizeText($pohon->nama_pohon);
+            
+            if ($pohonName === $targetText) return $pohon;
+            if (Str::contains($pohonName, $targetText) || Str::contains($targetText, $pohonName)) {
+                $percent = 95; 
+                if ($percent > $highestPercent) { $highestPercent = $percent; $bestMatch = $pohon; }
+            }
+            similar_text($targetText, $pohonName, $percent);
+            if ($percent > $highestPercent) { $highestPercent = $percent; $bestMatch = $pohon; }
+        }
+
+        return ($highestPercent >= 70) ? $bestMatch : null;
+    }
+
+    private function getDirectIndicators($node) {
+        if (!$node) return collect([]);
+        return collect($node->indikators ?? [])
+            ->filter(fn($i) => !empty($i->nama_indikator))
+            ->unique(fn($i) => strtolower(trim($i->nama_indikator)))
+            ->values();
+    }
+
+    private function getStopIds($collection, $type) {
+        return $collection->map(function($item) use ($type) {
+            $node = $this->findPohonNode($item, $type);
+            return $node ? $node->id : null;
+        })->filter()->toArray();
+    }
+
+    private function createVirtualRows($parentNode, $stopIds, $textField) {
+        $rows = collect([]);
+        if (!$parentNode || !$parentNode->children) return $rows;
+
+        foreach ($parentNode->children as $child) {
+            if (in_array($child->id, $stopIds)) continue;
+
+            $virtualRow = new \stdClass();
+            $virtualRow->{$textField} = ''; // Kosongkan nama agar kolom Sasaran bersih
+            $virtualRow->indikators_from_pohon = $this->getDirectIndicators($child);
+            
+            if($textField == 'outcome') {
+                $virtualRow->program = (object)['kode' => '', 'nama' => ''];
+            }
+
+            // Opsional: Cek jika indikator kosong, apakah baris tetap ditampilkan?
+            // Jika ya, langsung push. Jika tidak, cek count > 0.
+            $rows->push($virtualRow);
+
+            $childRows = $this->createVirtualRows($child, $stopIds, $textField);
+            $rows = $rows->concat($childRows);
+        }
+        return $rows;
+    }
+
+    // =================================================================================
+    // 3. RENDER (TAMPILAN WEB)
+    // =================================================================================
+
+    public function render()
+    {
+        // Panggil Single Source of Truth tadi
+        $data = $this->getDataRenstra();
+        return view('livewire.dokumen-renstra', $data);
+    }
+
+    // =================================================================================
+    // 4. EXPORT FUNCTIONS (PDF & EXCEL)
+    // =================================================================================
+
+    public function downloadPdf()
+    {
+        $data = $this->getDataRenstra();
+        
+        // Kita gunakan view khusus cetak yang bersih (tanpa tombol edit/navigasi)
+        $pdf = Pdf::loadView('cetak.dokumen-renstra', $data);
+        
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, 'Dokumen-Renstra-' . $this->periode . '.pdf');
+    }
+
+    public function downloadExcel()
+    {
+        $data = $this->getDataRenstra();
+        
+        // Panggil Class Export dan inject datanya
+        return Excel::download(new DokumenRenstraExport($data), 'Dokumen-Renstra-' . $this->periode . '.xlsx');
+    }
+
+    // =================================================================================
+    // 5. MODAL EDIT
     // =================================================================================
 
     public function openEditModal()
@@ -224,10 +270,8 @@ class DokumenRenstra extends Component
             'edit_nomor_dokumen' => 'required',
             'edit_tanggal_penetapan' => 'required',
         ]);
-
         $this->nomor_dokumen = $this->edit_nomor_dokumen;
         $this->tanggal_dokumen = $this->edit_tanggal_penetapan;
-
         $this->closeModal();
     }
 }
