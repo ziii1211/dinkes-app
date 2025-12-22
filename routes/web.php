@@ -16,10 +16,9 @@ use App\Livewire\ProgramKegiatan;
 use App\Livewire\KegiatanRenstra;
 use App\Livewire\SubKegiatanRenstra;
 
-// PERUBAHAN 1: Import Class Baru (CascadingRenstra) menggantikan PohonKinerja
+// Import Class Baru (CascadingRenstra)
 use App\Livewire\CascadingRenstra; 
 
-use App\Livewire\CascadingRenstra as CascadingRenstraComponent; // (Opsional: Jika ingin alias, tapi pakai langsung Class juga bisa)
 use App\Livewire\PerjanjianKinerja;
 use App\Livewire\PerjanjianKinerjaDetail;
 use App\Livewire\PerjanjianKinerjaLihat;
@@ -36,7 +35,7 @@ use App\Models\Sasaran;
 use App\Models\Outcome;
 use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
-use App\Models\PohonKinerja as PohonModel; // Tetap pakai Model PohonKinerja untuk logika database
+use App\Models\PohonKinerja as PohonModel;
 use App\Exports\DokumenRenstraExport;
 
 // --- 4. FACADES ---
@@ -66,7 +65,7 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/dokumen', DokumenRenstra::class)->name('matrik.dokumen');
         
-        // --- EXPORT PDF ---
+        // --- EXPORT PDF MATRIKS RENSTRA ---
         Route::get('/dokumen/cetak', function () {
             
             // 1. Ambil Data Pohon Kinerja & Indikatornya
@@ -162,19 +161,23 @@ Route::middleware('auth')->group(function () {
     // PERENCANAAN KINERJA
     Route::prefix('perencanaan-kinerja')->group(function () {
         
-        // PERUBAHAN 2: Ganti route pohon-kinerja menjadi cascading-renstra
         Route::get('/cascading-renstra', CascadingRenstra::class)->name('cascading.renstra');
         
-        Route::get('/cascading-renstra-lama', \App\Livewire\CascadingRenstra::class)->name('cascading.renstra.lama'); // (Opsional: Hapus baris ini jika file lama sudah dihapus total)
+        // Hapus Route lama jika sudah tidak dipakai
+        // Route::get('/cascading-renstra-lama', ...); 
         
         Route::get('/perjanjian-kinerja', PerjanjianKinerja::class)->name('perjanjian.kinerja');
         Route::get('/perjanjian-kinerja/{id}', PerjanjianKinerjaDetail::class)->name('perjanjian.kinerja.detail');
         Route::get('/perjanjian-kinerja/lihat/{id}', PerjanjianKinerjaLihat::class)->name('perjanjian.kinerja.lihat');
         
-        // Cetak PK
+        // --- PERBAIKAN: CETAK PERJANJIAN KINERJA (DOWNLOAD PDF) ---
         Route::get('/perjanjian-kinerja/cetak/{id}', function ($id) {
+            
+            // 1. Ambil Data
             $pk = PkModel::with(['jabatan', 'pegawai', 'sasarans.indikators', 'anggarans.subKegiatan'])->findOrFail($id);
             $jabatan = $pk->jabatan;
+            
+            // Logika Penentuan Atasan (Pihak Pertama)
             $is_kepala_dinas = is_null($jabatan->parent_id);
             $atasan_pegawai = null;
             $atasan_jabatan = null;
@@ -187,7 +190,8 @@ Route::middleware('auth')->group(function () {
                 }
             }
             
-            return view('cetak.perjanjian-kinerja', [
+            // 2. Generate PDF (Load View)
+            $pdf = Pdf::loadView('cetak.perjanjian-kinerja', [
                 'pk' => $pk,
                 'jabatan' => $jabatan,
                 'pegawai' => $pk->pegawai,
@@ -195,6 +199,15 @@ Route::middleware('auth')->group(function () {
                 'atasan_pegawai' => $atasan_pegawai,
                 'atasan_jabatan' => $atasan_jabatan
             ]);
+
+            // 3. Atur Kertas & Download
+            $pdf->setPaper('a4', 'portrait');
+            
+            // Nama file dinamis agar rapi saat didownload
+            $namaFile = 'PK_' . $pk->tahun . '_' . str_replace(' ', '_', $jabatan->nama) . '.pdf';
+
+            return $pdf->download($namaFile);
+
         })->name('perjanjian.kinerja.print');
     });
 

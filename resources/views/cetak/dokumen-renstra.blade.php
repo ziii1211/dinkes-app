@@ -2,114 +2,95 @@
 <html lang="id">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
-    <title>Matriks Renstra {{ $unit_kerja }}</title>
+    <title>Matriks Renstra {{ $header['unit_kerja'] ?? 'DINAS KESEHATAN' }}</title>
     <style>
         /* 1. SETUP HALAMAN */
         @page {
-            margin: 1cm 1.5cm; /* Margin agak tipis biar muat banyak */
-            size: A4 landscape; /* Wajib Landscape */
+            margin: 1cm 1cm;
+            size: A4 landscape;
         }
         
         body {
             font-family: Arial, Helvetica, sans-serif;
-            font-size: 10pt; /* Ukuran font standar */
+            font-size: 9pt; 
             color: #000;
+            line-height: 1.2;
         }
 
-        /* 2. KOP SURAT (Opsional: Jika ingin persis laporan, bisa simple header) */
-        .header-table {
-            width: 100%;
-            margin-bottom: 20px;
-            border: none;
-        }
-        .header-table td {
-            border: none;
-            vertical-align: middle;
-        }
+        /* 2. HEADER DOKUMEN */
         .header-title {
-            font-size: 14pt;
-            font-weight: bold;
             text-align: center;
+            font-weight: bold;
+            font-size: 12pt;
+            margin-bottom: 20px;
             text-transform: uppercase;
         }
-        .header-subtitle {
-            font-size: 11pt;
-            text-align: center;
-            margin-top: 5px;
-        }
 
-        /* 3. TABEL DATA (INTI TAMPILAN) */
+        /* 3. TABEL DATA */
         .data-table {
             width: 100%;
-            border-collapse: collapse; /* Garis menyatu rapi */
-            margin-bottom: 10px;
+            border-collapse: collapse;
+            table-layout: fixed;
         }
         
         .data-table th, .data-table td {
-            border: 1px solid #000; /* Garis hitam solid */
+            border: 1px solid #000; 
             padding: 5px;
-            vertical-align: top; /* Teks selalu mulai dari atas */
-            line-height: 1.4; /* Jarak antar baris teks biar enak dibaca */
+            vertical-align: top;
+            word-wrap: break-word;
         }
 
-        /* HEADER TABEL */
+        /* HEADER TABEL (Tetap Bold karena ini Judul Kolom) */
         .data-table thead th {
-            background-color: #E8E8E8; /* Abu-abu terang persis dokumen resmi */
-            color: #000;
+            background-color: #1a2c42; /* Navy Blue */
+            color: #ffffff; 
             font-weight: bold;
             text-align: center;
-            text-transform: uppercase; /* Huruf KAPITAL semua */
-            font-size: 9pt; /* Header sedikit lebih kecil biar muat */
-            padding: 8px 2px;
+            vertical-align: middle;
+            font-size: 9pt;
+            text-transform: capitalize;
+            padding: 8px 5px;
         }
 
-        /* ISI TABEL */
-        .col-text { font-weight: normal; }
-        .col-bold { font-weight: bold; }
-        
-        /* List Indikator */
-        ul {
-            margin: 0;
-            padding-left: 12px; /* Bullet tidak terlalu menjorok */
-        }
-        li {
-            margin-bottom: 2px;
-        }
+        /* Setting Print */
+        .data-table thead { display: table-header-group; }
+        .data-table tfoot { display: table-footer-group; }
+        .data-table tr { page-break-inside: avoid; }
 
-        /* Kode Program/Kegiatan */
+        /* LIST INDIKATOR */
+        ul { margin: 0; padding-left: 15px; list-style-type: -; }
+        li { margin-bottom: 3px; }
+
+        /* STYLE KHUSUS KOLOM PROGRAM (UPDATED: TIDAK BOLD) */
         .kode-text {
-            font-size: 8pt;
-            margin-top: 4px;
-            color: #333;
+            /* font-weight dihapus agar tidak bold */
+            margin-bottom: 3px;
+            display: block;
+        }
+        .nama-program-text {
+            /* font-weight dihapus agar tidak bold */
+            text-transform: uppercase; /* Biasanya nama program tetap kapital, tapi tidak bold */
         }
 
-        /* 4. TANDA TANGAN */
-        .signature-table {
-            width: 100%;
-            margin-top: 30px;
-            page-break-inside: avoid;
-        }
     </style>
 </head>
 <body>
 
-    {{-- HEADER DOKUMEN --}}
-    <div class="header-title">MATRIKS RENCANA STRATEGIS (RENSTRA)</div>
-    <div class="header-title">{{ $unit_kerja }}</div>
-    <div class="header-subtitle">PERIODE: {{ $periode }}</div>
+    {{-- JUDUL DOKUMEN --}}
+    <div class="header-title">
+        Matriks RENSTRA - {{ $header['unit_kerja'] ?? 'DINAS KESEHATAN' }} - {{ $header['periode'] ?? '2025 - 2029' }}
+    </div>
 
-    <br>
-
-    {{-- TABEL DATA --}}
+    {{-- TABEL --}}
     <table class="data-table">
         <thead>
             <tr>
-                <th width="12%">TUJUAN</th>
-                <th width="12%">SASARAN</th>
-                <th width="13%">OUTCOME </th>
-                <th width="13%">OUTPUT</th>
-                <th width="30%">INDIKATOR </th>
-                <th width="20%">PROGRAM / KEGIATAN /<br>SUB KEGIATAN</th>
+                <th width="12%">Tujuan</th>
+                <th width="12%">Sasaran</th>
+                <th width="14%">Outcome</th>
+                <th width="14%">Output</th>
+                <th width="24%">Indikator</th>
+                <th width="24%">Program / Kegiatan / Sub Kegiatan</th>
             </tr>
         </thead>
         <tbody>
@@ -117,38 +98,37 @@
             {{-- 1. TUJUAN --}}
             @foreach($tujuans as $tujuan)
             <tr>
-                <td class="col-bold">{{ $tujuan->tujuan ?? $tujuan->sasaran_rpjmd }}</td>
+                <td>{{ $tujuan->tujuan ?? $tujuan->sasaran_rpjmd }}</td>
                 <td></td><td></td><td></td>
+                {{-- Indikator Tujuan --}}
                 <td>
-                    @if(isset($tujuan->indikators_from_pohon) && $tujuan->indikators_from_pohon->count() > 0)
+                    @if(isset($tujuan->indikators_from_pohon) && count($tujuan->indikators_from_pohon) > 0)
                         <ul>
                             @foreach($tujuan->indikators_from_pohon as $ind)
                                 <li>{{ $ind->nama_indikator }}</li>
                             @endforeach
                         </ul>
-                    @else - @endif
+                    @endif
                 </td>
                 <td></td>
             </tr>
             @endforeach
 
-            {{-- 2. SASARAN (Termasuk Baris Virtual Level 3) --}}
+            {{-- 2. SASARAN --}}
             @foreach($sasarans as $sasaran)
             <tr>
                 <td></td>
-                <td class="col-bold">
-                    {{-- Nama Sasaran tampil jika bukan baris virtual --}}
-                    {{ $sasaran->sasaran ?? '' }}
-                </td>
+                <td>{{ $sasaran->sasaran ?? '' }}</td>
                 <td></td><td></td>
+                {{-- Indikator Sasaran --}}
                 <td>
-                    @if(isset($sasaran->indikators_from_pohon) && $sasaran->indikators_from_pohon->count() > 0)
+                    @if(isset($sasaran->indikators_from_pohon) && count($sasaran->indikators_from_pohon) > 0)
                         <ul>
                             @foreach($sasaran->indikators_from_pohon as $ind)
                                 <li>{{ $ind->nama_indikator }}</li>
                             @endforeach
                         </ul>
-                    @else - @endif
+                    @endif
                 </td>
                 <td></td>
             </tr>
@@ -158,24 +138,23 @@
             @foreach($outcomes as $outcome)
             <tr>
                 <td></td><td></td>
-                <td>
-                    {{ $outcome->outcome ?? '' }}
-                </td>
+                <td>{{ $outcome->outcome ?? '' }}</td>
                 <td></td>
+                {{-- Indikator Outcome --}}
                 <td>
-                    @if(isset($outcome->indikators_from_pohon) && $outcome->indikators_from_pohon->count() > 0)
+                    @if(isset($outcome->indikators_from_pohon) && count($outcome->indikators_from_pohon) > 0)
                         <ul>
                             @foreach($outcome->indikators_from_pohon as $ind)
                                 <li>{{ $ind->nama_indikator }}</li>
                             @endforeach
                         </ul>
-                    @else - @endif
+                    @endif
                 </td>
+                {{-- Kolom Program (SUDAH TIDAK BOLD) --}}
                 <td>
-                    {{-- Tampilkan Nama Program --}}
-                    @if(!empty($outcome->program->nama))
-                        <div class="col-bold">{{ $outcome->program->nama }}</div>
-                        <div class="kode-text">Kode: {{ $outcome->program->kode ?? '-' }}</div>
+                    @if(isset($outcome->program))
+                        <span class="kode-text">{{ $outcome->program->kode ?? '' }}</span>
+                        <span class="nama-program-text">{{ $outcome->program->nama ?? '' }}</span>
                     @endif
                 </td>
             </tr>
@@ -185,24 +164,21 @@
             @foreach($kegiatans as $kegiatan)
             <tr>
                 <td></td><td></td><td></td>
+                <td>{{ $kegiatan->output ?? '' }}</td>
+                {{-- Indikator Kegiatan --}}
                 <td>
-                    {{ $kegiatan->output ?? '' }}
-                </td>
-                <td>
-                    @if(isset($kegiatan->indikators_from_pohon) && $kegiatan->indikators_from_pohon->count() > 0)
+                    @if(isset($kegiatan->indikators_from_pohon) && count($kegiatan->indikators_from_pohon) > 0)
                         <ul>
                             @foreach($kegiatan->indikators_from_pohon as $ind)
                                 <li>{{ $ind->nama_indikator }}</li>
                             @endforeach
                         </ul>
-                    @else - @endif
-                </td>
-                <td>
-                    {{-- Tampilkan Nama Kegiatan --}}
-                    @if(!empty($kegiatan->nama))
-                        <div class="col-text">{{ $kegiatan->nama }}</div>
-                        <div class="kode-text">Kode: {{ $kegiatan->kode ?? '-' }}</div>
                     @endif
+                </td>
+                {{-- Kolom Kegiatan (SUDAH TIDAK BOLD) --}}
+                <td>
+                    <span class="kode-text">{{ $kegiatan->kode ?? '' }}</span>
+                    <span>{{ $kegiatan->nama ?? '' }}</span>
                 </td>
             </tr>
             @endforeach
@@ -214,41 +190,27 @@
                 <td>
                     @if(!empty($sub->output))
                         Output: {{ $sub->output }}
-                    @else - @endif
+                    @endif
                 </td>
+                {{-- Indikator Sub --}}
                 <td>
-                    @if(isset($sub->indikators_from_pohon) && $sub->indikators_from_pohon->count() > 0)
+                    @if(isset($sub->indikators_from_pohon) && count($sub->indikators_from_pohon) > 0)
                         <ul>
                             @foreach($sub->indikators_from_pohon as $ind)
                                 <li>{{ $ind->nama_indikator }}</li>
                             @endforeach
                         </ul>
-                    @else - @endif
+                    @endif
                 </td>
+                {{-- Kolom Sub Kegiatan (SUDAH TIDAK BOLD) --}}
                 <td>
-                    {{-- Tampilkan Nama Sub Kegiatan --}}
-                    <div>{{ $sub->nama ?? '' }}</div>
-                    <div class="kode-text">Kode: {{ $sub->kode ?? '' }}</div>
+                    <span class="kode-text">{{ $sub->kode ?? '' }}</span>
+                    <span>{{ $sub->nama ?? '' }}</span>
                 </td>
             </tr>
             @endforeach
 
         </tbody>
-    </table>
-
-    {{-- TANDA TANGAN --}}
-    <table class="signature-table">
-        <tr>
-            <td width="70%"></td>
-            <td width="30%" align="center">
-                Banjarmasin, {{ \Carbon\Carbon::now()->isoFormat('D MMMM Y') }}
-                <br>
-                Kepala {{ ucwords(strtolower($unit_kerja)) }}
-                <br><br><br><br><br>
-                <strong>( ........................................... )</strong><br>
-                NIP. ...........................................
-            </td>
-        </tr>
     </table>
 
 </body>
