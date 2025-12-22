@@ -39,4 +39,18 @@ class Outcome extends Model
     {
         return $this->hasMany(IndikatorOutcome::class);
     }
+
+    public function kegiatans()
+{
+    // Asumsi: Outcome terhubung ke Kegiatan lewat Program yang sama, 
+    // atau jika ada kolom outcome_id di tabel kegiatan. 
+    // Jika via program:
+    return $this->hasManyThrough(Kegiatan::class, Program::class, 'id', 'program_id', 'program_id', 'id');
+    
+    // TAPI, jika struktur DB Anda sederhana (Outcome -> Kegiatan langsung), pakai ini:
+    // return $this->hasMany(Kegiatan::class);
+    
+    // SEMENTARA KITA GUNAKAN LOGIKA MANUAL DI CONTROLLER AGAR AMAN
+    // (Silakan lewati edit model ini jika ragu struktur DB-nya)
+}
 }

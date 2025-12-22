@@ -106,9 +106,9 @@
             <tr>
                 <th width="12%">TUJUAN</th>
                 <th width="12%">SASARAN</th>
-                <th width="13%">OUTCOME /<br>PROGRAM</th>
-                <th width="13%">OUTPUT /<br>KEGIATAN</th>
-                <th width="30%">INDIKATOR KINERJA</th> {{-- Kolom Indikator paling lebar --}}
+                <th width="13%">OUTCOME </th>
+                <th width="13%">OUTPUT</th>
+                <th width="30%">INDIKATOR </th>
                 <th width="20%">PROGRAM / KEGIATAN /<br>SUB KEGIATAN</th>
             </tr>
         </thead>
