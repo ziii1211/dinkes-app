@@ -70,7 +70,8 @@
                                         </div>
                                         
                                         <div>
-                                            <div class="font-bold text-gray-800 text-sm uppercase">{{ $jabatan->pegawai->nama }}</div>
+                                            {{-- PERBAIKAN DI SINI: class 'uppercase' dihapus agar sesuai input asli --}}
+                                            <div class="font-bold text-gray-800 text-sm">{{ $jabatan->pegawai->nama }}</div>
                                             <div class="text-xs text-gray-400 mt-0.5">NIP. {{ $jabatan->pegawai->nip }}</div>
                                         </div>
                                     </div>
