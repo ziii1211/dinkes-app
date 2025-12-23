@@ -280,7 +280,33 @@
             </div>
             <div class="space-y-6">
                 <div><label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label><textarea wire:model="ind_keterangan" rows="3" class="w-full border rounded px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>@error('ind_keterangan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror</div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label><select wire:model="ind_satuan" class="w-full border rounded px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white"><option value="">Pilih</option><option>Kab/Kota</option><option>Dokumen</option><option>Persen</option></select></div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label>
+                    <select wire:model="ind_satuan" class="w-full border rounded px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        <option value="">Pilih Satuan</option>
+                        <option value="Angka">Angka</option>
+                        <option value="Barang">Barang</option>
+                        <option value="Bulan">Bulan</option>
+                        <option value="Data/Bulan">Data/Bulan</option>
+                        <option value="Dokumen">Dokumen</option>
+                        <option value="Fasyankes">Fasyankes</option>
+                        <option value="Indeks">Indeks</option>
+                        <option value="Inovasi">Inovasi</option>
+                        <option value="Kab/Kota">Kab/Kota</option>
+                        <option value="Kegiatan">Kegiatan</option>
+                        <option value="Laporan">Laporan</option>
+                        <option value="Level">Level</option>
+                        <option value="Nilai">Nilai</option>
+                        <option value="Orang">Orang</option>
+                        <option value="Paket">Paket</option>
+                        <option value="Permil">Permil</option>
+                        <option value="Persen">Persen</option>
+                        <option value="Poin">Poin</option>
+                        <option value="Rupiah">Rupiah</option>
+                        <option value="Unit">Unit</option>
+                    </select>
+                </div>
             </div>
             <div class="mt-8 flex justify-end gap-3"><button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded font-medium hover:bg-gray-200 transition-colors">Batal</button><button wire:click="storeIndikator" class="px-5 py-2.5 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button></div>
         </div>

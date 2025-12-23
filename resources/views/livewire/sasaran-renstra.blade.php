@@ -2,14 +2,11 @@
 
     <div class="space-y-8 relative z-10">
         
-        <!-- CARD UTAMA -->
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             
-            <!-- Header Card & Tombol Tambah -->
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Sasaran Renstra</h3>
                 
-                <!-- Tombol Tambah (Memicu Modal Utama) -->
                 <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Sasaran
@@ -17,11 +14,9 @@
             </div>
 
             <div class="p-6">
-                <!-- Tabel dengan Header Kompleks -->
                 <div class="overflow-x-auto rounded-lg border border-gray-200 min-h-[400px]">
                     <table class="w-full text-left border-collapse">
                         <thead>
-                            <!-- Baris Header 1 -->
                             <tr class="bg-gray-50 text-gray-700 text-sm font-bold uppercase tracking-wider border-b border-gray-200">
                                 <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-64">Tujuan Renstra</th>
                                 <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-64">Sasaran Renstra</th>
@@ -29,7 +24,6 @@
                                 <th colspan="6" class="p-2 border-b border-r border-gray-200 text-center align-middle">Target</th>
                                 <th rowspan="2" class="p-4 text-center align-middle w-32">Aksi</th>
                             </tr>
-                            <!-- Baris Header 2 (Tahun) -->
                             <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
                                 <th class="p-2 border-r border-gray-200 text-center w-16">2025</th>
                                 <th class="p-2 border-r border-gray-200 text-center w-16">2026</th>
@@ -46,7 +40,6 @@
                             @endphp
 
                             @forelse($groupedSasarans as $tujuanText => $items)
-                                <!-- 1. BARIS INDUK: TUJUAN RENSTRA -->
                                 <tr class="bg-gray-50">
                                     <td class="p-4 border-r border-gray-100 font-bold text-gray-800 align-top">
                                         {{ $tujuanText }}
@@ -55,13 +48,11 @@
                                     <td class="p-4 text-center"></td>
                                 </tr>
 
-                                <!-- 2. BARIS ANAK: SASARAN RENSTRA -->
                                 @foreach($items as $sasaran)
                                 <tr class="hover:bg-blue-50 transition-colors group">
                                     <td class="p-4 border-r border-gray-100"></td>
                                     <td class="p-4 border-r border-gray-100 align-top">
                                         <div class="text-gray-700 font-medium">{{ $sasaran->sasaran }}</div>
-                                        <!-- Label PJ jika ada -->
                                         @if($sasaran->jabatan)
                                             <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm">
                                                 <svg class="mr-1.5 h-3 w-3 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
@@ -71,10 +62,8 @@
                                     </td>
                                     <td class="p-4 border-r text-center text-gray-400 align-middle">&mdash;</td>
                                     
-                                    <!-- Target (Kosong di baris Sasaran) -->
                                     <td colspan="6" class="p-2 border-r text-center text-gray-300">&mdash;</td>
 
-                                    <!-- MENU AKSI SASARAN -->
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-transparent px-3 py-1.5 bg-blue-100 text-sm font-medium text-blue-700 hover:bg-blue-200 focus:outline-none transition-colors">
@@ -94,18 +83,15 @@
                                     </td>
                                 </tr>
 
-                                <!-- 3. BARIS INDIKATOR (LOOPING DI BAWAH SASARAN) -->
                                 @foreach($sasaran->indikators as $indikator)
                                 <tr class="hover:bg-gray-50 transition-colors bg-white border-l-4 border-blue-500">
                                     <td class="p-4 border-r border-gray-100"></td>
                                     <td class="p-4 border-r border-gray-100"></td>
                                     
-                                    <!-- Data Indikator -->
                                     <td class="p-4 border-r border-gray-100 text-sm text-gray-700 align-top">
                                         <div class="font-medium">{{ $indikator->keterangan }}</div>
                                     </td>
                                     
-                                    <!-- Data Target -->
                                     <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2025 ? $indikator->target_2025 . ' ' . $indikator->satuan : '-' }}</td>
                                     <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2026 ? $indikator->target_2026 . ' ' . $indikator->satuan : '-' }}</td>
                                     <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2027 ? $indikator->target_2027 . ' ' . $indikator->satuan : '-' }}</td>
@@ -113,7 +99,6 @@
                                     <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2029 ? $indikator->target_2029 . ' ' . $indikator->satuan : '-' }}</td>
                                     <td class="p-2 border-r text-center text-gray-600 text-xs font-medium">{{ $indikator->target_2030 ? $indikator->target_2030 . ' ' . $indikator->satuan : '-' }}</td>
 
-                                    <!-- MENU INDIKATOR -->
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none shadow-sm">
@@ -122,7 +107,6 @@
                                             <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100">
                                                 <div class="py-1">
                                                     <button wire:click="editIndikator({{ $indikator->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50"><svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>Edit Indikator</button>
-                                                    <!-- TOMBOL ATUR TARGET -->
                                                     <button wire:click="aturTarget({{ $indikator->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-purple-600 hover:bg-purple-50"><svg class="mr-3 h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>Atur Target</button>
                                                     <button wire:click="deleteIndikator({{ $indikator->id }})" wire:confirm="Hapus indikator ini?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50"><svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Hapus</button>
                                                 </div>
@@ -142,7 +126,6 @@
         </div>
     </div>
 
-    <!-- MODAL 1: FORM SASARAN -->
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
@@ -170,7 +153,6 @@
     </div>
     @endif
 
-    <!-- MODAL 2: PENANGGUNG JAWAB -->
     @if($isOpenPJ)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
@@ -193,7 +175,6 @@
     </div>
     @endif
 
-    <!-- MODAL 3: INDIKATOR -->
     @if($isOpenIndikator)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform transition-all scale-100">
@@ -202,16 +183,51 @@
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="p-8 space-y-6">
-                <div><label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label><textarea wire:model="ind_keterangan" rows="3" class="w-full border rounded px-3 py-2"></textarea></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label><select wire:model="ind_satuan" class="w-full border rounded px-3 py-2"><option value="">Pilih Satuan</option><option>Dokumen</option><option>Persen</option><option>Inovasi</option><option>Angka</option><option>Barang</option><option>Indeks</option></select></div>
-                <div><label class="block text-sm font-medium text-gray-700 mb-2">Arah</label><select wire:model="ind_arah" class="w-full border rounded px-3 py-2"><option value="">Pilih Arah</option><option>Naik</option><option>Turun</option><option>Tetap</option></select></div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
+                    <textarea wire:model="ind_keterangan" rows="3" class="w-full border rounded px-3 py-2"></textarea>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label>
+                    <select wire:model="ind_satuan" class="w-full border rounded px-3 py-2">
+                        <option value="">Pilih Satuan</option>
+                        <option value="Angka">Angka</option>
+                        <option value="Barang">Barang</option>
+                        <option value="Bulan">Bulan</option>
+                        <option value="Data/Bulan">Data/Bulan</option>
+                        <option value="Dokumen">Dokumen</option>
+                        <option value="Fasyankes">Fasyankes</option>
+                        <option value="Indeks">Indeks</option>
+                        <option value="Inovasi">Inovasi</option>
+                        <option value="Kab/Kota">Kab/Kota</option>
+                        <option value="Kegiatan">Kegiatan</option>
+                        <option value="Laporan">Laporan</option>
+                        <option value="Level">Level</option>
+                        <option value="Nilai">Nilai</option>
+                        <option value="Orang">Orang</option>
+                        <option value="Paket">Paket</option>
+                        <option value="Permil">Permil</option>
+                        <option value="Persen">Persen</option>
+                        <option value="Poin">Poin</option>
+                        <option value="Rupiah">Rupiah</option>
+                        <option value="Unit">Unit</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Arah</label>
+                    <select wire:model="ind_arah" class="w-full border rounded px-3 py-2">
+                        <option value="">Pilih Arah</option>
+                        <option value="Naik">Naik</option>
+                        <option value="Turun">Turun</option>
+                        <option value="Tetap">Tetap</option>
+                    </select>
+                </div>
             </div>
             <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl"><button wire:click="closeModal" class="px-6 py-2 bg-gray-100 rounded">Batal</button><button wire:click="storeIndikator" class="px-6 py-2 bg-blue-600 text-white rounded">Simpan</button></div>
         </div>
     </div>
     @endif
 
-    <!-- MODAL 4: ATUR TARGET -->
     @if($isOpenTarget)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all scale-100">

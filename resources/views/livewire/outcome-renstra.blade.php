@@ -194,15 +194,27 @@
                     <div class="relative">
                         <select wire:model.live="ind_satuan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
                             <option value="">-- Pilih Satuan --</option>
-                            <option value="Dokumen">Dokumen</option>
-                            <option value="Persen">Persen</option>
-                            <option value="Per 1000 Penduduk">Per 1000 Penduduk</option>
-                            <option value="Nilai">Nilai</option>
                             <option value="Angka">Angka</option>
+                            <option value="Barang">Barang</option>
+                            <option value="Bulan">Bulan</option>
+                            <option value="Data/Bulan">Data/Bulan</option>
+                            <option value="Dokumen">Dokumen</option>
+                            <option value="Fasyankes">Fasyankes</option>
                             <option value="Indeks">Indeks</option>
-                            <option value="Rupiah">Rupiah</option>
-                            <option value="Paket">Paket</option>
+                            <option value="Inovasi">Inovasi</option>
+                            <option value="Kab/Kota">Kab/Kota</option>
+                            <option value="Kegiatan">Kegiatan</option>
+                            <option value="Laporan">Laporan</option>
+                            <option value="Level">Level</option>
+                            <option value="Nilai">Nilai</option>
                             <option value="Orang">Orang</option>
+                            <option value="Paket">Paket</option>
+                            <option value="Per 1000 Penduduk">Per 1000 Penduduk</option>
+                            <option value="Permil">Permil</option>
+                            <option value="Persen">Persen</option>
+                            <option value="Poin">Poin</option>
+                            <option value="Rupiah">Rupiah</option>
+                            <option value="Unit">Unit</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
                     </div>
@@ -214,8 +226,8 @@
                     <div class="relative">
                         <select wire:model="ind_arah" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
                             <option value="">Pilih Arah</option>
-                            <option value="Meningkat">Meningkat</option>
-                            <option value="Menurun">Menurun</option>
+                            <option value="Meningkat">Naik</option>
+                            <option value="Menurun">Turun</option>
                             <option value="Tetap">Tetap</option>
                         </select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
