@@ -72,17 +72,17 @@
 
     <div class="min-h-screen flex flex-col">
         
-        <header class="bg-white dark:bg-slate-800 border-b border-gray-200 dark:border-slate-700 sticky top-0 z-50 transition-colors duration-300">
+        <header class="bg-gradient-to-r from-blue-200 via-blue-50 to-white dark:from-slate-800 dark:to-slate-900 border-b border-blue-200 dark:border-slate-700 sticky top-0 z-50 transition-all duration-300 shadow-lg">
             <div class="w-full px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-24">
                     
-                    {{-- PERBAIKAN LOGO: Dihapus class 'ml-6' agar mepet kiri pojok --}}
+                    {{-- Logo Container --}}
                     <div class="flex items-center flex-shrink-0 gap-4">
-                        {{-- Logo GERMAS (Pojok Kiri) --}}
-                        <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" alt="Logo GERMAS" class="h-24 w-auto object-contain">
+                        {{-- Logo GERMAS --}}
+                        <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" alt="Logo GERMAS" class="h-24 w-auto object-contain drop-shadow-sm">
                         
-                        {{-- Logo Pemprov (Di Sebelah Kanan Logo GERMAS) --}}
-                        <img src="{{ asset('logo pemprov.png') }}" alt="Logo Pemprov" class="h-20 w-auto object-contain">
+                        {{-- Logo Pemprov --}}
+                        <img src="{{ asset('logo pemprov.png') }}" alt="Logo Pemprov" class="h-20 w-auto object-contain drop-shadow-sm">
                     </div>
 
                     <nav class="hidden lg:flex space-x-2 items-center justify-center flex-1 px-4 whitespace-nowrap">
@@ -93,14 +93,14 @@
                             if(auth()->user()->role == 'pimpinan') $dashboardRoute = route('pimpinan.dashboard');
                         @endphp
                         
-                        <a href="{{ $dashboardRoute }}" wire:navigate class="text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('pimpinan.dashboard') ? 'text-blue-600 dark:text-blue-400' : '' }}">
+                        <a href="{{ $dashboardRoute }}" wire:navigate class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('pimpinan.dashboard') ? 'text-blue-700 dark:text-blue-400' : '' }}">
                             Dashboard
                         </a>
 
                         @if(auth()->user()->role == 'pimpinan')
                             
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Pengukuran Kinerja
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -112,7 +112,7 @@
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Master Data
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -125,7 +125,7 @@
 
                         @else 
                         <div class="relative group">
-                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Matrik Renstra
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -139,7 +139,7 @@
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Perencanaan Kinerja
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -150,7 +150,7 @@
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Pengukuran Kinerja
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -160,7 +160,7 @@
                             </div>
 
                             <div class="relative group">
-                                <button class="flex items-center text-gray-700 dark:text-slate-200 hover:text-blue-600 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Master Data
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
@@ -176,9 +176,9 @@
                     <div class="flex items-center gap-4 flex-shrink-0 relative">
                         <div class="hidden md:flex flex-col text-right cursor-pointer" @click="openUser = !openUser">
                             <span class="text-sm font-bold text-gray-800 dark:text-slate-200">{{ auth()->user()->name ?? 'Administrator' }}</span>
-                            <span class="text-xs text-gray-500 dark:text-slate-400 uppercase">{{ auth()->user()->role ?? 'Pegawai' }}</span>
+                            <span class="text-xs text-gray-600 dark:text-slate-400 uppercase">{{ auth()->user()->role ?? 'Pegawai' }}</span>
                         </div>
-                        <div class="h-12 w-12 rounded-full bg-gray-200 dark:bg-slate-700 border-2 border-white dark:border-slate-600 shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" @click="openUser = !openUser">
+                        <div class="h-12 w-12 rounded-full bg-white/50 dark:bg-slate-700 border-2 border-white dark:border-slate-600 shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" @click="openUser = !openUser">
                             <img src="{{ asset('user-icon.png') }}" alt="User" class="h-full w-full object-cover">
                         </div>
                         
