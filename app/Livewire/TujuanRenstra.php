@@ -31,7 +31,7 @@ class TujuanRenstra extends Component
     public $target_satuan;
 
     public $opsi_sasaran = [
-        'Meningkatnya Kualitas Kesehatan Masyarakat', //yang di ganti khusus untuk tujuan
+        'Meningkatnya Kualitas Kesehatan Masyarakat',
     ];
 
     public function render()

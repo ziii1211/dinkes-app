@@ -4,6 +4,8 @@ namespace App\Livewire\Auth;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Validation\ValidationException;
 
 class Login extends Component
 {
@@ -12,7 +14,7 @@ class Login extends Component
     public $password = '';
     public $remember = false;
     
-    // Default value untuk periode (PENTING: ini harus ada karena dipakai di view)
+    // Default value untuk periode
     public $periode = '2025-2029';
 
     // Rules validasi
@@ -22,7 +24,7 @@ class Login extends Component
         'periode'  => 'required',
     ];
 
-    // Custom messages agar lebih ramah
+    // Custom messages
     protected $messages = [
         'username.required' => 'Username wajib diisi.',
         'password.required' => 'Password wajib diisi.',
@@ -32,11 +34,29 @@ class Login extends Component
     {
         $this->validate();
 
-        // Coba login
-        if (Auth::attempt(['username' => $this->username, 'password' => $this->password], $this->remember)) {
-            session()->regenerate();
+        // 1. Kunci Rate Limiting (Gabungan Username + IP Address)
+        // Ini memastikan pembatasan berlaku unik per user dan per lokasi
+        $throttleKey = strtolower($this->username) . '|' . request()->ip();
 
-            // Simpan periode terpilih ke session jika diperlukan nanti
+        // 2. Cek apakah user sudah mencoba login terlalu sering (Max 5 kali)
+        if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
+            $seconds = RateLimiter::availableIn($throttleKey);
+            
+            throw ValidationException::withMessages([
+                'username' => "Terlalu banyak percobaan login. Silakan tunggu $seconds detik lagi.",
+            ]);
+        }
+
+        // 3. Coba Login ke Aplikasi
+        if (Auth::attempt(['username' => $this->username, 'password' => $this->password], $this->remember)) {
+            
+            // Jika BERHASIL login:
+            session()->regenerate();
+            
+            // Hapus catatan gagal login (reset counter ke 0)
+            RateLimiter::clear($throttleKey);
+
+            // Simpan periode ke session
             session(['periode_renstra' => $this->periode]);
 
             // Logika Redirect berdasarkan Role
@@ -49,9 +69,12 @@ class Login extends Component
             };
         }
 
-        // Jika gagal
+        // 4. Jika GAGAL login:
+        // Catat 1 kali kegagalan ke dalam sistem
+        RateLimiter::hit($throttleKey);
+
         $this->addError('username', 'Username atau password tidak sesuai.');
-        $this->password = ''; // Reset password field
+        $this->password = ''; // Reset password field agar user mengetik ulang
     }
 
     public function render()
