@@ -31,11 +31,7 @@ class TujuanRenstra extends Component
     public $target_satuan;
 
     public $opsi_sasaran = [
-        'Meningkatnya Kualitas Kesehatan Masyarakat',
-        'Meningkatnya Derajat Kesehatan Masyarakat',
-        'Menguatnya Tata Kelola Pemerintahan yang Bersih dan Melayani',
-        'Meningkatnya Kualitas Sumber Daya Manusia Kesehatan',
-        'Terwujudnya Akses Kesehatan yang Merata'
+        'Meningkatnya Kualitas Kesehatan Masyarakat', //yang di ganti khusus untuk tujuan
     ];
 
     public function render()
