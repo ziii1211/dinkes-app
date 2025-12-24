@@ -4,27 +4,25 @@ namespace App\Livewire\Auth;
 
 use Livewire\Component;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\RateLimiter;
-use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Facades\RateLimiter; // Wajib import ini
+use Illuminate\Support\Str;                 // Wajib import ini
+use Illuminate\Validation\ValidationException; // Wajib import ini
 
 class Login extends Component
 {
-    // Properti form
     public $username = '';
     public $password = '';
     public $remember = false;
     
-    // Default value untuk periode
+    // Default value periode (sesuai file asli Anda)
     public $periode = '2025-2029';
 
-    // Rules validasi
     protected $rules = [
         'username' => 'required|string',
         'password' => 'required',
         'periode'  => 'required',
     ];
 
-    // Custom messages
     protected $messages = [
         'username.required' => 'Username wajib diisi.',
         'password.required' => 'Password wajib diisi.',
@@ -34,51 +32,53 @@ class Login extends Component
     {
         $this->validate();
 
-        // 1. Kunci Rate Limiting (Gabungan Username + IP Address)
-        // Ini memastikan pembatasan berlaku unik per user dan per lokasi
-        $throttleKey = strtolower($this->username) . '|' . request()->ip();
+        // 1. MEMBUAT KUNCI PEMBATAS (THROTTLE KEY)
+        // Kunci unik gabungan Username (kecil) + IP Address
+        $throttleKey = Str::lower($this->username) . '|' . request()->ip();
 
-        // 2. Cek apakah user sudah mencoba login terlalu sering (Max 5 kali)
+        // 2. CEK APAKAH SEDANG DIBLOKIR? (Maksimal 5x salah)
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             
+            // Lempar error jika terlalu banyak percobaan
             throw ValidationException::withMessages([
                 'username' => "Terlalu banyak percobaan login. Silakan tunggu $seconds detik lagi.",
             ]);
         }
 
-        // 3. Coba Login ke Aplikasi
+        // 3. COBA LOGIN
         if (Auth::attempt(['username' => $this->username, 'password' => $this->password], $this->remember)) {
             
-            // Jika BERHASIL login:
+            // JIKA SUKSES:
+            // Hapus catatan percobaan gagal (Reset Counter)
+            RateLimiter::clear($throttleKey);
+            
             session()->regenerate();
             
-            // Hapus catatan gagal login (reset counter ke 0)
-            RateLimiter::clear($throttleKey);
-
-            // Simpan periode ke session
+            // Simpan periode ke session (Sesuai logika aplikasi Anda)
             session(['periode_renstra' => $this->periode]);
 
-            // Logika Redirect berdasarkan Role
-            $role = Auth::user()->role;
+            // Redirect sesuai Role
+            // Pastikan user punya kolom 'role' di database
+            $role = Auth::user()->role ?? 'pegawai'; // Default ke pegawai jika null
 
             return match ($role) {
-                'admin' => redirect()->intended(route('admin.dashboard')),
-                'pimpinan' => redirect()->intended(route('pimpinan.dashboard')),
-                default => redirect()->intended(route('dashboard')),
+                'admin' => redirect()->route('admin.dashboard'),
+                'pimpinan' => redirect()->route('pimpinan.dashboard'),
+                default => redirect()->route('dashboard'),
             };
         }
 
-        // 4. Jika GAGAL login:
-        // Catat 1 kali kegagalan ke dalam sistem
-        RateLimiter::hit($throttleKey);
+        // 4. JIKA GAGAL:
+        // Hitung +1 kegagalan (Blokir selama 60 detik jika sudah 5x)
+        RateLimiter::hit($throttleKey, 60);
 
-        $this->addError('username', 'Username atau password tidak sesuai.');
-        $this->password = ''; // Reset password field agar user mengetik ulang
+        $this->addError('username', 'Username atau password salah.');
+        $this->password = ''; // Kosongkan password agar user mengetik ulang
     }
 
     public function render()
     {
-        return view('livewire.auth.login')->layout('components.layouts.guest'); 
+        return view('livewire.auth.login')->layout('components.layouts.guest');
     }
 }

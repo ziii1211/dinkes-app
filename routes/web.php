@@ -1,6 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage; // <--- PENTING: Import Library Storage
 
 // --- 1. LIVEWIRE COMPONENTS ---
 use App\Livewire\Auth\Login;
@@ -45,14 +46,14 @@ use Barryvdh\DomPDF\Facade\Pdf;
 |--------------------------------------------------------------------------
 */
 
-// --- HALAMAN LOGIN (AKSES PUBLIK) ---
+// --- HALAMAN LOGIN ---
 Route::get('/login', Login::class)->name('login');
 
 
 // --- ROUTES YANG BUTUH LOGIN (MIDDLEWARE AUTH) ---
 Route::middleware('auth')->group(function () {
 
-    // 1. LOGOUT (POST METHOD AGAR AMAN DARI CSRF)
+    // 1. LOGOUT (POST METHOD)
     Route::post('/logout', function () {
         auth()->logout();
         session()->invalidate();
@@ -61,29 +62,43 @@ Route::middleware('auth')->group(function () {
     })->name('logout');
 
 
-    // 2. DASHBOARD UMUM (BISA DIAKSES SEMUA PEGAWAI)
+    // 2. DASHBOARD
     Route::get('/', Dashboard::class)->name('dashboard');
 
 
-    // 3. AREA KHUSUS ADMIN (DIPROTEKSI MIDDLEWARE ROLE:ADMIN)
-    // Hanya user dengan role 'admin' yang bisa masuk sini.
+    // 3. AREA ADMIN (Role: Admin)
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
-        
-        // Nanti bisa tambahkan route manajemen user di sini
-        // Route::get('/admin/users', ...);
     });
 
 
-    // 4. AREA KHUSUS PIMPINAN (DIPROTEKSI MIDDLEWARE ROLE:PIMPINAN)
-    // Hanya user dengan role 'pimpinan' yang bisa masuk sini.
+    // 4. AREA PIMPINAN (Role: Pimpinan)
     Route::middleware('role:pimpinan')->group(function () {
         Route::get('/pimpinan/dashboard', PimpinanDashboard::class)->name('pimpinan.dashboard');
     });
 
 
-    // 5. FITUR-FITUR APLIKASI (DIAKSES OLEH PEGAWAI / UMUM)
-    // Kode di bawah ini tetap sama seperti sebelumnya, tidak ada yang dihapus.
+    // 5. FITUR DOWNLOAD AMAN (SECURE FILE DOWNLOAD)
+    // ----------------------------------------------------------------------
+    // Ini adalah "Pintu Khusus". Hanya user login yang bisa akses link ini.
+    // Link ini akan mengambil file dari "Brankas" (Folder Private).
+    Route::get('/dokumen/unduh/{folder}/{filename}', function ($folder, $filename) {
+        
+        // Gabungkan folder dan nama file (Contoh: dokumen-rahasia/sk-2025.pdf)
+        // Pastikan folder sesuai dengan tempat Anda upload (misal: 'dokumen-rahasia')
+        $path = $folder . '/' . $filename;
+
+        // Cek apakah file ada di storage?
+        if (!Storage::exists($path)) {
+            abort(404, 'File tidak ditemukan.');
+        }
+
+        // Paksa download file ke browser user
+        return Storage::download($path);
+
+    })->name('dokumen.download');
+    // ----------------------------------------------------------------------
+
 
     // --- MASTER DATA ---
     Route::get('/struktur-organisasi', StrukturOrganisasi::class);
@@ -95,19 +110,13 @@ Route::middleware('auth')->group(function () {
         
         // CETAK PDF RENSTRA
         Route::get('/dokumen/cetak', function () {
-            
             $tujuans = \App\Models\Tujuan::with('pohonKinerja.indikators')->get();
             $sasarans = \App\Models\Sasaran::with('pohonKinerja.indikators')->get();
             $outcomes = \App\Models\Outcome::with(['program', 'pohonKinerja.indikators'])->get();
-            $kegiatans = \App\Models\Kegiatan::with('pohonKinerja.indikators')
-                            ->whereNotNull('output')
-                            ->get();
+            $kegiatans = \App\Models\Kegiatan::with('pohonKinerja.indikators')->whereNotNull('output')->get();
             $sub_kegiatans = \App\Models\SubKegiatan::with('pohonKinerja.indikators')->get();
 
-            $header = [
-                'unit_kerja' => 'DINAS KESEHATAN',
-                'periode' => '2025 - 2029'
-            ];
+            $header = ['unit_kerja' => 'DINAS KESEHATAN', 'periode' => '2025 - 2029'];
             
             $pdf = Pdf::loadView('cetak.dokumen-renstra', compact(
                 'tujuans', 'sasarans', 'outcomes', 'kegiatans', 'sub_kegiatans', 'header'
@@ -115,7 +124,6 @@ Route::middleware('auth')->group(function () {
 
             $pdf->setPaper('a4', 'landscape');
             return $pdf->download('Matriks_RENSTRA_Dinas_Kesehatan.pdf');
-            
         })->name('matrik.dokumen.print');
 
         // EXPORT EXCEL RENSTRA
@@ -128,7 +136,6 @@ Route::middleware('auth')->group(function () {
                 'sub_kegiatans' => \App\Models\SubKegiatan::with('pohonKinerja.indikators')->get(),
                 'header' => ['unit_kerja' => 'DINAS KESEHATAN', 'periode' => '2025 - 2029']
             ];
-            
             return Excel::download(new DokumenRenstraExport($data), 'Matriks_RENSTRA_Dinas_Kesehatan.xlsx');
         })->name('matrik.dokumen.excel');
 
@@ -143,16 +150,13 @@ Route::middleware('auth')->group(function () {
 
     // --- PERENCANAAN KINERJA ---
     Route::prefix('perencanaan-kinerja')->group(function () {
-        
         Route::get('/cascading-renstra', CascadingRenstra::class)->name('cascading.renstra');
-        
         Route::get('/perjanjian-kinerja', PerjanjianKinerja::class)->name('perjanjian.kinerja');
         Route::get('/perjanjian-kinerja/{id}', PerjanjianKinerjaDetail::class)->name('perjanjian.kinerja.detail');
         Route::get('/perjanjian-kinerja/lihat/{id}', PerjanjianKinerjaLihat::class)->name('perjanjian.kinerja.lihat');
         
         // CETAK PERJANJIAN KINERJA
         Route::get('/perjanjian-kinerja/cetak/{id}', function ($id) {
-            
             $pk = PkModel::with(['jabatan', 'pegawai', 'sasarans.indikators', 'anggarans.subKegiatan'])->findOrFail($id);
             $jabatan = $pk->jabatan;
             
@@ -181,7 +185,6 @@ Route::middleware('auth')->group(function () {
             $namaFile = 'PK_' . $pk->tahun . '_' . str_replace(' ', '_', $jabatan->nama) . '.pdf';
 
             return $pdf->download($namaFile);
-
         })->name('perjanjian.kinerja.print');
     });
 
