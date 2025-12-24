@@ -4,16 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Traits\LogsActivity; // <--- 1. IMPORT TRAIT AUDIT LOG
 
 class Sasaran extends Model
 {
     use HasFactory;
+    use LogsActivity; // <--- 2. AKTIFKAN CCTV (LOGGING) DI SINI
 
     protected $fillable = [
         'tujuan_id', // ID Induk (Tujuan Renstra)
         'sasaran',   // Nama Sasaran
         'jabatan_id' // Penanggung Jawab
     ];
+
+    // --- RELASI ANTAR TABEL ---
 
     // Relasi ke Induk (Tujuan)
     public function tujuan()
@@ -33,12 +37,13 @@ class Sasaran extends Model
         return $this->hasMany(IndikatorSasaran::class);
     }
 
-    // Relasi ke Anak (Outcome) - BARU DITAMBAHKAN
+    // Relasi ke Anak (Outcome)
     public function outcomes()
     {
         return $this->hasMany(Outcome::class);
     }
 
+    // Relasi ke Pohon Kinerja (Cascading)
     public function pohonKinerja()
     {
         return $this->hasOne(PohonKinerja::class, 'sasaran_id');

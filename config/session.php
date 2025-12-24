@@ -32,9 +32,11 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 120),
+    // PERBAIKAN KEAMANAN 1: Durasi sesi diperpendek jadi 60 menit (default)
+    'lifetime' => (int) env('SESSION_LIFETIME', 60),
 
-    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
+    // PERBAIKAN KEAMANAN 2: Wajib logout saat browser ditutup
+    'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', true),
 
     /*
     |--------------------------------------------------------------------------
@@ -169,7 +171,10 @@ return [
     |
     */
 
-    'secure' => env('SESSION_SECURE_COOKIE'),
+    // PERBAIKAN KEAMANAN 3: Secure Cookie (Smart Logic)
+    // Jika di Production (Online), WAJIB True.
+    // Jika di Local (Development), Boleh False agar tidak error login loop.
+    'secure' => env('SESSION_SECURE_COOKIE', env('APP_ENV') === 'production'),
 
     /*
     |--------------------------------------------------------------------------
@@ -199,7 +204,8 @@ return [
     |
     */
 
-    'same_site' => env('SESSION_SAME_SITE', 'lax'),
+    // PERBAIKAN KEAMANAN 4: Ubah ke 'strict' untuk keamanan maksimal
+    'same_site' => env('SESSION_SAME_SITE', 'strict'),
 
     /*
     |--------------------------------------------------------------------------

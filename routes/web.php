@@ -24,7 +24,6 @@ use App\Livewire\PengukuranKinerja as DetailPengukuranKinerja;
 use App\Livewire\PengaturanKinerja;
 
 // --- 2. MODELS ---
-// Kita import semua model agar pasti terbaca sebagai Eloquent Object
 use App\Models\PerjanjianKinerja as PkModel;
 use App\Models\Jabatan;
 use App\Models\Pegawai;
@@ -46,17 +45,46 @@ use Barryvdh\DomPDF\Facade\Pdf;
 |--------------------------------------------------------------------------
 */
 
-// HALAMAN LOGIN
+// --- HALAMAN LOGIN (AKSES PUBLIK) ---
 Route::get('/login', Login::class)->name('login');
 
-// ROUTES YANG BUTUH LOGIN
+
+// --- ROUTES YANG BUTUH LOGIN (MIDDLEWARE AUTH) ---
 Route::middleware('auth')->group(function () {
-    
-    // --- DASHBOARD ---
+
+    // 1. LOGOUT (POST METHOD AGAR AMAN DARI CSRF)
+    Route::post('/logout', function () {
+        auth()->logout();
+        session()->invalidate();
+        session()->regenerateToken();
+        return redirect('/login');
+    })->name('logout');
+
+
+    // 2. DASHBOARD UMUM (BISA DIAKSES SEMUA PEGAWAI)
     Route::get('/', Dashboard::class)->name('dashboard');
-    Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
-    Route::get('/pimpinan/dashboard', PimpinanDashboard::class)->name('pimpinan.dashboard');
-    
+
+
+    // 3. AREA KHUSUS ADMIN (DIPROTEKSI MIDDLEWARE ROLE:ADMIN)
+    // Hanya user dengan role 'admin' yang bisa masuk sini.
+    Route::middleware('role:admin')->group(function () {
+        Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
+        
+        // Nanti bisa tambahkan route manajemen user di sini
+        // Route::get('/admin/users', ...);
+    });
+
+
+    // 4. AREA KHUSUS PIMPINAN (DIPROTEKSI MIDDLEWARE ROLE:PIMPINAN)
+    // Hanya user dengan role 'pimpinan' yang bisa masuk sini.
+    Route::middleware('role:pimpinan')->group(function () {
+        Route::get('/pimpinan/dashboard', PimpinanDashboard::class)->name('pimpinan.dashboard');
+    });
+
+
+    // 5. FITUR-FITUR APLIKASI (DIAKSES OLEH PEGAWAI / UMUM)
+    // Kode di bawah ini tetap sama seperti sebelumnya, tidak ada yang dihapus.
+
     // --- MASTER DATA ---
     Route::get('/struktur-organisasi', StrukturOrganisasi::class);
     
@@ -65,23 +93,15 @@ Route::middleware('auth')->group(function () {
         
         Route::get('/dokumen', DokumenRenstra::class)->name('matrik.dokumen');
         
-        // 1. CETAK PDF RENSTRA (FIXED: SEMUA VARIABEL MENGGUNAKAN MODEL)
+        // CETAK PDF RENSTRA
         Route::get('/dokumen/cetak', function () {
             
-            // PENTING: Gunakan \App\Models\NamaModel::with(...) untuk semua data
-            // agar semua menjadi Object Eloquent yang memiliki relasi.
-
             $tujuans = \App\Models\Tujuan::with('pohonKinerja.indikators')->get();
-            
-            // SUMBER ERROR ANDA DISINI (Sebelumnya mungkin DB::table atau kurang namespace)
             $sasarans = \App\Models\Sasaran::with('pohonKinerja.indikators')->get();
-            
             $outcomes = \App\Models\Outcome::with(['program', 'pohonKinerja.indikators'])->get();
-            
             $kegiatans = \App\Models\Kegiatan::with('pohonKinerja.indikators')
                             ->whereNotNull('output')
                             ->get();
-            
             $sub_kegiatans = \App\Models\SubKegiatan::with('pohonKinerja.indikators')->get();
 
             $header = [
@@ -98,10 +118,9 @@ Route::middleware('auth')->group(function () {
             
         })->name('matrik.dokumen.print');
 
-        // 2. EXPORT EXCEL RENSTRA
+        // EXPORT EXCEL RENSTRA
         Route::get('/dokumen/excel', function () {
             $data = [
-                // Pastikan Excel juga menggunakan Model Eloquent
                 'tujuans' => \App\Models\Tujuan::with('pohonKinerja.indikators')->get(),
                 'sasarans' => \App\Models\Sasaran::with('pohonKinerja.indikators')->get(),
                 'outcomes' => \App\Models\Outcome::with(['program', 'pohonKinerja.indikators'])->get(),
@@ -131,14 +150,12 @@ Route::middleware('auth')->group(function () {
         Route::get('/perjanjian-kinerja/{id}', PerjanjianKinerjaDetail::class)->name('perjanjian.kinerja.detail');
         Route::get('/perjanjian-kinerja/lihat/{id}', PerjanjianKinerjaLihat::class)->name('perjanjian.kinerja.lihat');
         
-        // CETAK PERJANJIAN KINERJA (PDF DOWNLOAD)
+        // CETAK PERJANJIAN KINERJA
         Route::get('/perjanjian-kinerja/cetak/{id}', function ($id) {
             
-            // 1. Ambil Data PK
             $pk = PkModel::with(['jabatan', 'pegawai', 'sasarans.indikators', 'anggarans.subKegiatan'])->findOrFail($id);
             $jabatan = $pk->jabatan;
             
-            // 2. Tentukan Atasan (Pihak Pertama)
             $is_kepala_dinas = is_null($jabatan->parent_id);
             $atasan_pegawai = null;
             $atasan_jabatan = null;
@@ -151,7 +168,6 @@ Route::middleware('auth')->group(function () {
                 }
             }
             
-            // 3. Generate PDF
             $pdf = Pdf::loadView('cetak.perjanjian-kinerja', [
                 'pk' => $pk,
                 'jabatan' => $jabatan,
@@ -175,12 +191,4 @@ Route::middleware('auth')->group(function () {
         Route::get('/atur-kinerja/{jabatanId}', PengaturanKinerja::class)->name('pengukuran.atur');
         Route::get('/pengukuran/{jabatanId}', DetailPengukuranKinerja::class)->name('pengukuran.detail');
     });
-    
-    // --- LOGOUT ---
-    Route::get('/logout', function () {
-        auth()->logout();
-        session()->invalidate();
-        session()->regenerateToken();
-        return redirect('/login');
-    })->name('logout');
 });
