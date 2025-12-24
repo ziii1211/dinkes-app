@@ -274,4 +274,14 @@ class DokumenRenstra extends Component
         $this->tanggal_dokumen = $this->edit_tanggal_penetapan;
         $this->closeModal();
     }
+
+    public function save()
+{
+    $this->validate([
+        // HANYA boleh PDF, Word, Excel. MAKSIMAL 5MB (5120 KB).
+        'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:5120', 
+    ]);
+
+    // ... simpan file ...
+}
 }
