@@ -11,10 +11,20 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // DAFTARKAN ALIAS 'role' DI SINI
+        
+        // 1. DAFTARKAN ALIAS (Untuk dipakai spesifik di route)
+        // Contoh pemakaian di route: middleware('role:admin')
         $middleware->alias([
             'role' => \App\Http\Middleware\CheckRole::class,
         ]);
+
+        // 2. DAFTARKAN MIDDLEWARE WEB (GLOBAL)
+        // SecurityHeaders akan otomatis berjalan di SEMUA halaman tanpa dipanggil
+        // Ini melindungi seluruh aplikasi dari serangan Clickjacking & XSS
+        $middleware->web(append: [
+            \App\Http\Middleware\SecurityHeaders::class,
+        ]);
+
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         //
