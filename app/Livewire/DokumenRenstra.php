@@ -9,15 +9,21 @@ use App\Models\Outcome;
 use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\PohonKinerja;
+use App\Models\RenstraSetting; // <--- 1. IMPORT MODEL BARU
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
-use Maatwebsite\Excel\Facades\Excel; // Pastikan package excel sudah install
+use Maatwebsite\Excel\Facades\Excel; 
 use App\Exports\DokumenRenstraExport;
-use Barryvdh\DomPDF\Facade\Pdf; // Pastikan package dompdf sudah install
+use Barryvdh\DomPDF\Facade\Pdf; 
+use Livewire\WithFileUploads;
 
 class DokumenRenstra extends Component
 {
+    use WithFileUploads;
+
     public $unit_kerja = 'DINAS KESEHATAN';
+    
+    // Default values (akan ditimpa oleh database di method mount)
     public $nomor_dokumen = '031';
     public $tanggal_dokumen = '12 September 2025';
     public $periode = '2025 - 2029';
@@ -25,25 +31,41 @@ class DokumenRenstra extends Component
     public $isOpenEdit = false;
     public $edit_nomor_dokumen;
     public $edit_tanggal_penetapan;
+    
+    public $file; 
 
-    // Cache data pohon untuk optimasi
     protected $all_pohons;
 
     // =================================================================================
-    // 1. CORE LOGIC (DIPISAHKAN AGAR BISA DIPAKAI EXPORT)
+    // 0. MOUNT (AMBIL DATA DARI DATABASE SAAT HALAMAN DIBUKA)
+    // =================================================================================
+    public function mount()
+    {
+        // Ambil data setting pertama, atau buat default jika belum ada
+        $setting = RenstraSetting::firstOrCreate(
+            ['id' => 1], // ID 1 selalu dipakai untuk setting global ini
+            [
+                'nomor_dokumen' => '031', 
+                'tanggal_dokumen' => '12 September 2025'
+            ]
+        );
+
+        // Pasang data dari database ke variabel Livewire
+        $this->nomor_dokumen = $setting->nomor_dokumen;
+        $this->tanggal_dokumen = $setting->tanggal_dokumen;
+    }
+
+    // =================================================================================
+    // 1. CORE LOGIC
     // =================================================================================
 
     public function getDataRenstra()
     {
-        // Load data pohon sekali saja
         $this->all_pohons = PohonKinerja::with(['indikators', 'children'])->get();
 
-        // 1. Identifikasi Stop Points
-        $stopForSasaran = $this->getStopIds(Outcome::all(), 'outcome');  
+        $stopForSasaran = $this->getStopIds(Outcome::all(), 'outcome');   
         $stopForOutcome = $this->getStopIds(Kegiatan::all(), 'kegiatan'); 
         $stopForKegiatan = $this->getStopIds(SubKegiatan::all(), 'sub_kegiatan');
-
-        // 2. Mapping Data
 
         // TUJUAN
         $tujuans = Tujuan::all()->map(function($item) {
@@ -52,7 +74,7 @@ class DokumenRenstra extends Component
             return $item;
         });
 
-        // SASARAN (Flattening Level 3)
+        // SASARAN
         $finalSasarans = collect([]);
         foreach (Sasaran::all() as $item) {
             $node = $this->findPohonNode($item, 'sasaran');
@@ -108,11 +130,10 @@ class DokumenRenstra extends Component
             return $item;
         });
 
-        // KEMBALIKAN DATA MENTAH
         return [
             'unit_kerja'    => $this->unit_kerja,
-            'nomor_dokumen' => $this->nomor_dokumen,
-            'tanggal_dokumen' => $this->tanggal_dokumen,
+            'nomor_dokumen' => $this->nomor_dokumen,   // Ini sekarang sudah dinamis dari DB
+            'tanggal_dokumen' => $this->tanggal_dokumen, // Ini juga dinamis
             'periode'       => $this->periode,
             'tujuans'       => $tujuans,
             'sasarans'      => $finalSasarans,
@@ -123,7 +144,7 @@ class DokumenRenstra extends Component
     }
 
     // =================================================================================
-    // 2. HELPER FUNCTIONS (PRIVATE METHODS)
+    // 2. HELPER FUNCTIONS
     // =================================================================================
 
     private function normalizeText($text) {
@@ -133,13 +154,11 @@ class DokumenRenstra extends Component
     }
 
     private function findPohonNode($item, $type) {
-        // A. Coba by ID
         if ($type === 'tujuan' && isset($item->id)) {
             $matchById = $this->all_pohons->where('tujuan_id', $item->id)->first();
             if ($matchById) return $matchById;
         }
 
-        // B. Siapkan teks
         $targetText = '';
         if ($type === 'tujuan') {
             $targetText = $this->normalizeText($item->tujuan ?? $item->sasaran_rpjmd);
@@ -153,7 +172,6 @@ class DokumenRenstra extends Component
 
         if (empty($targetText) || strlen($targetText) < 3) return null;
 
-        // C. Matching
         $bestMatch = null;
         $highestPercent = 0;
 
@@ -195,15 +213,13 @@ class DokumenRenstra extends Component
             if (in_array($child->id, $stopIds)) continue;
 
             $virtualRow = new \stdClass();
-            $virtualRow->{$textField} = ''; // Kosongkan nama agar kolom Sasaran bersih
+            $virtualRow->{$textField} = '';
             $virtualRow->indikators_from_pohon = $this->getDirectIndicators($child);
             
             if($textField == 'outcome') {
                 $virtualRow->program = (object)['kode' => '', 'nama' => ''];
             }
 
-            // Opsional: Cek jika indikator kosong, apakah baris tetap ditampilkan?
-            // Jika ya, langsung push. Jika tidak, cek count > 0.
             $rows->push($virtualRow);
 
             $childRows = $this->createVirtualRows($child, $stopIds, $textField);
@@ -213,27 +229,23 @@ class DokumenRenstra extends Component
     }
 
     // =================================================================================
-    // 3. RENDER (TAMPILAN WEB)
+    // 3. RENDER
     // =================================================================================
 
     public function render()
     {
-        // Panggil Single Source of Truth tadi
         $data = $this->getDataRenstra();
         return view('livewire.dokumen-renstra', $data);
     }
 
     // =================================================================================
-    // 4. EXPORT FUNCTIONS (PDF & EXCEL)
+    // 4. EXPORT FUNCTIONS
     // =================================================================================
 
     public function downloadPdf()
     {
         $data = $this->getDataRenstra();
-        
-        // Kita gunakan view khusus cetak yang bersih (tanpa tombol edit/navigasi)
         $pdf = Pdf::loadView('cetak.dokumen-renstra', $data);
-        
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, 'Dokumen-Renstra-' . $this->periode . '.pdf');
@@ -242,13 +254,11 @@ class DokumenRenstra extends Component
     public function downloadExcel()
     {
         $data = $this->getDataRenstra();
-        
-        // Panggil Class Export dan inject datanya
         return Excel::download(new DokumenRenstraExport($data), 'Dokumen-Renstra-' . $this->periode . '.xlsx');
     }
 
     // =================================================================================
-    // 5. MODAL EDIT
+    // 5. MODAL EDIT & SAVE
     // =================================================================================
 
     public function openEditModal()
@@ -264,24 +274,52 @@ class DokumenRenstra extends Component
         $this->resetValidation();
     }
 
+    // UPDATE DOKUMEN: SEKARANG SUDAH MENYIMPAN KE DATABASE!
     public function updateRenstra()
     {
+        // 1. SATPAM DIGITAL: Cek Hak Akses
+        if (auth()->user()->role !== 'admin' && auth()->user()->role !== 'pimpinan') {
+            abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk mengubah dokumen ini.');
+        }
+
+        // 2. VALIDASI
         $this->validate([
-            'edit_nomor_dokumen' => 'required',
-            'edit_tanggal_penetapan' => 'required',
+            'edit_nomor_dokumen' => 'required|string|max:100', 
+            'edit_tanggal_penetapan' => 'required|string|max:50',
         ]);
-        $this->nomor_dokumen = $this->edit_nomor_dokumen;
-        $this->tanggal_dokumen = $this->edit_tanggal_penetapan;
-        $this->closeModal();
+
+        // 3. SIMPAN KE DATABASE (PERMANEN)
+        RenstraSetting::updateOrCreate(
+            ['id' => 1], 
+            [
+                'nomor_dokumen' => $this->edit_nomor_dokumen,
+                'tanggal_dokumen' => $this->edit_tanggal_penetapan
+            ]
+        );
+
+        // 4. FLASH MESSAGE & RELOAD HALAMAN (SOLUSI BUG GARIS HITAM)
+        // Kita simpan pesan di session
+        session()->flash('message', 'Data dokumen berhasil diperbarui secara permanen.');
+
+        // Kita PAKSA redirect ke halaman ini sendiri agar browser melakukan refresh bersih.
+        // Bug garis hitam akan hilang karena halaman dimuat ulang dari nol.
+        return redirect()->route('matrik.dokumen');
     }
 
     public function save()
-{
-    $this->validate([
-        // HANYA boleh PDF, Word, Excel. MAKSIMAL 5MB (5120 KB).
-        'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:5120', 
-    ]);
+    {
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Hanya Admin yang boleh mengunggah dokumen.');
+        }
 
-    // ... simpan file ...
-}
+        $this->validate([
+            'file' => 'required|file|mimes:pdf,doc,docx,xls,xlsx|max:5120', 
+        ]);
+
+        $filename = 'RENSTRA_' . time() . '.' . $this->file->getClientOriginalExtension();
+        $this->file->storeAs('dokumen-rahasia', $filename);
+
+        $this->file = null;
+        session()->flash('message', 'Dokumen berhasil diunggah dengan aman.');
+    }
 }

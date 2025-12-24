@@ -1,13 +1,4 @@
 <div>
-    <x-slot:title>Matrik Renstra</x-slot>
-    
-    <x-slot:breadcrumb>
-        <a href="/" class="hover:text-white transition-colors">Dashboard</a>
-        <span class="mx-2">/</span>
-        <span class="text-blue-200">Master Data</span>
-        <span class="mx-2">/</span>
-        <span class="font-medium text-white">Matrik Renstra</span>
-    </x-slot>
 
     <div class="space-y-6">
         
@@ -15,7 +6,7 @@
             
             <div class="px-8 py-6 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h2 class="text-xl font-bold text-gray-800 text-blue-900">
-                    Matriks RENSTRA
+                    DOKUMEN RENSTRA
                 </h2>
                 <div class="flex gap-2">
                     <button wire:click="downloadPdf" wire:loading.attr="disabled" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded shadow-sm flex items-center transition-colors">

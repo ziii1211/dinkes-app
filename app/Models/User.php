@@ -16,7 +16,6 @@ class User extends Authenticatable
         'username',  // Tambahan kolom username
         'email',
         'password',
-        //'role',
         'nip',
         'jabatan',
     ];
