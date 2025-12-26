@@ -79,8 +79,12 @@ class Dashboard extends Component
         $this->detailIsuKritis = [];
 
         foreach ($rawPerformance as $row) {
-            if ($row->target_tahun > 0) {
-                $rawCapaian = ($row->realisasi / $row->target_tahun) * 100;
+            // PERBAIKAN: Casting ke float untuk mencegah error non-numeric
+            $target = (float) $row->target_tahun;
+            $realisasi = (float) $row->realisasi;
+
+            if ($target > 0) {
+                $rawCapaian = ($realisasi / $target) * 100;
                 $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
 
                 if (!isset($tempScores[$row->jabatan])) {
@@ -93,8 +97,8 @@ class Dashboard extends Component
                     $this->detailIsuKritis[] = [
                         'jabatan' => $row->jabatan,
                         'indikator' => $row->nama_indikator,
-                        'target' => $row->target_tahun,
-                        'realisasi' => $row->realisasi,
+                        'target' => $target,
+                        'realisasi' => $realisasi,
                         'capaian' => round($rawCapaian, 1)
                     ];
                 }
@@ -174,8 +178,12 @@ class Dashboard extends Component
         $isuKritisNames = [];
 
         foreach ($rawPerformance as $row) {
-            if ($row->target_tahun > 0) {
-                $rawCapaian = ($row->realisasi / $row->target_tahun) * 100;
+            // PERBAIKAN: Casting ke float untuk mencegah error non-numeric
+            $target = (float) $row->target_tahun;
+            $realisasi = (float) $row->realisasi;
+
+            if ($target > 0) {
+                $rawCapaian = ($realisasi / $target) * 100;
                 $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
                 
                 $totalGlobalCapaian += $cappedCapaian;

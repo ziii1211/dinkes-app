@@ -65,6 +65,7 @@ class Dashboard extends Component
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
+                'pk_indikators.arah', // TAMBAHKAN INI
                 'realisasi_kinerjas.realisasi',
                 'realisasi_kinerjas.tahun',
                 DB::raw("CASE 
@@ -79,9 +80,20 @@ class Dashboard extends Component
         $this->detailIsuKritis = [];
 
         foreach ($rawPerformance as $row) {
-            if ($row->target_tahun > 0) {
-                $rawCapaian = ($row->realisasi / $row->target_tahun) * 100;
-                $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
+            // KONVERSI ANGKA DENGAN KOMA
+            $target = (float) str_replace(',', '.', $row->target_tahun);
+            $realisasi = (float) str_replace(',', '.', $row->realisasi);
+            $arah = strtolower(trim($row->arah ?? ''));
+            $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
+
+            if ($target > 0) {
+                if ($isNegative) {
+                    $rawCapaian = ((2 * $target) - $realisasi) / $target * 100;
+                } else {
+                    $rawCapaian = ($realisasi / $target) * 100;
+                }
+
+                $cappedCapaian = $rawCapaian > 100 ? 100 : ($rawCapaian < 0 ? 0 : $rawCapaian);
 
                 if (!isset($tempScores[$row->jabatan])) {
                     $tempScores[$row->jabatan] = ['total' => 0, 'count' => 0];
@@ -93,8 +105,8 @@ class Dashboard extends Component
                     $this->detailIsuKritis[] = [
                         'jabatan' => $row->jabatan,
                         'indikator' => $row->nama_indikator,
-                        'target' => $row->target_tahun,
-                        'realisasi' => $row->realisasi,
+                        'target' => $target,
+                        'realisasi' => $realisasi,
                         'capaian' => round($rawCapaian, 1)
                     ];
                 }
@@ -157,6 +169,7 @@ class Dashboard extends Component
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
+                'pk_indikators.arah', // PASTIKAN KOLOM INI ADA
                 'realisasi_kinerjas.realisasi',
                 'realisasi_kinerjas.tahun',
                 DB::raw("CASE 
@@ -174,9 +187,20 @@ class Dashboard extends Component
         $isuKritisNames = [];
 
         foreach ($rawPerformance as $row) {
-            if ($row->target_tahun > 0) {
-                $rawCapaian = ($row->realisasi / $row->target_tahun) * 100;
-                $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
+            // KONVERSI ANGKA DENGAN KOMA
+            $target = (float) str_replace(',', '.', $row->target_tahun);
+            $realisasi = (float) str_replace(',', '.', $row->realisasi);
+            $arah = strtolower(trim($row->arah ?? ''));
+            $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
+
+            if ($target > 0) {
+                if ($isNegative) {
+                    $rawCapaian = ((2 * $target) - $realisasi) / $target * 100;
+                } else {
+                    $rawCapaian = ($realisasi / $target) * 100;
+                }
+                
+                $cappedCapaian = $rawCapaian > 100 ? 100 : ($rawCapaian < 0 ? 0 : $rawCapaian);
                 
                 $totalGlobalCapaian += $cappedCapaian;
                 $countGlobalData++;

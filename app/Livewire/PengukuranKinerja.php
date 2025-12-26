@@ -21,7 +21,6 @@ class PengukuranKinerja extends Component
     public $tahun;
     public $selectedMonth;
     
-    // INI YANG SEBELUMNYA HILANG:
     public $availableYears = []; 
 
     public $pk = null;
@@ -80,6 +79,14 @@ class PengukuranKinerja extends Component
         $this->loadData(); 
     }
 
+    // HELPER: Konversi angka string (koma) ke float (titik)
+    private function parseNumber($value)
+    {
+        if (is_null($value)) return 0;
+        // Ganti koma dengan titik, lalu cast ke float
+        return (float) str_replace(',', '.', (string) $value);
+    }
+
     public function loadData()
     {
         $this->checkScheduleStatus();
@@ -106,9 +113,31 @@ class PengukuranKinerja extends Component
                     $indikator->catatan_bulan = $data ? $data->catatan : null;
                     $indikator->tanggapan_bulan = $data ? $data->tanggapan : null; 
 
-                    if ($indikator->realisasi_bulan !== null && $indikator->target_tahunan > 0) {
-                        $capaian = ($indikator->realisasi_bulan / $indikator->target_tahunan) * 100;
-                        $indikator->capaian_bulan = number_format($capaian, 2) . '%';
+                    // --- PERBAIKAN: Gunakan parseNumber untuk menangani koma ---
+                    $target = $this->parseNumber($indikator->target_tahunan);
+                    $realisasi = $this->parseNumber($indikator->realisasi_bulan);
+
+                    // Deteksi Arah
+                    $arah = strtolower(trim($indikator->arah ?? ''));
+                    $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
+
+                    if ($indikator->realisasi_bulan !== null && $target > 0) {
+                        if ($isNegative) {
+                            // Rumus Negatif (Turun)
+                            // ((2 * Target) - Realisasi) / Target * 100
+                            $capaian = ((2 * $target) - $realisasi) / $target * 100;
+                        } else {
+                            // Rumus Positif (Naik)
+                            // (Realisasi / Target) * 100
+                            $capaian = ($realisasi / $target) * 100;
+                        }
+                        
+                        // Capping 100% dan floor 0%
+                        if ($capaian > 100) $capaian = 100;
+                        if ($capaian < 0) $capaian = 0;
+
+                        // Tampilkan dengan koma sebagai desimal (format Indonesia)
+                        $indikator->capaian_bulan = number_format($capaian, 2, ',', '.') . '%';
                     } else {
                         $indikator->capaian_bulan = '-';
                     }
@@ -129,8 +158,18 @@ class PengukuranKinerja extends Component
         foreach ($this->rencanaAksis as $aksi) {
             $dataAksi = $realisasiAksiMap->get($aksi->id);
             $aksi->realisasi_bulan = $dataAksi ? $dataAksi->realisasi : null;
-            if ($aksi->realisasi_bulan !== null && $aksi->target > 0) {
-                $capaian = ($aksi->realisasi_bulan / $aksi->target) * 100;
+            
+            // Gunakan parseNumber
+            $targetAksi = $this->parseNumber($aksi->target);
+            $realisasiAksi = $this->parseNumber($aksi->realisasi_bulan);
+
+            if ($aksi->realisasi_bulan !== null && $targetAksi > 0) {
+                // Rencana Aksi Default Positif
+                $capaian = ($realisasiAksi / $targetAksi) * 100;
+                
+                if ($capaian > 100) $capaian = 100;
+                if ($capaian < 0) $capaian = 0;
+                
                 $aksi->capaian_bulan = round($capaian);
             } else {
                 $aksi->capaian_bulan = null;
@@ -234,8 +273,13 @@ class PengukuranKinerja extends Component
     }
     public function closeRealisasi() { $this->isOpenRealisasi = false; }
     public function simpanRealisasi() {
-        $this->validate(['realisasiInput' => 'required|numeric']);
-        RealisasiKinerja::updateOrCreate(['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['realisasi' => $this->realisasiInput, 'catatan' => $this->catatanInput]);
+        // Validasi input angka bisa koma atau titik
+        $this->validate(['realisasiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
+        
+        // Simpan ke DB dengan format titik agar konsisten
+        $cleanRealisasi = str_replace(',', '.', $this->realisasiInput);
+        
+        RealisasiKinerja::updateOrCreate(['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['realisasi' => $cleanRealisasi, 'catatan' => $this->catatanInput]);
         $this->closeRealisasi(); $this->loadData();
     }
     public function openRealisasiAksi($id) {
@@ -246,15 +290,21 @@ class PengukuranKinerja extends Component
     }
     public function closeRealisasiAksi() { $this->isOpenRealisasiAksi = false; }
     public function simpanRealisasiAksi() {
-        $this->validate(['realisasiAksiInput' => 'required|numeric']);
-        RealisasiRencanaAksi::updateOrCreate(['rencana_aksi_id' => $this->aksiId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['realisasi' => $this->realisasiAksiInput]);
+        $this->validate(['realisasiAksiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
+        
+        $cleanRealisasi = str_replace(',', '.', $this->realisasiAksiInput);
+        
+        RealisasiRencanaAksi::updateOrCreate(['rencana_aksi_id' => $this->aksiId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['realisasi' => $cleanRealisasi]);
         $this->closeRealisasiAksi(); $this->loadData();
     }
     public function openTambahAksi() { $this->reset(['formAksiNama', 'formAksiTarget', 'formAksiSatuan']); $this->isOpenTambahAksi = true; }
     public function closeTambahAksi() { $this->isOpenTambahAksi = false; }
     public function storeRencanaAksi() {
-        $this->validate(['formAksiNama' => 'required', 'formAksiTarget' => 'required|numeric', 'formAksiSatuan' => 'required']);
-        RencanaAksi::create(['jabatan_id' => $this->jabatan->id, 'tahun' => $this->tahun, 'nama_aksi' => $this->formAksiNama, 'target' => $this->formAksiTarget, 'satuan' => $this->formAksiSatuan]);
+        $this->validate(['formAksiNama' => 'required', 'formAksiTarget' => 'required', 'formAksiSatuan' => 'required']);
+        
+        $cleanTarget = str_replace(',', '.', $this->formAksiTarget);
+        
+        RencanaAksi::create(['jabatan_id' => $this->jabatan->id, 'tahun' => $this->tahun, 'nama_aksi' => $this->formAksiNama, 'target' => $cleanTarget, 'satuan' => $this->formAksiSatuan]);
         $this->closeTambahAksi(); $this->loadData();
     }
     public function openTanggapan($id, $nama) {

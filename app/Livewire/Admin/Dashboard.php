@@ -14,15 +14,12 @@ use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    // UBAH DEFAULT PERIODE KE RENSTRA
     public $periode = 'Renstra 2026-2030';
-    public $perangkat_daerah = ''; // ID Jabatan yang dipilih (Kosong = Dinas Kesehatan Global)
+    public $perangkat_daerah = ''; 
 
-    // --- Modal State ---
     public $isOpenHighlight = false;
     public $activeTab = 'performer';
 
-    // --- Data Detail ---
     public $detailPerformers = [];
     public $detailIsuKritis = [];
     public $detailDokumen = [];
@@ -54,7 +51,6 @@ class Dashboard extends Component
 
     private function loadDetailData()
     {
-        // 1. Data Detail Performer & Isu (Dengan Filter Jabatan)
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -66,8 +62,8 @@ class Dashboard extends Component
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
+                'pk_indikators.arah', 
                 'realisasi_kinerjas.realisasi',
-                'realisasi_kinerjas.capaian as capaian_db',
                 'realisasi_kinerjas.tahun',
                 DB::raw("CASE 
                     WHEN realisasi_kinerjas.tahun = 2025 THEN pk_indikators.target_2025
@@ -81,9 +77,20 @@ class Dashboard extends Component
         $this->detailIsuKritis = [];
 
         foreach ($rawPerformance as $row) {
-            if ($row->target_tahun > 0) {
-                $rawCapaian = ($row->realisasi / $row->target_tahun) * 100;
-                $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
+            // KONVERSI ANGKA DENGAN KOMA
+            $target = (float) str_replace(',', '.', $row->target_tahun);
+            $realisasi = (float) str_replace(',', '.', $row->realisasi);
+            $arah = strtolower(trim($row->arah ?? ''));
+            $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
+
+            if ($target > 0) {
+                if ($isNegative) {
+                    $rawCapaian = ((2 * $target) - $realisasi) / $target * 100;
+                } else {
+                    $rawCapaian = ($realisasi / $target) * 100;
+                }
+                
+                $cappedCapaian = $rawCapaian > 100 ? 100 : ($rawCapaian < 0 ? 0 : $rawCapaian);
 
                 if (!isset($tempScores[$row->jabatan])) {
                     $tempScores[$row->jabatan] = ['total' => 0, 'count' => 0];
@@ -95,8 +102,8 @@ class Dashboard extends Component
                     $this->detailIsuKritis[] = [
                         'jabatan' => $row->jabatan,
                         'indikator' => $row->nama_indikator,
-                        'target' => $row->target_tahun,
-                        'realisasi' => $row->realisasi,
+                        'target' => $target,
+                        'realisasi' => $realisasi,
                         'capaian' => round($rawCapaian, 1)
                     ];
                 }
@@ -118,7 +125,6 @@ class Dashboard extends Component
             return $b['score'] <=> $a['score'];
         });
 
-        // 2. Data Detail Dokumen (Dengan Filter Jabatan)
         $this->detailDokumen = PerjanjianKinerja::with(['jabatan.pegawai'])
             ->whereIn('status', ['draft', 'final'])
             ->when($this->perangkat_daerah, function($query) {
@@ -147,10 +153,8 @@ class Dashboard extends Component
 
     public function render()
     {
-        // 0. AMBIL DATA JABATAN UNTUK DROPDOWN
         $jabatans = Jabatan::orderBy('nama', 'asc')->get();
 
-        // 1. QUERY CORE (Dengan Filter Jabatan)
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -162,6 +166,7 @@ class Dashboard extends Component
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
+                'pk_indikators.arah', 
                 'realisasi_kinerjas.realisasi',
                 'realisasi_kinerjas.tahun',
                 DB::raw("CASE 
@@ -179,9 +184,20 @@ class Dashboard extends Component
         $isuKritisNames = [];
 
         foreach ($rawPerformance as $row) {
-            if ($row->target_tahun > 0) {
-                $rawCapaian = ($row->realisasi / $row->target_tahun) * 100;
-                $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
+            // KONVERSI ANGKA DENGAN KOMA
+            $target = (float) str_replace(',', '.', $row->target_tahun);
+            $realisasi = (float) str_replace(',', '.', $row->realisasi);
+            $arah = strtolower(trim($row->arah ?? ''));
+            $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
+
+            if ($target > 0) {
+                if ($isNegative) {
+                    $rawCapaian = ((2 * $target) - $realisasi) / $target * 100;
+                } else {
+                    $rawCapaian = ($realisasi / $target) * 100;
+                }
+                
+                $cappedCapaian = $rawCapaian > 100 ? 100 : ($rawCapaian < 0 ? 0 : $rawCapaian);
                 
                 $totalGlobalCapaian += $cappedCapaian;
                 $countGlobalData++;
@@ -222,7 +238,6 @@ class Dashboard extends Component
             $isuKritisDesc = "{$isuKritisCount} Isu: {$listNames}.";
         }
 
-        // 2. QUERY LAINNYA (Dengan Filter Jabatan)
         $pkStats = PerjanjianKinerja::query()
             ->when($this->perangkat_daerah, function($query) {
                 $query->where('jabatan_id', $this->perangkat_daerah);
@@ -241,7 +256,6 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        // Chart Data
         $chartData = RealisasiKinerja::selectRaw('bulan, AVG(capaian) as rata_rata')
             ->where('tahun', date('Y'))
             ->groupBy('bulan')
@@ -312,7 +326,6 @@ class Dashboard extends Component
                 ];
             });
 
-        // Deadline Alert
         $activeSchedule = JadwalPengukuran::where('is_active', true)
             ->whereDate('tanggal_mulai', '<=', now()) 
             ->whereDate('tanggal_selesai', '>=', now()) 
@@ -359,11 +372,8 @@ class Dashboard extends Component
             'chart_data' => $normalizedChart,
             'chart_labels' => $bulanLabels,
             'is_dummy_chart' => !$hasRealChartData,
-            
             'deadline' => $activeSchedule,
             'sisa_hari' => $sisaHari,
-            
-            // KIRIM DATA JABATAN KE VIEW
             'jabatans' => $jabatans 
         ];
 
