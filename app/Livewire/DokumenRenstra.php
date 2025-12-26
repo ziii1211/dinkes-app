@@ -9,7 +9,7 @@ use App\Models\Outcome;
 use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\PohonKinerja;
-use App\Models\RenstraSetting; // <--- 1. IMPORT MODEL BARU
+use App\Models\RenstraSetting;
 use Illuminate\Support\Str;
 use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel; 
@@ -23,7 +23,7 @@ class DokumenRenstra extends Component
 
     public $unit_kerja = 'DINAS KESEHATAN';
     
-    // Default values (akan ditimpa oleh database di method mount)
+    // Default values
     public $nomor_dokumen = '031';
     public $tanggal_dokumen = '12 September 2025';
     public $periode = '2025 - 2029';
@@ -37,20 +37,18 @@ class DokumenRenstra extends Component
     protected $all_pohons;
 
     // =================================================================================
-    // 0. MOUNT (AMBIL DATA DARI DATABASE SAAT HALAMAN DIBUKA)
+    // 0. MOUNT
     // =================================================================================
     public function mount()
     {
-        // Ambil data setting pertama, atau buat default jika belum ada
         $setting = RenstraSetting::firstOrCreate(
-            ['id' => 1], // ID 1 selalu dipakai untuk setting global ini
+            ['id' => 1],
             [
                 'nomor_dokumen' => '031', 
                 'tanggal_dokumen' => '12 September 2025'
             ]
         );
 
-        // Pasang data dari database ke variabel Livewire
         $this->nomor_dokumen = $setting->nomor_dokumen;
         $this->tanggal_dokumen = $setting->tanggal_dokumen;
     }
@@ -61,46 +59,72 @@ class DokumenRenstra extends Component
 
     public function getDataRenstra()
     {
+        // 1. Ambil data Pohon & HITUNG LEVEL (DEPTH)
         $this->all_pohons = PohonKinerja::with(['indikators', 'children'])->get();
+        $this->calculateDepths(); 
 
-        $stopForSasaran = $this->getStopIds(Outcome::all(), 'outcome');   
-        $stopForOutcome = $this->getStopIds(Kegiatan::all(), 'kegiatan'); 
+        // 2. Siapkan Stop Lists (Daftar ID yang sudah ada di DB agar tidak digenerate ulang sebagai virtual)
+        // Stop untuk Sasaran: Item yang ada di tabel Outcome (next level) ATAU di tabel Sasaran itu sendiri (current level)
+        $idsInSasaranDb = $this->getStopIds(Sasaran::all(), 'sasaran');
+        $idsInOutcomeDb = $this->getStopIds(Outcome::all(), 'outcome');
+        $stopForSasaranVirtual = array_merge($idsInOutcomeDb, $idsInSasaranDb);
+
+        // Stop untuk Outcome: Item yang ada di tabel Kegiatan (next level) ATAU di tabel Outcome itu sendiri
+        $idsInKegiatanDb = $this->getStopIds(Kegiatan::all(), 'kegiatan');
+        $stopForOutcomeVirtual = array_merge($idsInKegiatanDb, $idsInOutcomeDb);
+        
         $stopForKegiatan = $this->getStopIds(SubKegiatan::all(), 'sub_kegiatan');
 
-        // TUJUAN
+        // --- KOLOM 1: TUJUAN ---
         $tujuans = Tujuan::all()->map(function($item) {
             $node = $this->findPohonNode($item, 'tujuan');
             $item->indikators_from_pohon = $this->getDirectIndicators($node);
             return $item;
         });
 
-        // SASARAN
+        // --- KOLOM 2: SASARAN (FIX: HIDE ROOT TAPI SHOW CHILDREN) ---
         $finalSasarans = collect([]);
         foreach (Sasaran::all() as $item) {
             $node = $this->findPohonNode($item, 'sasaran');
-            $item->indikators_from_pohon = $this->getDirectIndicators($node); 
-            $finalSasarans->push($item);
+            
+            // A. Add Item Asli (Hanya jika BUKAN Root/Tujuan)
+            $isRoot = ($node && isset($node->depth) && $node->depth == 0);
+            
+            if (!$isRoot) {
+                $item->indikators_from_pohon = $this->getDirectIndicators($node); 
+                $finalSasarans->push($item);
+            }
 
+            // B. Cari Anak/Turunan (Virtual Rows)
+            // Tetap jalankan ini MESKIPUN $isRoot true, agar anak-anaknya tampil.
+            // Gunakan $stopForSasaranVirtual agar anak yang SUDAH ada di DB Sasaran tidak muncul ganda.
             if ($node) {
-                $virtualChildren = $this->createVirtualRows($node, $stopForSasaran, 'sasaran');
+                $virtualChildren = $this->createVirtualRows($node, $stopForSasaranVirtual, 'sasaran');
                 $finalSasarans = $finalSasarans->concat($virtualChildren);
             }
         }
 
-        // OUTCOME
+        // --- KOLOM 3: OUTCOME ---
         $finalOutcomes = collect([]);
         foreach (Outcome::with('program')->get() as $item) {
             $node = $this->findPohonNode($item, 'outcome');
-            $item->indikators_from_pohon = $this->getDirectIndicators($node);
-            $finalOutcomes->push($item);
+            
+            // Cek Depth Outcome (biasanya Level 2). Jika Level < 2, hati-hati duplikat.
+            // Logika sama: Jika dia Level 1 (Sasaran) tapi nyasar ke Outcome, bisa di-skip display-nya, tapi anaknya tetap dicari.
+            $isSasaranLevel = ($node && isset($node->depth) && $node->depth <= 1); 
+
+            if (!$isSasaranLevel) {
+                $item->indikators_from_pohon = $this->getDirectIndicators($node);
+                $finalOutcomes->push($item);
+            }
 
             if ($node) {
-                $virtualChildren = $this->createVirtualRows($node, $stopForOutcome, 'outcome');
+                $virtualChildren = $this->createVirtualRows($node, $stopForOutcomeVirtual, 'outcome');
                 $finalOutcomes = $finalOutcomes->concat($virtualChildren);
             }
         }
         
-        // KEGIATAN
+        // --- KOLOM 4: KEGIATAN ---
         $finalKegiatans = collect([]);
         foreach (Kegiatan::whereNotNull('output')->get() as $item) {
             $node = $this->findPohonNode($item, 'kegiatan');
@@ -116,7 +140,7 @@ class DokumenRenstra extends Component
             }
         }
 
-        // SUB KEGIATAN
+        // --- KOLOM 5: SUB KEGIATAN ---
         $sub_kegiatans = SubKegiatan::with('indikators')->get()->map(function($item) {
             $manual = $item->indikators ? $item->indikators->map(fn($ind) => (object)['nama_indikator' => $ind->keterangan ?? $ind->nama_indikator ?? '-']) : collect([]);
             
@@ -124,16 +148,17 @@ class DokumenRenstra extends Component
             $pohonInd = $this->getDirectIndicators($node);
 
             $item->indikators_from_pohon = $manual->concat($pohonInd)
-                ->filter(fn($i) => !empty($i->nama_indikator))
+                ->filter(fn($i) => !empty($i->nama_indikator) && $i->nama_indikator !== '-')
                 ->unique(fn($i) => $this->normalizeText($i->nama_indikator))
                 ->values();
+            
             return $item;
         });
 
         return [
             'unit_kerja'    => $this->unit_kerja,
-            'nomor_dokumen' => $this->nomor_dokumen,   // Ini sekarang sudah dinamis dari DB
-            'tanggal_dokumen' => $this->tanggal_dokumen, // Ini juga dinamis
+            'nomor_dokumen' => $this->nomor_dokumen,
+            'tanggal_dokumen' => $this->tanggal_dokumen,
             'periode'       => $this->periode,
             'tujuans'       => $tujuans,
             'sasarans'      => $finalSasarans,
@@ -147,10 +172,26 @@ class DokumenRenstra extends Component
     // 2. HELPER FUNCTIONS
     // =================================================================================
 
+    private function calculateDepths() {
+        foreach ($this->all_pohons as $pohon) {
+            $depth = 0;
+            $curr = $pohon;
+            $safety = 0;
+            while ($curr && $curr->parent_id && $safety < 20) {
+                $depth++;
+                $parentId = $curr->parent_id;
+                $curr = $this->all_pohons->where('id', $parentId)->first();
+                $safety++;
+            }
+            $pohon->depth = $depth;
+        }
+    }
+
     private function normalizeText($text) {
         if (empty($text)) return '';
-        $text = preg_replace('/[^a-zA-Z0-9\s]/', '', $text);
-        return strtolower(trim(preg_replace('/\s+/', ' ', $text)));
+        $text = strtolower($text);
+        $text = preg_replace('/[^a-z0-9\s]/', '', $text);
+        return trim(preg_replace('/\s+/', ' ', $text));
     }
 
     private function findPohonNode($item, $type) {
@@ -194,7 +235,7 @@ class DokumenRenstra extends Component
         if (!$node) return collect([]);
         return collect($node->indikators ?? [])
             ->filter(fn($i) => !empty($i->nama_indikator))
-            ->unique(fn($i) => strtolower(trim($i->nama_indikator)))
+            ->unique(fn($i) => $this->normalizeText($i->nama_indikator))
             ->values();
     }
 
@@ -210,10 +251,12 @@ class DokumenRenstra extends Component
         if (!$parentNode || !$parentNode->children) return $rows;
 
         foreach ($parentNode->children as $child) {
+            // STOP jika ID anak ini ada di daftar stopIds 
+            // (artinya anak ini sudah tampil sebagai data asli di database, jadi jangan buat duplikat virtual)
             if (in_array($child->id, $stopIds)) continue;
 
             $virtualRow = new \stdClass();
-            $virtualRow->{$textField} = '';
+            $virtualRow->{$textField} = ''; // Kolom nama dikosongkan utk virtual
             $virtualRow->indikators_from_pohon = $this->getDirectIndicators($child);
             
             if($textField == 'outcome') {
@@ -274,21 +317,17 @@ class DokumenRenstra extends Component
         $this->resetValidation();
     }
 
-    // UPDATE DOKUMEN: SEKARANG SUDAH MENYIMPAN KE DATABASE!
     public function updateRenstra()
     {
-        // 1. SATPAM DIGITAL: Cek Hak Akses
         if (auth()->user()->role !== 'admin' && auth()->user()->role !== 'pimpinan') {
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk mengubah dokumen ini.');
         }
 
-        // 2. VALIDASI
         $this->validate([
             'edit_nomor_dokumen' => 'required|string|max:100', 
             'edit_tanggal_penetapan' => 'required|string|max:50',
         ]);
 
-        // 3. SIMPAN KE DATABASE (PERMANEN)
         RenstraSetting::updateOrCreate(
             ['id' => 1], 
             [
@@ -297,12 +336,8 @@ class DokumenRenstra extends Component
             ]
         );
 
-        // 4. FLASH MESSAGE & RELOAD HALAMAN (SOLUSI BUG GARIS HITAM)
-        // Kita simpan pesan di session
         session()->flash('message', 'Data dokumen berhasil diperbarui secara permanen.');
 
-        // Kita PAKSA redirect ke halaman ini sendiri agar browser melakukan refresh bersih.
-        // Bug garis hitam akan hilang karena halaman dimuat ulang dari nol.
         return redirect()->route('matrik.dokumen');
     }
 
