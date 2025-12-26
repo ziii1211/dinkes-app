@@ -68,7 +68,9 @@ class KegiatanRenstra extends Component
     public function render()
     {
         return view('livewire.kegiatan-renstra', [
-            'kegiatans' => Kegiatan::with(['indikators', 'jabatan'])
+            // PERBAIKAN DI SINI:
+            // Menggunakan 'jabatan.pegawai' agar data status pegawai (Definitif/PLT) terbaca di View
+            'kegiatans' => Kegiatan::with(['indikators', 'jabatan.pegawai'])
                 ->where('program_id', $this->program->id)
                 ->orderBy('kode', 'asc')
                 ->get(),
@@ -85,7 +87,8 @@ class KegiatanRenstra extends Component
         ]);
     }
 
-    // ... (Sisa fungsi CRUD, Modal, dll biarkan tetap ada seperti sebelumnya) ...
+    // --- CRUD FUNCTIONS ---
+
     public function closeModal()
     {
         $this->isOpen = false;
@@ -94,7 +97,12 @@ class KegiatanRenstra extends Component
         $this->isOpenTarget = false;
         $this->isOpenPJ = false;
         $this->resetValidation();
-        $this->reset(['kegiatan_id', 'kode', 'nama', 'output', 'isEditMode', 'ind_keterangan', 'ind_satuan', 'indikator_id', 'selected_kegiatan_id', 'target_2025', 'target_2026', 'target_2027', 'target_2028', 'target_2029', 'target_2030', 'target_satuan', 'pj_kegiatan_text', 'pj_jabatan_id']);
+        $this->reset([
+            'kegiatan_id', 'kode', 'nama', 'output', 'isEditMode', 
+            'ind_keterangan', 'ind_satuan', 'indikator_id', 'selected_kegiatan_id', 
+            'target_2025', 'target_2026', 'target_2027', 'target_2028', 'target_2029', 'target_2030', 
+            'target_satuan', 'pj_kegiatan_text', 'pj_jabatan_id'
+        ]);
     }
 
     public function openModal()
@@ -112,10 +120,20 @@ class KegiatanRenstra extends Component
     {
         $this->validate(['kode' => 'required', 'nama' => 'required']);
         if ($this->isEditMode) {
-            Kegiatan::find($this->kegiatan_id)->update(['kode' => $this->kode, 'nama' => $this->nama, 'output' => $this->output]);
+            Kegiatan::find($this->kegiatan_id)->update([
+                'kode' => $this->kode, 
+                'nama' => $this->nama, 
+                'output' => $this->output
+            ]);
         } else {
-            Kegiatan::create(['program_id' => $this->program->id, 'kode' => $this->kode, 'nama' => $this->nama, 'output' => $this->output]);
-        } $this->closeModal();
+            Kegiatan::create([
+                'program_id' => $this->program->id, 
+                'kode' => $this->kode, 
+                'nama' => $this->nama, 
+                'output' => $this->output
+            ]);
+        } 
+        $this->closeModal();
     }
 
     public function edit($id)
@@ -160,7 +178,8 @@ class KegiatanRenstra extends Component
         $kegiatan = Kegiatan::find($this->kegiatan_id);
         if ($kegiatan) {
             $kegiatan->update(['output' => $this->output]);
-        } $this->closeModal();
+        } 
+        $this->closeModal();
     }
 
     public function hapusOutput($id)
@@ -187,7 +206,8 @@ class KegiatanRenstra extends Component
         $data = Kegiatan::find($this->kegiatan_id);
         if ($data) {
             $data->update(['jabatan_id' => $this->pj_jabatan_id ?: null]);
-        } $this->closeModal();
+        } 
+        $this->closeModal();
     }
 
     public function tambahIndikator($kegiatanId)
@@ -213,12 +233,18 @@ class KegiatanRenstra extends Component
     public function storeIndikator()
     {
         $this->validate(['ind_keterangan' => 'required', 'ind_satuan' => 'required']);
-        $data = ['kegiatan_id' => $this->selected_kegiatan_id, 'keterangan' => $this->ind_keterangan, 'satuan' => $this->ind_satuan];
+        $data = [
+            'kegiatan_id' => $this->selected_kegiatan_id, 
+            'keterangan' => $this->ind_keterangan, 
+            'satuan' => $this->ind_satuan
+        ];
+        
         if ($this->isEditMode) {
             IndikatorKegiatan::find($this->indikator_id)->update($data);
         } else {
             IndikatorKegiatan::create($data);
-        } $this->closeModal();
+        } 
+        $this->closeModal();
     }
 
     public function deleteIndikator($id)
@@ -249,7 +275,15 @@ class KegiatanRenstra extends Component
     {
         $ind = IndikatorKegiatan::find($this->indikator_id);
         if ($ind) {
-            $ind->update(['target_2025' => $this->target_2025, 'target_2026' => $this->target_2026, 'target_2027' => $this->target_2027, 'target_2028' => $this->target_2028, 'target_2029' => $this->target_2029, 'target_2030' => $this->target_2030]);
-        } $this->closeModal();
+            $ind->update([
+                'target_2025' => $this->target_2025, 
+                'target_2026' => $this->target_2026, 
+                'target_2027' => $this->target_2027, 
+                'target_2028' => $this->target_2028, 
+                'target_2029' => $this->target_2029, 
+                'target_2030' => $this->target_2030
+            ]);
+        } 
+        $this->closeModal();
     }
 }

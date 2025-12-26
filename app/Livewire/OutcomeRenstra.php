@@ -7,6 +7,7 @@ use App\Models\Outcome;
 use App\Models\Sasaran;
 use App\Models\Jabatan;
 use App\Models\IndikatorOutcome;
+use App\Models\Pegawai; // <--- TAMBAHKAN INI
 
 class OutcomeRenstra extends Component
 {
@@ -36,9 +37,10 @@ class OutcomeRenstra extends Component
     {
         return view('livewire.outcome-renstra', [
             // PERBAIKAN DISINI:
-            // Mengganti latest() menjadi orderBy('id', 'asc')
-            // Agar data baru masuk ke posisi paling bawah
-            'outcomes' => Outcome::with(['indikators', 'sasaran', 'jabatan'])->orderBy('id', 'asc')->get(),
+            // Menambahkan 'jabatan.pegawai' agar status (Definitif/PLT) terbaca di View
+            'outcomes' => Outcome::with(['indikators', 'sasaran', 'jabatan.pegawai'])
+                        ->orderBy('id', 'asc')
+                        ->get(),
             
             'sasarans' => Sasaran::all(),
             'jabatans' => Jabatan::all()

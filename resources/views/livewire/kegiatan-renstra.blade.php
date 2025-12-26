@@ -60,41 +60,30 @@
                                                     {{ $kegiatan->kode }} {{ $kegiatan->nama }}
                                                 </span>
                                             </div>
-                                            @if($kegiatan->jabatan && !$kegiatan->output)
-                                                <div class="mt-1 ml-14 inline-flex items-center px-2 py-0.5 rounded text-xs bg-yellow-50 text-yellow-700 border border-yellow-100 w-fit">
-                                                    <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                                    PJ: {{ $kegiatan->jabatan->nama }}
-                                                </div>
-                                            @endif
                                         </div>
                                     </td>
                                     <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
                                     
                                     <td class="p-4 text-center align-middle relative">
                                         <div class="flex justify-center items-center gap-2">
-                                            
                                             @if(!$kegiatan->output)
                                                 <button wire:click="tambahOutput({{ $kegiatan->id }})" class="inline-flex items-center px-3 py-1.5 border border-green-600 text-xs font-medium rounded-md text-green-600 bg-white hover:bg-green-50 focus:outline-none transition-colors">
                                                     <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                                     Tambah Output
                                                 </button>
-
                                                 <button wire:click="delete({{ $kegiatan->id }})" wire:confirm="Hapus Kegiatan ini?" class="inline-flex items-center px-3 py-1.5 border border-red-600 text-xs font-medium rounded-md text-red-600 bg-white hover:bg-red-50 focus:outline-none transition-colors">
                                                     <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                     Hapus
                                                 </button>
-                                                
                                                 <button wire:click="edit({{ $kegiatan->id }})" class="inline-flex items-center px-3 py-1.5 border border-gray-300 text-xs font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none transition-colors">
                                                      <svg class="mr-1.5 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                                     Edit
                                                 </button>
-
                                             @else
                                                 <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-                                                    <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none shadow-sm">
+                                                    <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm">
                                                         Menu <svg class="-mr-1 ml-1.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                                                     </button>
-                                                    
                                                     <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100">
                                                         <div class="py-1">
                                                             <button wire:click="edit({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 transition-colors">
@@ -116,13 +105,52 @@
                                 @if($kegiatan->output)
                                 <tr class="bg-gray-50 border-b border-gray-100 hover:bg-gray-100 transition-colors">
                                     <td class="p-6 border-r border-gray-100 align-top pl-12">
-                                        <div class="flex gap-3">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 border border-green-200 h-6 whitespace-nowrap">
-                                                Output
-                                            </span>
-                                            <span class="text-gray-800 font-bold leading-relaxed text-sm">
-                                                {{ $kegiatan->output }}
-                                            </span>
+                                        <div class="flex flex-col gap-1">
+                                            <div class="flex gap-3">
+                                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 border border-green-200 h-6 whitespace-nowrap">
+                                                    Output
+                                                </span>
+                                                <span class="text-gray-800 font-bold leading-relaxed text-sm">
+                                                    {{ $kegiatan->output }}
+                                                </span>
+                                            </div>
+
+                                            {{-- ======================================================== --}}
+                                            {{-- LOGIKA TOMBOL PENANGGUNG JAWAB (DINAMIS) --}}
+                                            {{-- HANYA JABATAN (Tanpa Nama Pegawai) --}}
+                                            {{-- ======================================================== --}}
+                                            @php
+                                                $pjClass = 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200';
+                                                $pjText = 'Pilih PJ'; 
+
+                                                if ($kegiatan->jabatan) {
+                                                    $pjText = 'PJ: ' . $kegiatan->jabatan->nama;
+                                                    $pegawai = $kegiatan->jabatan->pegawai;
+                                                    
+                                                    if ($pegawai) {
+                                                        $status = strtolower($pegawai->status);
+                                                        
+                                                        if (str_contains($status, 'definitif')) {
+                                                            $pjClass = 'bg-green-100 text-green-700 border-green-200 hover:bg-green-200';
+                                                        } elseif (str_contains($status, 'plt') || str_contains($status, 'plh')) {
+                                                            $pjClass = 'bg-yellow-100 text-yellow-700 border-yellow-200 hover:bg-yellow-200';
+                                                        } else {
+                                                            $pjClass = 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200';
+                                                        }
+                                                    } else {
+                                                        // Ada Jabatan tapi Kosong -> Merah Muda
+                                                        $pjClass = 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100';
+                                                    }
+                                                }
+                                            @endphp
+                                            
+                                            <button wire:click="pilihPenanggungJawab({{ $kegiatan->id }})" 
+                                                    class="mt-1 ml-14 inline-flex items-center px-2 py-0.5 rounded text-xs border w-fit transition-colors shadow-sm {{ $pjClass }}"
+                                                    title="Klik untuk ubah Penanggung Jawab">
+                                                <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                <span class="font-bold mr-1">{{ Str::limit($pjText, 60) }}</span>
+                                            </button>
+                                            {{-- ======================================================== --}}
                                         </div>
                                     </td>
                                     <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
