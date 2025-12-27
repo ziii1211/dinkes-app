@@ -4,7 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithPagination;
-use App\Models\Jabatan; // PENTING: Kita ambil data dari Master Jabatan
+use App\Models\Jabatan;
 use Illuminate\Support\Facades\Auth;
 
 class PerjanjianKinerja extends Component
@@ -16,17 +16,24 @@ class PerjanjianKinerja extends Component
 
     public function render()
     {
-        // 1. QUERY KE MODEL JABATAN
-        // Kita ambil semua jabatan yang ada di struktur organisasi
+        $user = Auth::user();
         $query = Jabatan::query();
 
-        // 2. FILTER PENCARIAN
+        // LOGIKA HAK AKSES (Updated)
+        // Admin dan Pimpinan bisa lihat semua (God Mode)
+        if ($user->role !== 'admin' && $user->role !== 'pimpinan') {
+            
+            if ($user->pegawai && $user->pegawai->jabatan_id) {
+                $query->where('id', $user->pegawai->jabatan_id);
+            } else {
+                $query->where('id', 0);
+            }
+        }
+
         if ($this->search) {
             $query->where('nama', 'like', '%' . $this->search . '%');
         }
 
-        // 3. URUTKAN DAN PAGINATION
-        // Urutkan biar rapi (misal berdasarkan hierarki/parent_id atau id)
         $jabatans = $query->orderBy('id', 'asc')
                           ->paginate($this->perPage);
 

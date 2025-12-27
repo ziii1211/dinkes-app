@@ -2,7 +2,6 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
@@ -13,10 +12,11 @@ class User extends Authenticatable
 
     protected $fillable = [
         'name',
-        'username',  // Tambahan kolom username
+        'username',
         'email',
         'password',
-        'nip',
+        'role',     // Pastikan role masuk fillable
+        'nip',      // Pastikan nip masuk fillable
         'jabatan',
     ];
 
@@ -29,10 +29,19 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
     ];
-    
-    // Helper untuk cek role di blade nanti
+
+    // Helper cek role
     public function hasRole($role)
     {
         return $this->role === $role;
+    }
+
+    /**
+     * RELASI PENTING: Menghubungkan User ke Pegawai via NIP
+     * Syarat: NIP di tabel users harus SAMA PERSIS dengan NIP di tabel pegawais
+     */
+    public function pegawai()
+    {
+        return $this->belongsTo(Pegawai::class, 'nip', 'nip');
     }
 }

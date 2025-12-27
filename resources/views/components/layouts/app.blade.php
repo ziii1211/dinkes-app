@@ -173,11 +173,17 @@
 
                     </nav>
 
+                    {{-- BAGIAN USER PROFILE --}}
                     <div class="flex items-center gap-4 flex-shrink-0 relative">
+                        {{-- MENAMPILKAN NAMA DAN JABATAN (PERBAIKAN DISINI) --}}
                         <div class="hidden md:flex flex-col text-right cursor-pointer" @click="openUser = !openUser">
                             <span class="text-sm font-bold text-gray-800 dark:text-slate-200">{{ auth()->user()->name ?? 'Administrator' }}</span>
-                            <span class="text-xs text-gray-600 dark:text-slate-400 uppercase">{{ auth()->user()->role ?? 'Pegawai' }}</span>
+                            {{-- GANTI ROLE DENGAN JABATAN --}}
+                            <span class="text-xs text-gray-600 dark:text-slate-400 uppercase tracking-wide">
+                                {{ auth()->user()->jabatan ?? 'Pegawai' }}
+                            </span>
                         </div>
+                        
                         <div class="h-12 w-12 rounded-full bg-white/50 dark:bg-slate-700 border-2 border-white dark:border-slate-600 shadow-md overflow-hidden cursor-pointer hover:shadow-lg transition-shadow" @click="openUser = !openUser">
                             <img src="{{ asset('user-icon.png') }}" alt="User" class="h-full w-full object-cover">
                         </div>
@@ -206,7 +212,7 @@
 
                             <div class="border-t border-gray-100 dark:border-slate-700 my-1"></div>
                             
-                            {{-- LOGOUT BUTTON SECURE (MODIFIKASI: Menggunakan Form POST & Button) --}}
+                            {{-- LOGOUT BUTTON SECURE --}}
                             <form action="{{ route('logout') }}" method="POST">
                                 @csrf
                                 <button type="submit" class="w-full text-left block px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-700 dark:hover:text-red-300 transition-colors flex items-center">
