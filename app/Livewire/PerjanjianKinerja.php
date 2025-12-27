@@ -19,17 +19,22 @@ class PerjanjianKinerja extends Component
         $user = Auth::user();
         $query = Jabatan::query();
 
-        // LOGIKA HAK AKSES (Updated)
-        // Admin dan Pimpinan bisa lihat semua (God Mode)
+        // --- UPDATE: MEMBUKA AKSES TAMPILAN UNTUK PEGAWAI ---
+        // Sebelumnya ada logika pembatasan di sini.
+        // Sekarang kita biarkan Pegawai melihat semua data (sama seperti Admin),
+        // sesuai permintaan "samakan tampilan".
+        
+        /* // LOGIKA LAMA (YANG DIHAPUS/KOMENTAR):
         if ($user->role !== 'admin' && $user->role !== 'pimpinan') {
-            
             if ($user->pegawai && $user->pegawai->jabatan_id) {
                 $query->where('id', $user->pegawai->jabatan_id);
             } else {
                 $query->where('id', 0);
             }
         }
+        */
 
+        // Filter Pencarian Tetap Ada
         if ($this->search) {
             $query->where('nama', 'like', '%' . $this->search . '%');
         }

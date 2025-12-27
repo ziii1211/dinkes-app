@@ -25,36 +25,21 @@ class PengukuranBulanan extends Component
 
     public function render()
     {
-        $user = Auth::user();
-
-        // 1. Query Dasar
+        // QUERY DIBUKA UNTUK SEMUA ROLE (Admin, Pimpinan, Pegawai)
+        // Tidak ada lagi logika "if user->role !== admin" untuk membatasi query.
+        
         $query = Jabatan::query()->with('pegawai');
 
-        // 2. LOGIKA HAK AKSES (Updated)
-        // Jika user BUKAN Admin DAN BUKAN Pimpinan, baru kita batasi.
-        // Artinya: Admin & Pimpinan bebas melihat semua.
-        if ($user->role !== 'admin' && $user->role !== 'pimpinan') {
-            
-            // Cek data pegawai user tersebut
-            if ($user->pegawai && $user->pegawai->jabatan_id) {
-                // Hanya tampilkan jabatannya sendiri
-                $query->where('id', $user->pegawai->jabatan_id);
-            } else {
-                // Blokir jika tidak jelas
-                $query->where('id', 0);
-            }
-        }
-
-        // 3. Filter Pencarian
+        // Filter Pencarian
         $query->when($this->search, function($q) {
-            $q->where('nama', 'like', '%'.$this->search.'%')
-              ->orWhereHas('pegawai', function($sq) {
-                  $sq->where('nama', 'like', '%'.$this->search.'%')
-                     ->orWhere('nip', 'like', '%'.$this->search.'%');
-              });
-        });
+                $q->where('nama', 'like', '%'.$this->search.'%')
+                  ->orWhereHas('pegawai', function($sq) {
+                      $sq->where('nama', 'like', '%'.$this->search.'%')
+                         ->orWhere('nip', 'like', '%'.$this->search.'%');
+                  });
+            });
 
-        $jabatans = $query->paginate($this->perPage);
+        $jabatans = $query->orderBy('id', 'asc')->paginate($this->perPage);
 
         return view('livewire.pengukuran-bulanan', [
             'jabatans' => $jabatans
