@@ -307,6 +307,25 @@ class PengukuranKinerja extends Component
         RencanaAksi::create(['jabatan_id' => $this->jabatan->id, 'tahun' => $this->tahun, 'nama_aksi' => $this->formAksiNama, 'target' => $cleanTarget, 'satuan' => $this->formAksiSatuan]);
         $this->closeTambahAksi(); $this->loadData();
     }
+
+    // --- FUNGSI HAPUS RENCANA AKSI (YANG DITAMBAHKAN) ---
+    public function deleteRencanaAksi($id)
+    {
+        $aksi = RencanaAksi::find($id);
+
+        if ($aksi) {
+            // Hapus realisasi terkait terlebih dahulu untuk menjaga integritas data
+            RealisasiRencanaAksi::where('rencana_aksi_id', $id)->delete();
+            
+            // Hapus Rencana Aksi
+            $aksi->delete();
+            
+            $this->loadData();
+            session()->flash('message', 'Rencana Aksi berhasil dihapus.');
+        }
+    }
+    // ----------------------------------------------------
+
     public function openTanggapan($id, $nama) {
         $this->indikatorId = $id; $this->indikatorNama = $nama;
         $data = RealisasiKinerja::where('indikator_id', $id)->where('bulan', $this->selectedMonth)->where('tahun', $this->tahun)->first();
