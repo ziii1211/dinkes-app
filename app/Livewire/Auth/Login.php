@@ -7,7 +7,6 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Support\Str;
 use Illuminate\Validation\ValidationException;
-use App\Models\Jabatan; // PENTING: Import Model Jabatan
 
 class Login extends Component
 {
@@ -23,8 +22,8 @@ class Login extends Component
     ];
 
     protected $messages = [
-        'username.required' => 'Silakan pilih Jabatan Anda.',
-        'password.required' => 'Password (NIP) wajib diisi.',
+        'username.required' => 'Username wajib diisi.',
+        'password.required' => 'Password wajib diisi.',
     ];
 
     public function login()
@@ -40,7 +39,7 @@ class Login extends Component
             ]);
         }
 
-        // Login menggunakan Username (Nama Jabatan) & Password (NIP)
+        // Login standar menggunakan 'username' dan 'password'
         if (Auth::attempt(['username' => $this->username, 'password' => $this->password], $this->remember)) {
             
             RateLimiter::clear($throttleKey);
@@ -58,18 +57,12 @@ class Login extends Component
 
         RateLimiter::hit($throttleKey, 60);
 
-        $this->addError('username', 'Kombinasi Jabatan dan NIP tidak cocok.');
+        $this->addError('username', 'Username atau password salah.');
         $this->password = ''; 
     }
 
     public function render()
     {
-        // PENTING: Ambil data jabatan dari database
-        // Urutkan berdasarkan nama agar mudah dicari di dropdown
-        $jabatans = Jabatan::orderBy('nama', 'asc')->get();
-
-        return view('livewire.auth.login', [
-            'jabatans' => $jabatans
-        ])->layout('components.layouts.guest');
+        return view('livewire.auth.login')->layout('components.layouts.guest');
     }
 }
