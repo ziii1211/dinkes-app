@@ -5,10 +5,13 @@
             
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Outcome</h3>
+                {{-- TOMBOL TAMBAH HANYA UNTUK ADMIN --}}
+                @if(auth()->user()->hasRole('admin'))
                 <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Outcome
                 </button>
+                @endif
             </div>
 
             <div class="p-6">
@@ -18,7 +21,10 @@
                             <tr class="bg-white text-gray-700 text-sm font-bold border-b border-gray-200">
                                 <th rowspan="2" class="p-4 border-r border-gray-200 align-middle w-96">Outcome / Indikator Outcome</th>
                                 <th colspan="6" class="p-4 border-b border-r border-gray-200 text-center align-middle">Periode</th>
+                                {{-- HEADER AKSI HANYA UNTUK ADMIN --}}
+                                @if(auth()->user()->hasRole('admin'))
                                 <th rowspan="2" class="p-4 text-center align-middle w-32">Aksi</th>
+                                @endif
                             </tr>
                             <tr class="bg-white text-gray-800 text-sm font-bold border-b border-gray-200">
                                 <th class="p-4 border-r text-center w-24">2025</th>
@@ -85,6 +91,8 @@
                                     </td>
                                     <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
                                     
+                                    {{-- TOMBOL MENU OUTCOME HANYA UNTUK ADMIN --}}
+                                    @if(auth()->user()->hasRole('admin'))
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-gray-50 text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm">
@@ -100,6 +108,7 @@
                                             </div>
                                         </div>
                                     </td>
+                                    @endif
                                 </tr>
 
                                 @foreach($outcome->indikators as $indikator)
@@ -122,6 +131,8 @@
                                     <td class="p-4 border-r text-center text-gray-700 text-sm">{{ $indikator->target_2029 ? $indikator->target_2029 . ' ' . $indikator->satuan : '-' }}</td>
                                     <td class="p-4 border-r text-center text-gray-700 text-sm">{{ $indikator->target_2030 ? $indikator->target_2030 . ' ' . $indikator->satuan : '-' }}</td>
 
+                                    {{-- TOMBOL MENU INDIKATOR HANYA UNTUK ADMIN --}}
+                                    @if(auth()->user()->hasRole('admin'))
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none shadow-sm">
@@ -136,10 +147,19 @@
                                             </div>
                                         </div>
                                     </td>
+                                    @endif
                                 </tr>
                                 @endforeach
                             @empty
-                                <tr><td colspan="8" class="p-10 text-center text-gray-400 italic bg-gray-50">Data Outcome belum tersedia. Silakan klik tombol <strong>+ Tambah Outcome</strong>.</td></tr>
+                                <tr>
+                                    {{-- COLSPAN 8 JIKA ADMIN, 7 JIKA BUKAN --}}
+                                    <td colspan="{{ auth()->user()->hasRole('admin') ? 8 : 7 }}" class="p-10 text-center text-gray-400 italic bg-gray-50">
+                                        Data Outcome belum tersedia. 
+                                        @if(auth()->user()->hasRole('admin'))
+                                            Silakan klik tombol <strong>+ Tambah Outcome</strong>.
+                                        @endif
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -148,157 +168,160 @@
         </div>
     </div>
 
-    @if($isOpen)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Outcome' : 'Form Outcome' }}</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            
-            <div class="space-y-4">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Sasaran Renstra <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select wire:model="sasaran_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white text-gray-700 cursor-pointer">
-                            <option value="">Pilih Sasaran Renstra</option>
-                            @foreach($sasarans as $sasaran)
-                                <option value="{{ $sasaran->id }}">{{ $sasaran->sasaran }}</option>
-                            @endforeach
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
-                    </div>
-                    @error('sasaran_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                </div>
-
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
-                    <textarea wire:model="outcome" rows="4" placeholder="Keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none placeholder-gray-400"></textarea>
-                    @error('outcome') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                </div>
-            </div>
-
-            <div class="mt-8 flex justify-end gap-3">
-                <button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors">Batal</button>
-                <button wire:click="store" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
-            </div>
-        </div>
-    </div>
-    @endif
-
-    @if($isOpenPJ)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">Penanggung Jawab</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <div class="space-y-4">
-                <div class="bg-gray-50 p-4 rounded border text-sm text-gray-600 italic">"{{ $pj_outcome_text }}"</div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
-                    <select wire:model="pj_jabatan_id" class="w-full border rounded px-4 py-2 focus:ring-blue-500 outline-none bg-white">
-                        <option value="">Pilih Jabatan</option>
-                        @foreach($jabatans as $j) <option value="{{ $j->id }}">{{ $j->nama }}</option> @endforeach
-                    </select>
-                </div>
-            </div>
-            <div class="mt-8 flex justify-end gap-3"><button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded font-medium hover:bg-gray-200">Batal</button><button wire:click="simpanPenanggungJawab" class="px-5 py-2.5 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow-sm">Simpan</button></div>
-        </div>
-    </div>
-    @endif
-
-    @if($isOpenIndikator)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Indikator' : 'Form Indikator Outcome' }}</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
-            </div>
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
-                    <textarea wire:model="ind_keterangan" rows="3" placeholder="Keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
-                    @error('ind_keterangan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    {{-- MODAL HANYA RENDER JIKA ADMIN --}}
+    @if(auth()->user()->hasRole('admin'))
+        @if($isOpen)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Outcome' : 'Form Outcome' }}</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                 </div>
                 
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Satuan Indikator <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select wire:model.live="ind_satuan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
-                            <option value="">-- Pilih Satuan --</option>
-                            <option value="Angka">Angka</option>
-                            <option value="Barang">Barang</option>
-                            <option value="Bulan">Bulan</option>
-                            <option value="Data/Bulan">Data/Bulan</option>
-                            <option value="Dokumen">Dokumen</option>
-                            <option value="Fasyankes">Fasyankes</option>
-                            <option value="Indeks">Indeks</option>
-                            <option value="Inovasi">Inovasi</option>
-                            <option value="Kab/Kota">Kab/Kota</option>
-                            <option value="Kegiatan">Kegiatan</option>
-                            <option value="Laporan">Laporan</option>
-                            <option value="Level">Level</option>
-                            <option value="Nilai">Nilai</option>
-                            <option value="Orang">Orang</option>
-                            <option value="Paket">Paket</option>
-                            <option value="Per 1000 Penduduk">Per 1000 Penduduk</option>
-                            <option value="Permil">Permil</option>
-                            <option value="Persen">Persen</option>
-                            <option value="Poin">Poin</option>
-                            <option value="Rupiah">Rupiah</option>
-                            <option value="Unit">Unit</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
+                <div class="space-y-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Sasaran Renstra <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select wire:model="sasaran_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white text-gray-700 cursor-pointer">
+                                <option value="">Pilih Sasaran Renstra</option>
+                                @foreach($sasarans as $sasaran)
+                                    <option value="{{ $sasaran->id }}">{{ $sasaran->sasaran }}</option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
+                        </div>
+                        @error('sasaran_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
-                    @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                </div>
-                
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Arah <span class="text-red-500">*</span></label>
-                    <div class="relative">
-                        <select wire:model="ind_arah" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
-                            <option value="">Pilih Arah</option>
-                            <option value="Meningkat">Naik</option>
-                            <option value="Menurun">Turun</option>
-                            <option value="Tetap">Tetap</option>
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
-                    </div>
-                    @error('ind_arah') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                </div>
-            </div>
 
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
-                <button wire:click="closeModal" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">Batal</button>
-                <button wire:click="storeIndikator" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
+                        <textarea wire:model="outcome" rows="4" placeholder="Keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none placeholder-gray-400"></textarea>
+                        @error('outcome') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3">
+                    <button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors">Batal</button>
+                    <button wire:click="store" class="px-5 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
+                </div>
             </div>
         </div>
-    </div>
-    @endif
+        @endif
 
-    @if($isOpenTarget)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">Form Target Indikator</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="space-y-4 p-2 max-h-[60vh] overflow-y-auto">
-                @foreach([2025, 2026, 2027, 2028, 2029, 2030] as $year)
-                <div class="grid grid-cols-12 gap-4 items-center">
-                    <div class="col-span-3"><label class="text-sm font-medium text-gray-700">Target {{ $year }}</label></div>
-                    <div class="col-span-9 relative">
-                        <input type="text" wire:model="target_{{ $year }}" class="w-full border rounded px-4 py-2 focus:ring-blue-500 focus:border-blue-500">
-                        <div class="absolute inset-y-0 right-0 flex items-center px-4 bg-gray-50 border-l text-sm text-gray-500">{{ $target_satuan ?? 'Angka' }}</div>
+        @if($isOpenPJ)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Penanggung Jawab</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+                <div class="space-y-4">
+                    <div class="bg-gray-50 p-4 rounded border text-sm text-gray-600 italic">"{{ $pj_outcome_text }}"</div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan</label>
+                        <select wire:model="pj_jabatan_id" class="w-full border rounded px-4 py-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="">Pilih Jabatan</option>
+                            @foreach($jabatans as $j) <option value="{{ $j->id }}">{{ $j->nama }}</option> @endforeach
+                        </select>
                     </div>
                 </div>
-                @endforeach
+                <div class="mt-8 flex justify-end gap-3"><button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded font-medium hover:bg-gray-200">Batal</button><button wire:click="simpanPenanggungJawab" class="px-5 py-2.5 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 shadow-sm">Simpan</button></div>
             </div>
-            <div class="mt-6 flex justify-end gap-3"><button wire:click="closeModal" class="px-4 py-2 bg-gray-100 rounded">Batal</button><button wire:click="simpanTarget" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button></div>
         </div>
-    </div>
+        @endif
+
+        @if($isOpenIndikator)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Indikator' : 'Form Indikator Outcome' }}</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+                </div>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
+                        <textarea wire:model="ind_keterangan" rows="3" placeholder="Keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none"></textarea>
+                        @error('ind_keterangan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Satuan Indikator <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select wire:model.live="ind_satuan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
+                                <option value="">-- Pilih Satuan --</option>
+                                <option value="Angka">Angka</option>
+                                <option value="Barang">Barang</option>
+                                <option value="Bulan">Bulan</option>
+                                <option value="Data/Bulan">Data/Bulan</option>
+                                <option value="Dokumen">Dokumen</option>
+                                <option value="Fasyankes">Fasyankes</option>
+                                <option value="Indeks">Indeks</option>
+                                <option value="Inovasi">Inovasi</option>
+                                <option value="Kab/Kota">Kab/Kota</option>
+                                <option value="Kegiatan">Kegiatan</option>
+                                <option value="Laporan">Laporan</option>
+                                <option value="Level">Level</option>
+                                <option value="Nilai">Nilai</option>
+                                <option value="Orang">Orang</option>
+                                <option value="Paket">Paket</option>
+                                <option value="Per 1000 Penduduk">Per 1000 Penduduk</option>
+                                <option value="Permil">Permil</option>
+                                <option value="Persen">Persen</option>
+                                <option value="Poin">Poin</option>
+                                <option value="Rupiah">Rupiah</option>
+                                <option value="Unit">Unit</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
+                        </div>
+                        @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Arah <span class="text-red-500">*</span></label>
+                        <div class="relative">
+                            <select wire:model="ind_arah" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
+                                <option value="">Pilih Arah</option>
+                                <option value="Meningkat">Naik</option>
+                                <option value="Menurun">Turun</option>
+                                <option value="Tetap">Tetap</option>
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500"><svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg></div>
+                        </div>
+                        @error('ind_arah') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
+                    <button wire:click="closeModal" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm hover:bg-gray-200 transition-colors">Batal</button>
+                    <button wire:click="storeIndikator" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
+                </div>
+            </div>
+        </div>
+        @endif
+
+        @if($isOpenTarget)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Form Target Indikator</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                <div class="space-y-4 p-2 max-h-[60vh] overflow-y-auto">
+                    @foreach([2025, 2026, 2027, 2028, 2029, 2030] as $year)
+                    <div class="grid grid-cols-12 gap-4 items-center">
+                        <div class="col-span-3"><label class="text-sm font-medium text-gray-700">Target {{ $year }}</label></div>
+                        <div class="col-span-9 relative">
+                            <input type="text" wire:model="target_{{ $year }}" class="w-full border rounded px-4 py-2 focus:ring-blue-500 focus:border-blue-500">
+                            <div class="absolute inset-y-0 right-0 flex items-center px-4 bg-gray-50 border-l text-sm text-gray-500">{{ $target_satuan ?? 'Angka' }}</div>
+                        </div>
+                    </div>
+                    @endforeach
+                </div>
+                <div class="mt-6 flex justify-end gap-3"><button wire:click="closeModal" class="px-4 py-2 bg-gray-100 rounded">Batal</button><button wire:click="simpanTarget" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button></div>
+            </div>
+        </div>
+        @endif
     @endif
 </div>

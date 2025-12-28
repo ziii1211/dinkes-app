@@ -26,7 +26,7 @@ class DatabaseSeeder extends Seeder
             'name' => 'Administrator',
             'username' => 'admin',
             'email' => 'admin@dinkes.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('123456'),
             'role' => 'admin',
             'nip' => 'admin123',
             'jabatan' => 'Administrator Sistem'
@@ -37,18 +37,18 @@ class DatabaseSeeder extends Seeder
             'name' => 'Kepala Dinas',
             'username' => 'pimpinan',
             'email' => 'pimpinan@dinkes.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('123456'),
             'role' => 'pimpinan',
             'nip' => '197709232006041015',
             'jabatan' => 'Kepala Dinas Kesehatan'
         ]);
 
-        // Akun Pegawai Contoh
+        // Akun Pegawai 
         User::create([
             'name' => 'Staf Pegawai',
             'username' => 'pegawai',
             'email' => 'pegawai@dinkes.com',
-            'password' => Hash::make('password'),
+            'password' => Hash::make('123456'),
             'role' => 'pegawai',
             'nip' => '199001012022031001',
             'jabatan' => 'Staf Pelaksana'

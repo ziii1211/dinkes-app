@@ -5,10 +5,14 @@
             
             <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Program / Kegiatan / Sub Kegiatan</h3>
+                
+                {{-- TOMBOL TAMBAH HANYA UNTUK ADMIN --}}
+                @if(auth()->user()->hasRole('admin'))
                 <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Program
                 </button>
+                @endif
             </div>
 
             <div class="p-6">
@@ -18,7 +22,10 @@
                             <tr class="bg-white text-gray-700 text-sm font-bold border-b border-gray-200">
                                 <th rowspan="2" class="p-4 border-r border-gray-200 align-middle w-96">Program / Outcome</th>
                                 <th colspan="6" class="p-4 border-b border-r border-gray-200 text-center align-middle">Periode</th>
+                                {{-- KOLOM AKSI HANYA UNTUK ADMIN --}}
+                                @if(auth()->user()->hasRole('admin'))
                                 <th rowspan="2" class="p-4 text-center align-middle w-32">Aksi</th>
+                                @endif
                             </tr>
                             <tr class="bg-white text-gray-800 text-sm font-bold border-b border-gray-200">
                                 <th class="p-4 border-r text-center w-24">2025</th>
@@ -44,6 +51,8 @@
                                     </td>
                                     <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
                                     
+                                    {{-- TOMBOL MENU PROGRAM HANYA UNTUK ADMIN --}}
+                                    @if(auth()->user()->hasRole('admin'))
                                     <td class="p-4 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                             <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm">
@@ -67,6 +76,7 @@
                                             </div>
                                         </div>
                                     </td>
+                                    @endif
                                 </tr>
 
                                 @foreach($program->outcomes as $outcome)
@@ -86,6 +96,8 @@
                                         
                                         <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
                                         
+                                        {{-- TOMBOL MENU OUTCOME HANYA UNTUK ADMIN --}}
+                                        @if(auth()->user()->hasRole('admin'))
                                         <td class="p-4 text-center align-middle relative">
                                             <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                                 <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-transparent px-3 py-1.5 bg-blue-50 text-sm font-medium text-blue-700 hover:bg-blue-100 focus:outline-none transition-colors">
@@ -105,11 +117,20 @@
                                                 </div>
                                             </div>
                                         </td>
+                                        @endif
                                     </tr>
                                 @endforeach
 
                             @empty
-                                <tr><td colspan="8" class="p-10 text-center text-gray-400 italic bg-gray-50">Data Program belum tersedia. Silakan klik tombol <strong>+ Tambah Program</strong>.</td></tr>
+                                <tr>
+                                    {{-- COLSPAN 8 JIKA ADMIN, 7 JIKA BUKAN --}}
+                                    <td colspan="{{ auth()->user()->hasRole('admin') ? 8 : 7 }}" class="p-10 text-center text-gray-400 italic bg-gray-50">
+                                        Data Program belum tersedia. 
+                                        @if(auth()->user()->hasRole('admin'))
+                                            Silakan klik tombol <strong>+ Tambah Program</strong>.
+                                        @endif
+                                    </td>
+                                </tr>
                             @endforelse
                         </tbody>
                     </table>
@@ -118,79 +139,82 @@
         </div>
     </div>
 
-    @if($isOpen)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Program' : 'Tambah Program' }}</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Kode Program <span class="text-red-500">*</span></label>
-                    <input type="text" wire:model="kode" placeholder="Contoh: 1.02.01" class="w-full border rounded px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
-                    @error('kode') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+    {{-- MODAL HANYA RENDER JIKA ADMIN --}}
+    @if(auth()->user()->hasRole('admin'))
+        @if($isOpen)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Program' : 'Tambah Program' }}</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
                 </div>
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama Program <span class="text-red-500">*</span></label>
-                    <textarea wire:model="nama" rows="3" placeholder="Nama Program" class="w-full border rounded px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"></textarea>
-                    @error('nama') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
-                </div>
-            </div>
-            <div class="mt-8 flex justify-end gap-3">
-                <button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">Batal</button>
-                <button wire:click="store" class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm transition-colors">Simpan</button>
-            </div>
-        </div>
-    </div>
-    @endif
-
-    @if($isOpenOutcome)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
-            <div class="flex justify-between items-center mb-6">
-                <h3 class="text-xl font-bold text-gray-800">Pilih Outcome Program</h3>
-                <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
-            </div>
-            
-            <div class="space-y-6">
-                <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Pilih Data Outcome <span class="text-red-500">*</span>
-                    </label>
-                    <div class="relative">
-                        <select wire:model="outcome_id_to_add" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer shadow-sm">
-                            <option value="">-- Pilih Outcome dari Data Master --</option>
-                            @foreach($outcomes_list as $outcome)
-                                <option value="{{ $outcome->id }}">
-                                    @if($outcome->program_id)
-                                        [Sudah Terpakai] - 
-                                    @endif
-                                    {{ Str::limit($outcome->outcome, 100) }}
-                                </option>
-                            @endforeach
-                        </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
-                            <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
-                        </div>
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Kode Program <span class="text-red-500">*</span></label>
+                        <input type="text" wire:model="kode" placeholder="Contoh: 1.02.01" class="w-full border rounded px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
+                        @error('kode') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
-                    <p class="text-xs text-gray-500 mt-2 flex items-center">
-                        <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Menampilkan seluruh data Outcome yang diinput di halaman Outcome.
-                    </p>
-                    @error('outcome_id_to_add') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Nama Program <span class="text-red-500">*</span></label>
+                        <textarea wire:model="nama" rows="3" placeholder="Nama Program" class="w-full border rounded px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"></textarea>
+                        @error('nama') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+                <div class="mt-8 flex justify-end gap-3">
+                    <button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">Batal</button>
+                    <button wire:click="store" class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm transition-colors">Simpan</button>
                 </div>
             </div>
+        </div>
+        @endif
 
-            <div class="mt-8 flex justify-end gap-3">
-                <button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">Batal</button>
-                <button wire:click="storeOutcome" class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm transition-colors">Simpan</button>
+        @if($isOpenOutcome)
+        <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
+            <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-gray-800">Pilih Outcome Program</h3>
+                    <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+                
+                <div class="space-y-6">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">
+                            Pilih Data Outcome <span class="text-red-500">*</span>
+                        </label>
+                        <div class="relative">
+                            <select wire:model="outcome_id_to_add" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white cursor-pointer shadow-sm">
+                                <option value="">-- Pilih Outcome dari Data Master --</option>
+                                @foreach($outcomes_list as $outcome)
+                                    <option value="{{ $outcome->id }}">
+                                        @if($outcome->program_id)
+                                            [Sudah Terpakai] - 
+                                        @endif
+                                        {{ Str::limit($outcome->outcome, 100) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-4 text-gray-500">
+                                <svg class="fill-current h-4 w-4" viewBox="0 0 20 20"><path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z"/></svg>
+                            </div>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2 flex items-center">
+                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Menampilkan seluruh data Outcome yang diinput di halaman Outcome.
+                        </p>
+                        @error('outcome_id_to_add') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    </div>
+                </div>
+
+                <div class="mt-8 flex justify-end gap-3">
+                    <button wire:click="closeModal" class="px-5 py-2.5 bg-gray-100 text-gray-700 rounded hover:bg-gray-200 transition-colors">Batal</button>
+                    <button wire:click="storeOutcome" class="px-5 py-2.5 bg-blue-600 text-white rounded hover:bg-blue-700 shadow-sm transition-colors">Simpan</button>
+                </div>
             </div>
         </div>
-    </div>
+        @endif
     @endif
 </div>
