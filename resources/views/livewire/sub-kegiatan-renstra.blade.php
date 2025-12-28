@@ -1,6 +1,5 @@
 <div>
 
-    {{-- HEADER INFORMASI (READ ONLY) --}}
     <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6 relative z-10">
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
             <h4 class="text-sm font-bold text-gray-800 mb-1">Perangkat Daerah</h4>
@@ -31,7 +30,6 @@
         </div>
     </div>
 
-    {{-- TABEL DATA --}}
     <div class="space-y-8 relative z-10">
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
             
@@ -100,10 +98,52 @@
                                             <td rowspan="{{ $rowSpan }}" class="p-4 border-r align-top font-bold text-gray-800 bg-white">
                                                 <div>{{ $sub->kode }}</div>
                                                 <div class="mt-1">{{ $sub->nama }}</div>
-                                                @if($sub->jabatan)
-                                                    <div class="mt-2 inline-flex items-center px-2 py-0.5 rounded bg-yellow-50 text-yellow-700 border border-yellow-200 text-[10px]">
-                                                        PJ: {{ $sub->jabatan->nama }}
-                                                    </div>
+                                                
+                                                {{-- LOGIKA TOMBOL PENANGGUNG JAWAB (SAMA DENGAN KEGIATAN) --}}
+                                                @php
+                                                    $pjClass = 'bg-gray-100 text-gray-600 border-gray-200';
+                                                    if(auth()->user()->hasRole('admin')) { $pjClass .= ' hover:bg-gray-200'; }
+                                                    $pjText = 'Pilih PJ'; 
+
+                                                    if ($sub->jabatan) {
+                                                        $pjText = 'PJ: ' . $sub->jabatan->nama;
+                                                        $pegawai = $sub->jabatan->pegawai;
+                                                        
+                                                        if ($pegawai) {
+                                                            $status = strtolower($pegawai->status);
+                                                            if (str_contains($status, 'definitif')) {
+                                                                $pjClass = 'bg-green-100 text-green-700 border-green-200';
+                                                                if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-green-200';
+                                                            } elseif (str_contains($status, 'plt') || str_contains($status, 'plh')) {
+                                                                $pjClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                                                                if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-yellow-200';
+                                                            } else {
+                                                                $pjClass = 'bg-blue-100 text-blue-700 border-blue-200';
+                                                                if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-blue-200';
+                                                            }
+                                                        } else {
+                                                            // Ada Jabatan tapi Kosong -> Merah Muda
+                                                            $pjClass = 'bg-red-50 text-red-600 border-red-100';
+                                                            if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-red-100';
+                                                        }
+                                                    }
+                                                @endphp
+
+                                                {{-- TOMBOL / BADGE PJ --}}
+                                                @if(auth()->user()->hasRole('admin'))
+                                                    <button wire:click="pilihPenanggungJawab({{ $sub->id }})" 
+                                                            class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] border w-fit transition-colors shadow-sm {{ $pjClass }}"
+                                                            title="Klik untuk ubah Penanggung Jawab">
+                                                        <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                        <span class="font-bold mr-1">{{ Str::limit($pjText, 40) }}</span>
+                                                    </button>
+                                                @else
+                                                    @if($sub->jabatan)
+                                                    <span class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] border w-fit shadow-sm cursor-default {{ $pjClass }}">
+                                                        <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                        <span class="font-bold mr-1">{{ Str::limit($pjText, 40) }}</span>
+                                                    </span>
+                                                    @endif
                                                 @endif
                                             </td>
                                             <td rowspan="{{ $rowSpan }}" class="p-4 border-r align-top bg-white">{{ $sub->output ?? '-' }}</td>
@@ -130,7 +170,7 @@
                                         <td class="p-2 border-r text-center">{{ $ind->target_2030 ?? '-' }}</td> 
                                         <td class="p-2 border-r text-right text-[10px] whitespace-nowrap">{{ $ind->pagu_2030 ? 'Rp ' . number_format($ind->pagu_2030, 0, ',', '.') : '-' }}</td>
                                         
-                                        {{-- AKSI HANYA UNTUK ADMIN --}}
+                                        {{-- TOMBOL MENU HANYA UNTUK ADMIN --}}
                                         @if(auth()->user()->hasRole('admin'))
                                         <td class="p-4 text-center align-middle">
                                             <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
@@ -167,10 +207,51 @@
                                         <td class="p-4 border-r align-top font-bold text-gray-800">
                                             <div>{{ $sub->kode }}</div>
                                             <div class="mt-1">{{ $sub->nama }}</div>
-                                            @if($sub->jabatan)
-                                                <div class="mt-2 inline-flex items-center px-2 py-0.5 rounded bg-yellow-50 text-yellow-700 border border-yellow-200 text-[10px]">
-                                                    PJ: {{ $sub->jabatan->nama }}
-                                                </div>
+                                            
+                                            {{-- LOGIKA TOMBOL PENANGGUNG JAWAB (SAMA DENGAN KEGIATAN) --}}
+                                            @php
+                                                $pjClass = 'bg-gray-100 text-gray-600 border-gray-200';
+                                                if(auth()->user()->hasRole('admin')) { $pjClass .= ' hover:bg-gray-200'; }
+                                                $pjText = 'Pilih PJ'; 
+
+                                                if ($sub->jabatan) {
+                                                    $pjText = 'PJ: ' . $sub->jabatan->nama;
+                                                    $pegawai = $sub->jabatan->pegawai;
+                                                    
+                                                    if ($pegawai) {
+                                                        $status = strtolower($pegawai->status);
+                                                        if (str_contains($status, 'definitif')) {
+                                                            $pjClass = 'bg-green-100 text-green-700 border-green-200';
+                                                            if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-green-200';
+                                                        } elseif (str_contains($status, 'plt') || str_contains($status, 'plh')) {
+                                                            $pjClass = 'bg-yellow-100 text-yellow-700 border-yellow-200';
+                                                            if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-yellow-200';
+                                                        } else {
+                                                            $pjClass = 'bg-blue-100 text-blue-700 border-blue-200';
+                                                            if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-blue-200';
+                                                        }
+                                                    } else {
+                                                        $pjClass = 'bg-red-50 text-red-600 border-red-100';
+                                                        if(auth()->user()->hasRole('admin')) $pjClass .= ' hover:bg-red-100';
+                                                    }
+                                                }
+                                            @endphp
+
+                                            {{-- TOMBOL / BADGE PJ --}}
+                                            @if(auth()->user()->hasRole('admin'))
+                                                <button wire:click="pilihPenanggungJawab({{ $sub->id }})" 
+                                                        class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] border w-fit transition-colors shadow-sm {{ $pjClass }}"
+                                                        title="Klik untuk ubah Penanggung Jawab">
+                                                    <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                    <span class="font-bold mr-1">{{ Str::limit($pjText, 40) }}</span>
+                                                </button>
+                                            @else
+                                                @if($sub->jabatan)
+                                                <span class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] border w-fit shadow-sm cursor-default {{ $pjClass }}">
+                                                    <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                    <span class="font-bold mr-1">{{ Str::limit($pjText, 40) }}</span>
+                                                </span>
+                                                @endif
                                             @endif
                                         </td>
                                         <td class="p-4 border-r align-top">{{ $sub->output ?? '-' }}</td>
@@ -362,7 +443,7 @@
         </div>
         @endif
 
-        {{-- MODAL TARGET (Sama seperti sebelumnya tapi dibungkus) --}}
+        {{-- MODAL TARGET --}}
         @if($isOpenTarget)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl mx-4 p-0 overflow-hidden flex flex-col max-h-[90vh]">

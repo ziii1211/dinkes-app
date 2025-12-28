@@ -1,238 +1,291 @@
-<div class="space-y-8 animate-fade-in-up font-sans text-slate-600 relative">
-    
-    {{-- CSS Utilities --}}
+<div class="min-h-screen bg-[#F8FAFC] font-sans text-slate-600 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-20">
+
+    {{-- CUSTOM STYLES & ANIMATIONS --}}
     <style>
-        @keyframes fadeInUp {
-            from { opacity: 0; transform: translateY(15px); }
+        @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
+        
+        .font-jakarta { font-family: 'Plus Jakarta Sans', sans-serif; }
+        
+        /* Smooth Scroll & Custom Scrollbar */
+        .custom-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+        .custom-scroll::-webkit-scrollbar-track { background: transparent; }
+        .custom-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+        .custom-scroll::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+        /* Animation Keyframes */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes shine {
+            100% { left: 125%; }
+        }
+        @keyframes entry {
+            from { opacity: 0; transform: translateY(20px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        .animate-fade-in-up { animation: fadeInUp 0.6s ease-out forwards; }
-        .hide-scrollbar::-webkit-scrollbar { display: none; }
-        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
-        .glass-card { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); }
+
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-entry { animation: entry 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards; opacity: 0; }
+        .animate-shine { position: absolute; top: 0; left: -100%; width: 50%; height: 100%; background: linear-gradient(to right, transparent, rgba(255,255,255,0.4), transparent); transform: skewX(-20deg); animation: shine 3s infinite; }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+
+        /* Glassmorphism Utilities */
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02);
+        }
     </style>
 
-    {{-- Background Decorations (Blobs) --}}
-    <div class="fixed top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-        <div class="absolute -top-20 -left-20 w-96 h-96 bg-indigo-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
-        <div class="absolute top-40 right-20 w-72 h-72 bg-purple-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
-        <div class="absolute -bottom-20 left-1/2 w-80 h-80 bg-emerald-100 rounded-full mix-blend-multiply filter blur-3xl opacity-30"></div>
+    {{-- DYNAMIC BACKGROUND MESH --}}
+    <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
+        <div class="absolute top-0 left-1/4 w-[800px] h-[800px] bg-indigo-200/20 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-float"></div>
+        <div class="absolute bottom-0 right-1/4 w-[600px] h-[600px] bg-fuchsia-200/20 rounded-full mix-blend-multiply filter blur-[100px] opacity-70 animate-float" style="animation-delay: 2s"></div>
+        <div class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[900px] h-[900px] bg-blue-100/30 rounded-full mix-blend-multiply filter blur-[120px] opacity-50"></div>
     </div>
 
-    {{-- Section 1: Filter & Action Bar --}}
-    <div class="glass-card p-4 rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 flex flex-col lg:flex-row gap-4 items-center justify-between relative z-20">
-        <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto flex-1">
-            
-            {{-- Filter 1: PERIODE (RENSTRA) --}}
-            <div class="relative group w-full sm:w-64">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+    {{-- NAVIGATION / HEADER (Floating Glass) --}}
+    <div class="sticky top-4 z-50 px-4 mb-8">
+        <div class="max-w-[1600px] mx-auto glass rounded-2xl px-6 py-4 shadow-sm transition-all hover:shadow-md animate-entry">
+            <div class="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                {{-- Brand --}}
+                <div class="flex items-center gap-4">
+                    <div class="relative group cursor-pointer">
+                        <div class="absolute -inset-2 bg-gradient-to-r from-indigo-500 to-fuchsia-500 rounded-full blur opacity-20 group-hover:opacity-40 transition duration-500"></div>
+                        <div class="relative w-12 h-12 bg-white rounded-xl flex items-center justify-center text-indigo-600 shadow-sm border border-slate-100">
+                            <svg class="w-6 h-6 transform group-hover:scale-110 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 8v8m-4-5v5m-4-2v2m-2 4h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                        </div>
+                    </div>
+                    <div>
+                        <h1 class="text-2xl font-jakarta font-bold text-slate-800 tracking-tight">Dashboard Kinerja</h1>
+                        <div class="flex items-center gap-2 text-xs font-medium text-slate-500">
+                            <span class="relative flex h-2 w-2">
+                              <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                            </span>
+                            System Online
+                        </div>
+                    </div>
                 </div>
-                <select wire:model.live="periode" class="pl-11 w-full text-sm font-semibold border-slate-200 bg-slate-50/50 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 py-3 transition-all hover:bg-white cursor-pointer hover:shadow-sm">
-                    <option>Renstra 2026-2030</option>
-                </select>
+
+                {{-- Filters --}}
+                <div class="flex flex-wrap items-center gap-3">
+                    <div class="relative group">
+                        <select wire:model.live="periode" class="appearance-none pl-10 pr-8 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer w-full sm:w-48 transition-all hover:bg-slate-100">
+                            <option>Renstra 2026-2030</option>
+                        </select>
+                        <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    </div>
+
+                    <div class="relative group">
+                        <select wire:model.live="perangkat_daerah" class="appearance-none pl-10 pr-8 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer w-full sm:w-64 transition-all hover:bg-slate-100">
+                            <option value="">Semua Unit Kerja</option>
+                            @foreach($jabatans as $jab)
+                                <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+                            @endforeach
+                        </select>
+                        <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                    </div>
+                </div>
             </div>
-            
-            {{-- Filter 2: UNIT KERJA (Dropdown Dinas Kesehatan) --}}
-            <div class="relative group w-full sm:w-64">
-                <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none">
-                    <svg class="w-5 h-5 text-indigo-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+        </div>
+    </div>
+
+    {{-- MAIN CONTENT WRAPPER --}}
+    <div class="max-w-[1600px] mx-auto px-6 space-y-8 font-jakarta">
+
+        {{-- ALERT BANNER (Modern Gradient) --}}
+        @if($deadline)
+        <div class="animate-entry relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 shadow-xl shadow-indigo-500/20 p-1">
+            <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>
+            <div class="bg-white/10 backdrop-blur-sm rounded-[20px] p-6 relative z-10">
+                <div class="animate-shine"></div>
+                <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-white">
+                    <div class="flex items-center gap-5">
+                        <div class="w-14 h-14 rounded-2xl bg-white/20 border border-white/20 flex items-center justify-center backdrop-blur-md shadow-inner">
+                            <svg class="w-7 h-7 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <div>
+                            <h3 class="text-xl font-bold">Laporan {{ Carbon\Carbon::createFromFormat('m', $deadline->bulan)->isoFormat('MMMM') }}</h3>
+                            <p class="text-indigo-100 font-medium text-sm mt-0.5 opacity-90">
+                                Deadline dalam <span class="bg-white text-indigo-700 px-2 py-0.5 rounded-md font-bold mx-1 shadow-sm">{{ $sisa_hari }} Hari</span> lagi. Pastikan data terinput dengan benar.
+                            </p>
+                        </div>
+                    </div>
+                    <button class="px-6 py-3 bg-white text-indigo-700 text-sm font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
+                        Periksa Status
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
+                    </button>
                 </div>
-                <select wire:model.live="perangkat_daerah" class="pl-11 w-full text-sm font-semibold border-slate-200 bg-slate-50/50 rounded-2xl focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-500 text-slate-700 py-3 transition-all hover:bg-white cursor-pointer hover:shadow-sm">
-                    <option value="">Dinas Kesehatan</option>
-                    @foreach($jabatans as $jab)
-                        <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+            </div>
+        </div>
+        @endif
+
+        {{-- BENTO GRID LAYOUT --}}
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-entry delay-100">
+            
+            {{-- CHART SECTION (Modernized) --}}
+            <div class="lg:col-span-8 glass-card rounded-[2.5rem] p-8 relative overflow-hidden group">
+                <div class="flex items-center justify-between mb-8 relative z-10">
+                    <div>
+                        <h3 class="text-xl font-extrabold text-slate-800">Analisis Capaian</h3>
+                        <p class="text-sm text-slate-400 font-medium">Monitoring performa real-time</p>
+                    </div>
+                    @if($is_dummy_chart)
+                    <span class="px-3 py-1 rounded-full bg-amber-50 text-amber-600 text-xs font-bold border border-amber-100 flex items-center gap-1.5">
+                        <span class="w-1.5 h-1.5 rounded-full bg-amber-500"></span> Simulasi
+                    </span>
+                    @endif
+                </div>
+
+                {{-- Chart Container --}}
+                <div class="h-[340px] w-full flex items-end justify-between gap-2 sm:gap-4 relative z-10 px-2 pb-2">
+                    {{-- Guide Lines --}}
+                    <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-30">
+                        <div class="border-t border-dashed border-slate-300 w-full h-0"></div>
+                        <div class="border-t border-dashed border-slate-300 w-full h-0"></div>
+                        <div class="border-t border-dashed border-slate-300 w-full h-0"></div>
+                        <div class="border-t border-slate-200 w-full h-0"></div>
+                    </div>
+
+                    @foreach($chart_data as $index => $val)
+                    <div class="w-full h-full flex flex-col justify-end group/bar cursor-pointer relative">
+                        <div class="relative w-full flex items-end justify-center h-full">
+                            {{-- Tooltip --}}
+                            <div class="opacity-0 group-hover/bar:opacity-100 absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-xl transition-all duration-300 transform translate-y-2 group-hover/bar:translate-y-0 z-20 whitespace-nowrap">
+                                {{ $val }}%
+                                <svg class="absolute -bottom-1 left-1/2 -translate-x-1/2 text-slate-800 w-2 h-2" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
+                            </div>
+
+                            {{-- The Bar --}}
+                            <div style="height: {{ $val > 100 ? 100 : ($val < 5 ? 5 : $val) }}%" 
+                                 class="w-full max-w-[50px] rounded-t-2xl relative transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)
+                                 {{ $val >= 100 ? 'bg-gradient-to-t from-emerald-500 to-emerald-400' : 'bg-gradient-to-t from-indigo-600 to-indigo-400' }}
+                                 opacity-90 hover:opacity-100 group-hover/bar:scale-y-[1.03] group-hover/bar:shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)]">
+                                 {{-- Glossy Reflection --}}
+                                 <div class="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
+                            </div>
+                        </div>
+                        <span class="text-[10px] font-bold text-slate-400 mt-3 text-center transition-colors group-hover/bar:text-indigo-600 uppercase tracking-wider">{{ substr($chart_labels[$index], 0, 3) }}</span>
+                    </div>
                     @endforeach
-                </select>
-            </div>
-        </div>
-
-    </div>
-
-    {{-- Section 3: Charts & Highlights --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        
-        <div class="lg:col-span-8 bg-white rounded-[32px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 p-8 flex flex-col relative overflow-hidden">
-            <div class="flex items-center justify-between mb-10 z-10">
-                <div>
-                    <h3 class="text-2xl font-extrabold text-slate-800 flex items-center gap-3">
-                        Tren Capaian Kinerja
-                        @if($is_dummy_chart)
-                        <span class="text-[10px] font-bold bg-indigo-50 text-indigo-500 px-2 py-1 rounded-lg border border-indigo-100 uppercase tracking-wide">Data Contoh</span>
-                        @endif
-                    </h3>
-                    <p class="text-sm text-slate-400 font-medium mt-1">Analisis performa bulanan tahun berjalan</p>
-                </div>
-                <div class="hidden sm:flex bg-slate-50 p-1.5 rounded-2xl border border-slate-100">
-                    <button class="px-5 py-2.5 text-xs font-bold bg-white rounded-xl shadow-sm text-indigo-600 border border-slate-100">Grafik</button>
-                    <button class="px-5 py-2.5 text-xs font-bold text-slate-400 hover:text-slate-600 transition-colors">Tabel</button>
                 </div>
             </div>
-            
-            <div class="relative h-80 w-full flex items-end justify-between gap-4 flex-1 z-10 px-2">
-                {{-- Grid Lines --}}
-                <div class="absolute inset-0 flex flex-col justify-between pointer-events-none">
-                    <div class="absolute top-0 w-full border-t border-dashed border-indigo-200 z-0 opacity-60"><span class="text-[10px] font-bold text-indigo-400 absolute -top-4 right-0 bg-white px-1">Target 100%</span></div>
-                    @for($i=0; $i<5; $i++)
-                        <div class="border-b border-dashed border-slate-100 h-full w-full"></div>
-                    @endfor
+
+            {{-- HIGHLIGHT CARDS (Right Column) --}}
+            <div class="lg:col-span-4 flex flex-col h-full gap-5">
+                {{-- Card Header --}}
+                <div class="flex items-center justify-between px-2">
+                    <h3 class="text-lg font-bold text-slate-800">Sorotan Kinerja</h3>
+                    <button wire:click="openHighlightModal" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 px-3 py-1.5 rounded-lg transition-colors">
+                        Lihat Semua
+                    </button>
                 </div>
 
-                @foreach($chart_data as $index => $val)
-                <div class="w-full relative group h-full flex items-end z-10">
-                    {{-- Bar --}}
-                    <div style="height: {{ $val > 100 ? 100 : ($val < 5 ? 5 : $val) }}%" 
-                         class="w-full bg-gradient-to-t from-indigo-500 via-purple-500 to-indigo-400 rounded-t-2xl relative transition-all duration-500 group-hover:from-indigo-600 group-hover:to-purple-600 group-hover:-translate-y-1 shadow-sm group-hover:shadow-[0_10px_20px_-5px_rgba(99,102,241,0.4)] cursor-pointer">
+                {{-- Scrollable List --}}
+                <div class="flex-1 overflow-y-auto custom-scroll pr-2 space-y-4 max-h-[400px]">
+                    @foreach($highlights as $item)
+                    <div wire:click="openHighlightModal('{{ $item['label'] == 'Top Performer' ? 'performer' : ($item['label'] == 'Perlu Perhatian' ? 'isu' : 'dokumen') }}')" 
+                         class="group relative bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden">
                         
-                        {{-- Tooltip --}}
-                        <div class="opacity-0 group-hover:opacity-100 absolute -top-12 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold py-1.5 px-3 rounded-xl shadow-xl transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 whitespace-nowrap pointer-events-none z-20">
-                            {{ $val }}%
-                            <div class="absolute -bottom-1 left-1/2 -translate-x-1/2 w-2 h-2 bg-slate-800 rotate-45"></div>
+                        {{-- Hover Gradient --}}
+                        <div class="absolute inset-0 bg-gradient-to-r {{ $item['label'] == 'Perlu Perhatian' ? 'from-rose-50/50' : ($item['label'] == 'Top Performer' ? 'from-amber-50/50' : 'from-blue-50/50') }} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+
+                        <div class="relative z-10 flex items-start gap-4">
+                            <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 shadow-sm
+                                {{ $item['label'] == 'Perlu Perhatian' ? 'bg-rose-100 text-rose-600' : 
+                                  ($item['label'] == 'Top Performer' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600') }}">
+                                @if($item['icon'] == 'star') <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                                @elseif($item['icon'] == 'warning') <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                @else <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                @endif
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-slate-800 text-sm group-hover:text-indigo-900 transition-colors">{{ $item['label'] }}</h4>
+                                <p class="text-xs text-slate-500 mt-1 leading-relaxed">{{ $item['desc'] }}</p>
+                            </div>
                         </div>
                     </div>
-                    
-                    {{-- X-Axis Label --}}
-                    <div class="absolute -bottom-8 inset-x-0 text-center">
-                        <span class="text-[10px] font-bold text-slate-400 group-hover:text-indigo-600 transition-colors uppercase tracking-wider">{{ $chart_labels[$index] ?? '' }}</span>
-                    </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
-            <div class="h-8"></div>
         </div>
 
-        <div class="lg:col-span-4 bg-white rounded-[32px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 p-8 flex flex-col">
-            <h3 class="text-xl font-extrabold text-slate-800 mb-8 flex items-center gap-3">
-                <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-yellow-100 text-yellow-600 shadow-sm">
-                    <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z"></path></svg>
-                </span>
-                Highlight Kinerja
-            </h3>
+        {{-- BOTTOM SECTION --}}
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-entry delay-200">
             
-            <div class="flex-1 space-y-4 overflow-y-auto pr-2 hide-scrollbar">
-                @foreach($highlights as $item)
-                <div wire:click="openHighlightModal('{{ $item['label'] == 'Top Performer' ? 'performer' : ($item['label'] == 'Perlu Perhatian' ? 'isu' : 'dokumen') }}')" 
-                     class="group relative p-5 rounded-3xl bg-slate-50 border border-slate-100 hover:bg-white hover:shadow-[0_10px_30px_-10px_rgba(0,0,0,0.08)] hover:border-indigo-100 transition-all duration-300 cursor-pointer hover:scale-[1.02]">
-                    <div class="flex items-start gap-5">
-                        <div class="flex-shrink-0 p-3.5 rounded-2xl bg-white shadow-sm border border-slate-100 group-hover:scale-110 transition-transform duration-300 {{ $item['color'] }}">
-                            @if($item['icon'] == 'star') <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
-                            @elseif($item['icon'] == 'warning') <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                            @else <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                            @endif
-                        </div>
-                        <div>
-                            <h4 class="text-sm font-bold text-slate-800 group-hover:text-indigo-600 transition-colors">{{ $item['label'] }}</h4>
-                            <p class="text-xs text-slate-500 mt-1.5 leading-relaxed font-medium">{{ $item['desc'] }}</p>
-                        </div>
+            {{-- ACTIVITY LOG --}}
+            <div class="lg:col-span-2 glass-card rounded-[2.5rem] p-8">
+                <div class="flex items-center gap-3 mb-6">
+                    <div class="w-10 h-10 rounded-xl bg-slate-100 flex items-center justify-center text-slate-500">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                     </div>
+                    <h3 class="text-lg font-bold text-slate-800">Aktivitas Terkini</h3>
                 </div>
-                @endforeach
-            </div>
-            
-            <button wire:click="openHighlightModal" class="w-full mt-8 py-4 border-2 border-dashed border-slate-200 rounded-2xl text-xs font-bold text-slate-400 hover:text-indigo-600 hover:border-indigo-300 hover:bg-indigo-50 transition-all flex items-center justify-center gap-2 group">
-                <span>Lihat Detail Lengkap</span>
-                <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-            </button>
-        </div>
-    </div>
 
-    {{-- Section 4: Activities & Actions --}}
-    <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        
-        <div class="lg:col-span-8 bg-white rounded-[32px] shadow-[0_20px_40px_-15px_rgba(0,0,0,0.05)] border border-slate-100 p-8">
-            <h3 class="text-xl font-extrabold text-slate-800 mb-8 flex items-center gap-3">
-                 <div class="p-2 bg-indigo-50 rounded-xl text-indigo-600">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                 </div>
-                 Log Aktivitas Terbaru
-            </h3>
-            
-            <div class="space-y-0 relative before:absolute before:inset-y-6 before:left-[27px] before:w-[2px] before:bg-slate-100">
-                @foreach($activities as $act)
-                <div class="relative pl-14 py-4 group">
-                    <div class="absolute left-5 top-7 w-4 h-4 rounded-full border-[3px] border-white bg-slate-300 group-hover:bg-indigo-500 group-hover:scale-125 transition-all shadow-sm z-10 ring-4 ring-slate-50 group-hover:ring-indigo-100"></div>
-                    
-                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 rounded-3xl hover:bg-slate-50 border border-transparent hover:border-slate-100 hover:shadow-sm transition-all duration-300">
-                        <div>
-                            <p class="text-sm font-bold text-slate-800 group-hover:text-indigo-700 transition-colors leading-relaxed">{!! $act['aktivitas'] !!}</p>
-                            <div class="flex items-center gap-3 mt-2">
-                                <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider bg-white px-2 py-1 rounded-lg border border-slate-100 shadow-sm">{{ $act['waktu'] }}</span>
-                                <span class="text-xs text-slate-500 flex items-center gap-1.5 font-semibold">
-                                    <div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div> 
-                                    by {{ $act['user'] }}
+                <div class="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-px before:bg-gradient-to-b before:from-slate-200 before:via-slate-100 before:to-transparent">
+                    @foreach($activities as $act)
+                    <div class="relative flex gap-6 pb-6 group last:pb-0">
+                        <div class="absolute left-0 mt-1.5 ml-2.5 -translate-x-1/2 translate-y-0.5 w-5 h-5 rounded-full border-4 border-white bg-slate-200 group-hover:bg-indigo-500 group-hover:scale-110 transition-all z-10 shadow-sm"></div>
+                        
+                        <div class="flex-1 bg-slate-50/50 hover:bg-white p-4 rounded-2xl border border-transparent hover:border-indigo-100 hover:shadow-sm transition-all duration-300">
+                            <div class="flex justify-between items-start gap-4">
+                                <div>
+                                    <p class="text-sm font-semibold text-slate-700">{!! $act['aktivitas'] !!}</p>
+                                    <div class="flex items-center gap-2 mt-2">
+                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200/50 px-2 py-0.5 rounded">{{ $act['user'] }}</span>
+                                        <span class="text-xs text-slate-400 font-medium">{{ $act['waktu'] }}</span>
+                                    </div>
+                                </div>
+                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase {{ str_replace('bg-', 'bg-opacity-10 text-', $act['status_color']) }} {{ $act['status_color'] }}">
+                                    {{ $act['status'] }}
                                 </span>
                             </div>
                         </div>
-                        <span class="px-3.5 py-1.5 rounded-xl text-[10px] font-bold uppercase tracking-wider {{ str_replace('bg-', 'bg-opacity-10 bg-', $act['status_color']) }} border border-transparent self-start sm:self-center shadow-sm">
-                            {{ $act['status'] }}
-                        </span>
                     </div>
+                    @endforeach
                 </div>
-                @endforeach
             </div>
-        </div>
 
-        <div class="lg:col-span-4 flex flex-col h-full">
-            <div class="bg-gradient-to-br from-indigo-600 via-purple-700 to-indigo-800 rounded-[32px] shadow-[0_20px_50px_-20px_rgba(79,70,229,0.5)] p-8 text-white relative overflow-hidden flex-1 flex flex-col justify-between group">
-                
-                {{-- Decorative Blobs --}}
-                <div class="absolute top-0 right-0 -mr-8 -mt-8 w-48 h-48 bg-white opacity-10 rounded-full blur-3xl animate-pulse"></div>
-                <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-40 h-40 bg-fuchsia-500 opacity-20 rounded-full blur-3xl"></div>
-                
+            {{-- DARK CARD SHORTCUTS --}}
+            <div class="relative bg-[#1e1b4b] rounded-[2.5rem] p-8 text-white overflow-hidden flex flex-col justify-between group">
+                <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[60px] -mr-16 -mt-16 group-hover:bg-indigo-500/30 transition-all duration-1000"></div>
+                <div class="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-[60px] -ml-16 -mb-16 group-hover:bg-fuchsia-500/30 transition-all duration-1000"></div>
+
                 <div class="relative z-10">
-                    <h3 class="text-xl font-bold mb-8 flex items-center gap-3">
-                        <span class="p-2 bg-white/10 rounded-xl backdrop-blur-sm border border-white/10">
-                            <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        </span>
-                        Aksi Cepat
-                    </h3>
+                    <h3 class="text-xl font-bold mb-6">Akses Cepat</h3>
+                    
                     <div class="space-y-3">
-                        {{-- PERBAIKAN: Route ini sudah benar menggunakan nama route yang ada di web.php --}}
-                        <a href="{{ route('matrik.dokumen') }}" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 p-4 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg group/item cursor-pointer">
-                            <div class="p-2.5 bg-white/10 rounded-xl group-hover/item:bg-white/20 transition-colors">
-                                <svg class="w-5 h-5 text-indigo-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <a href="{{ route('matrik.dokumen') }}" class="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 p-4 rounded-2xl backdrop-blur-sm transition-all hover:translate-x-1 group/item">
+                            <div class="w-10 h-10 rounded-lg bg-indigo-500/20 flex items-center justify-center text-indigo-300 group-hover/item:text-white group-hover/item:bg-indigo-500 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                             </div>
                             <div>
-                                <span class="text-sm font-bold block">Buat RPJMD</span>
-                                <span class="text-[10px] text-indigo-200 font-medium">Input Data Perencanaan</span>
+                                <div class="font-bold text-sm">Input RPJMD</div>
+                                <div class="text-[11px] text-slate-400 group-hover/item:text-indigo-200">Manajemen Data</div>
                             </div>
                         </a>
-                        {{-- PERBAIKAN: Ganti route('pohon.kinerja') menjadi route('cascading.renstra') --}}
-                        <a href="{{ route('cascading.renstra') }}" class="flex items-center gap-4 bg-white/10 hover:bg-white/20 backdrop-blur-md border border-white/10 p-4 rounded-2xl transition-all hover:-translate-y-1 hover:shadow-lg group/item cursor-pointer">
-                            <div class="p-2.5 bg-white/10 rounded-xl group-hover/item:bg-white/20 transition-colors">
-                                <svg class="w-5 h-5 text-indigo-100" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
-                            </div>
-                            <div>
-                                <span class="text-sm font-bold block">Tambah Pohon</span>
-                                <span class="text-[10px] text-indigo-200 font-medium">Cascading Kinerja</span>
-                            </div>
-                        </a>
-                    </div>
-                </div>
 
-                {{-- NOTIFIKASI DEADLINE DINAMIS --}}
-                <div class="mt-8 pt-6 border-t border-white/10 relative z-10">
-                    <div class="flex items-start gap-3 bg-indigo-900/40 p-4 rounded-2xl border border-white/10 backdrop-blur-md">
-                        @if($deadline)
-                            <span class="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
-                                <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
-                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-rose-500"></span>
-                            </span>
-                            <div class="text-xs text-indigo-100 leading-relaxed font-medium">
-                                <span class="block text-white font-bold mb-0.5">Deadline Mendekat!</span>
-                                Batas unggah realisasi bulan 
-                                <span class="text-white font-bold">{{ Carbon\Carbon::createFromFormat('m', $deadline->bulan)->isoFormat('MMMM') }} {{ $deadline->tahun }}</span>
-                                tersisa <span class="underline decoration-rose-400 decoration-2 underline-offset-2 font-bold text-white cursor-pointer hover:text-rose-200 transition-colors">{{ $sisa_hari }} hari lagi</span>.
+                        <a href="{{ route('cascading.renstra') }}" class="flex items-center gap-4 bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/20 p-4 rounded-2xl backdrop-blur-sm transition-all hover:translate-x-1 group/item">
+                            <div class="w-10 h-10 rounded-lg bg-fuchsia-500/20 flex items-center justify-center text-fuchsia-300 group-hover/item:text-white group-hover/item:bg-fuchsia-500 transition-colors">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
                             </div>
-                        @else
-                            <span class="relative flex h-2.5 w-2.5 mt-1.5 shrink-0">
-                                <span class="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
-                            </span>
-                            <div class="text-xs text-indigo-100 leading-relaxed font-medium">
-                                <span class="block text-white font-bold mb-0.5">Jadwal Aman</span>
-                                Belum ada jadwal pengukuran kinerja yang aktif saat ini.
+                            <div>
+                                <div class="font-bold text-sm">Cascading Kinerja</div>
+                                <div class="text-[11px] text-slate-400 group-hover/item:text-fuchsia-200">Visualisasi Pohon</div>
                             </div>
-                        @endif
+                        </a>
                     </div>
                 </div>
             </div>
@@ -240,197 +293,149 @@
 
     </div>
 
-    {{-- ================================================================= --}}
-    {{-- MODAL HIGHLIGHT KINERJA (UPDATED) --}}
-    {{-- ================================================================= --}}
+    {{-- MODAL (PREMIUM BLURRED) --}}
     @if($isOpenHighlight)
-    <div class="relative z-[99]" aria-labelledby="modal-title" role="dialog" aria-modal="true">
-        
-        {{-- Backdrop (Background Gelap & Blur Kuat) --}}
-        <div 
-            wire:click="closeHighlightModal"
-            class="fixed inset-0 bg-slate-900/60 backdrop-blur-[6px] transition-opacity"
-            aria-hidden="true"
-        ></div>
+    <div class="fixed inset-0 z-[100] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div class="flex items-center justify-center min-h-screen px-4 pt-4 pb-20 text-center sm:block sm:p-0">
+            
+            {{-- Backdrop --}}
+            <div wire:click="closeHighlightModal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm transition-opacity animate-entry" aria-hidden="true"></div>
 
-        {{-- Positioning Wrapper Center --}}
-        <div class="fixed inset-0 z-10 w-screen overflow-y-auto">
-            <div class="flex min-h-full items-center justify-center p-4 text-center sm:p-0">
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
+
+            {{-- Modal Panel --}}
+            <div class="relative inline-block align-bottom bg-white rounded-[2rem] text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:align-middle sm:max-w-4xl sm:w-full border border-slate-200 animate-entry delay-100">
                 
-                {{-- Modal Panel --}}
-                <div class="relative transform overflow-hidden rounded-[2.5rem] bg-white text-left shadow-[0_20px_60px_-15px_rgba(0,0,0,0.3)] transition-all sm:my-8 sm:w-full sm:max-w-5xl border border-slate-100 ring-1 ring-slate-200">
-                    
-                    {{-- Header Modal --}}
-                    <div class="bg-white px-8 py-6 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
-                        <div>
-                            <h3 class="text-xl font-extrabold text-slate-800 tracking-tight" id="modal-title">Detail Kinerja Organisasi</h3>
-                            <p class="text-sm text-slate-400 font-medium mt-1">Pantau performa indikator dan dokumen secara rinci</p>
-                        </div>
-                        <button wire:click="closeHighlightModal" class="bg-slate-50 p-2 rounded-full text-slate-400 hover:text-rose-500 hover:bg-rose-50 transition-all">
-                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                {{-- Modal Header --}}
+                <div class="bg-white px-8 py-6 border-b border-slate-100 flex justify-between items-center sticky top-0 z-10">
+                    <div>
+                        <h3 class="text-xl font-bold text-slate-800">Detail Kinerja</h3>
+                        <p class="text-sm text-slate-400">Laporan mendalam berdasarkan indikator</p>
+                    </div>
+                    <button wire:click="closeHighlightModal" class="w-8 h-8 rounded-full bg-slate-50 text-slate-400 hover:bg-rose-50 hover:text-rose-500 flex items-center justify-center transition-all">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+
+                {{-- Tabs --}}
+                <div class="bg-slate-50/50 px-8 border-b border-slate-200">
+                    <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+                        @foreach(['performer' => ['🏆 Top Performer', 'indigo'], 'isu' => ['⚠️ Isu Kritis', 'rose'], 'dokumen' => ['📄 Dokumen PK', 'emerald']] as $key => $val)
+                        <button wire:click="switchTab('{{ $key }}')" 
+                                class="{{ $activeTab === $key ? 'border-'.$val[1].'-500 text-'.$val[1].'-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} 
+                                       whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-all flex items-center gap-2">
+                           {{ $val[0] }}
                         </button>
-                    </div>
+                        @endforeach
+                    </nav>
+                </div>
 
-                    {{-- Tab Navigation --}}
-                    <div class="bg-slate-50/80 backdrop-blur-sm px-8 pt-2 border-b border-slate-200">
-                        <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                            <button wire:click="switchTab('performer')" class="{{ $activeTab === 'performer' ? 'border-indigo-500 text-indigo-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
-                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"></path></svg>
-                                Top Performer Ranking
-                            </button>
-                            <button wire:click="switchTab('isu')" class="{{ $activeTab === 'isu' ? 'border-rose-500 text-rose-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
-                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                Isu Kritis (Underperform)
-                            </button>
-                            <button wire:click="switchTab('dokumen')" class="{{ $activeTab === 'dokumen' ? 'border-emerald-500 text-emerald-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} whitespace-nowrap py-4 px-1 border-b-[3px] font-bold text-sm transition-colors flex items-center gap-2">
-                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                Status Dokumen PK
-                            </button>
-                        </nav>
-                    </div>
-
-                    {{-- Modal Content Body --}}
-                    <div class="p-8 min-h-[400px] bg-slate-50/30">
-                        
-                        {{-- TAB 1: PERFORMER --}}
-                        @if($activeTab === 'performer')
-                            <div class="animate-fade-in-up">
-                                <h4 class="text-sm font-bold text-slate-500 mb-6 uppercase tracking-wider">Peringkat Capaian Kinerja Unit</h4>
-                                @if(count($detailPerformers) > 0)
-                                    <div class="overflow-hidden bg-white border border-slate-200 rounded-2xl shadow-sm">
-                                        <table class="min-w-full divide-y divide-slate-100">
-                                            <thead class="bg-slate-50/80">
-                                                <tr>
-                                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Peringkat</th>
-                                                    <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Nama Jabatan / Unit</th>
-                                                    <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Jumlah Indikator</th>
-                                                    <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Rata-rata Capaian</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody class="bg-white divide-y divide-slate-100">
-                                                @foreach($detailPerformers as $index => $item)
-                                                <tr class="hover:bg-slate-50 transition-colors">
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $index == 0 ? 'text-yellow-600' : 'text-slate-500' }}">
-                                                        #{{ $index + 1 }}
-                                                        @if($index == 0) <span class="ml-2 inline-block animate-bounce">👑</span> @endif
-                                                    </td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-slate-700">{{ $item['jabatan'] }}</td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-center text-slate-500 font-medium">{{ $item['jumlah_indikator'] }}</td>
-                                                    <td class="px-6 py-4 whitespace-nowrap text-sm text-right">
-                                                        <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold {{ $item['score'] >= 90 ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : ($item['score'] >= 75 ? 'bg-blue-100 text-blue-700 border border-blue-200' : 'bg-amber-100 text-amber-700 border border-amber-200') }}">
-                                                            {{ $item['score'] }}%
-                                                        </span>
-                                                    </td>
-                                                </tr>
-                                                @endforeach
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                @else
-                                    <div class="flex flex-col items-center justify-center py-16 text-slate-400">
-                                        <svg class="w-16 h-16 text-slate-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                        <span class="font-medium">Belum ada data kinerja yang diinput.</span>
-                                    </div>
-                                @endif
-                            </div>
-                        @endif
-
-                        {{-- TAB 2: ISU KRITIS --}}
-                        @if($activeTab === 'isu')
-                            <div class="animate-fade-in-up">
-                                <h4 class="text-sm font-bold text-rose-600 mb-6 uppercase tracking-wider flex items-center gap-2">
-                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                    Indikator Perlu Perhatian (Capaian < 50%)
-                                </h4>
-                                @if(count($detailIsuKritis) > 0)
-                                    <div class="grid grid-cols-1 gap-4">
-                                        @foreach($detailIsuKritis as $isu)
-                                        <div class="bg-rose-50 border border-rose-100 p-5 rounded-2xl flex flex-col sm:flex-row justify-between gap-6 hover:shadow-md transition-shadow">
-                                            <div class="flex-1">
-                                                <div class="inline-block px-2 py-0.5 bg-white text-rose-500 text-[10px] font-bold rounded border border-rose-200 mb-2">{{ $isu['jabatan'] }}</div>
-                                                <h5 class="text-sm font-bold text-slate-800 leading-snug">{{ $isu['indikator'] }}</h5>
-                                                <div class="flex items-center gap-4 mt-3 text-xs font-medium text-slate-500">
-                                                    <span class="bg-white px-2 py-1 rounded border border-rose-100">Target: <strong class="text-slate-700">{{ $isu['target'] }}</strong></span>
-                                                    <span class="bg-white px-2 py-1 rounded border border-rose-100">Realisasi: <strong class="text-slate-700">{{ $isu['realisasi'] }}</strong></span>
-                                                </div>
-                                            </div>
-                                            <div class="flex items-center justify-end min-w-[120px]">
-                                                <div class="text-right">
-                                                    <span class="block text-2xl font-black text-rose-600">{{ $isu['capaian'] }}%</span>
-                                                    <span class="text-[10px] font-bold text-rose-400 uppercase tracking-wider">Capaian</span>
-                                                </div>
-                                            </div>
-                                        </div>
+                {{-- Modal Content --}}
+                <div class="p-8 max-h-[60vh] overflow-y-auto custom-scroll bg-slate-50/30">
+                    @if($activeTab === 'performer')
+                         @if(count($detailPerformers) > 0)
+                            <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                                <table class="min-w-full divide-y divide-slate-100">
+                                    <thead class="bg-slate-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Rank</th>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Unit Kerja</th>
+                                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Indikator</th>
+                                            <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Skor</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-slate-100">
+                                        @foreach($detailPerformers as $idx => $item)
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $idx==0 ? 'text-amber-500' : 'text-slate-500' }}">#{{ $idx+1 }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ $item['jabatan'] }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-center">{{ $item['jumlah_indikator'] }}</td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right">
+                                                <span class="px-2 py-1 text-xs font-bold rounded bg-indigo-50 text-indigo-600 border border-indigo-100">{{ $item['score'] }}%</span>
+                                            </td>
+                                        </tr>
                                         @endforeach
-                                    </div>
-                                @else
-                                    <div class="flex flex-col items-center justify-center py-16 text-emerald-500 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-100">
-                                        <svg class="w-16 h-16 mb-3 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                        <p class="font-bold text-lg">Luar Biasa!</p>
-                                        <p class="text-sm font-medium opacity-80">Tidak ada indikator kritis. Semua kinerja on-track.</p>
-                                    </div>
-                                @endif
+                                    </tbody>
+                                </table>
                             </div>
+                        @else
+                            <div class="text-center py-10 text-slate-400">Belum ada data performer.</div>
                         @endif
 
-                        {{-- TAB 3: DOKUMEN --}}
-                        @if($activeTab === 'dokumen')
-                             <div class="animate-fade-in-up">
-                                <h4 class="text-sm font-bold text-emerald-600 mb-6 uppercase tracking-wider">Status Dokumen Perjanjian Kinerja</h4>
-                                @if(count($detailDokumen) > 0)
-                                    <div class="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
-                                        {{-- Wrapper Scroll Horizontal --}}
-                                        <div class="overflow-x-auto"> 
-                                            <table class="min-w-full divide-y divide-slate-100">
-                                                <thead class="bg-slate-50/80">
-                                                    <tr>
-                                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Unit / Jabatan</th>
-                                                        <th class="px-6 py-4 text-left text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Pejabat</th>
-                                                        <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Tahun</th>
-                                                        <th class="px-6 py-4 text-center text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Status</th>
-                                                        <th class="px-6 py-4 text-right text-xs font-bold text-slate-500 uppercase tracking-wider whitespace-nowrap">Update Terakhir</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody class="bg-white divide-y divide-slate-100">
-                                                    @foreach($detailDokumen as $doc)
-                                                    <tr class="hover:bg-slate-50 transition-colors">
-                                                        <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-slate-700">{{ $doc['jabatan'] }}</td>
-                                                        <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-600 font-medium">{{ $doc['pegawai'] }}</td>
-                                                        <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-slate-500 font-bold">{{ $doc['tahun'] }}</td>
-                                                        <td class="px-6 py-4 whitespace-nowrap text-center">
-                                                            <span class="inline-flex items-center px-3 py-1 rounded-lg text-xs font-bold {{ $doc['status'] == 'Final' ? 'bg-emerald-100 text-emerald-700 border border-emerald-200' : 'bg-slate-100 text-slate-600 border border-slate-200' }}">
-                                                                {{ $doc['status'] }}
-                                                            </span>
-                                                        </td>
-                                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-400 font-medium">{{ $doc['tanggal'] }}</td>
-                                                    </tr>
-                                                    @endforeach
-                                                </tbody>
-                                            </table>
-                                        </div>
+                    @elseif($activeTab === 'isu')
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            @forelse($detailIsuKritis as $isu)
+                            <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center gap-2 mb-2">
+                                        <span class="text-[10px] font-bold bg-rose-50 text-rose-500 px-2 py-0.5 rounded uppercase">{{ $isu['jabatan'] }}</span>
                                     </div>
-                                @else
-                                    <div class="text-center py-16 text-slate-400">
-                                        <svg class="w-16 h-16 mx-auto text-slate-200 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                        Belum ada dokumen Perjanjian Kinerja.
+                                    <h4 class="font-bold text-sm text-slate-800 line-clamp-2">{{ $isu['indikator'] }}</h4>
+                                </div>
+                                <div class="mt-4 flex items-end justify-between border-t border-slate-50 pt-3">
+                                    <div class="text-xs text-slate-500 space-y-1">
+                                        <div>Target: <span class="font-bold text-slate-700">{{ $isu['target'] }}</span></div>
+                                        <div>Realisasi: <span class="font-bold text-slate-700">{{ $isu['realisasi'] }}</span></div>
                                     </div>
-                                @endif
+                                    <div class="text-right">
+                                        <div class="text-2xl font-black text-rose-500 leading-none">{{ $isu['capaian'] }}%</div>
+                                        <div class="text-[10px] text-rose-300 font-bold uppercase mt-1">Capaian</div>
+                                    </div>
+                                </div>
                             </div>
+                            @empty
+                            <div class="col-span-2 flex flex-col items-center justify-center py-12 text-emerald-500 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-100">
+                                <svg class="w-12 h-12 opacity-50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="font-bold">Semua Aman!</span>
+                                <span class="text-xs text-emerald-600/70">Tidak ada indikator kritis.</span>
+                            </div>
+                            @endforelse
+                        </div>
+
+                    @else
+                        {{-- Dokumen Content --}}
+                        @if(count($detailDokumen) > 0)
+                        <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                             <table class="min-w-full divide-y divide-slate-100">
+                                <thead class="bg-slate-50">
+                                    <tr>
+                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Unit / Pegawai</th>
+                                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase">Status</th>
+                                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">Tanggal</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="bg-white divide-y divide-slate-100">
+                                    @foreach($detailDokumen as $doc)
+                                    <tr class="hover:bg-slate-50 transition-colors">
+                                        <td class="px-6 py-4">
+                                            <div class="text-sm font-bold text-slate-800">{{ $doc['jabatan'] }}</div>
+                                            <div class="text-xs text-slate-500">{{ $doc['pegawai'] }}</div>
+                                        </td>
+                                        <td class="px-6 py-4 text-center">
+                                            <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $doc['status'] == 'Final' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
+                                                {{ $doc['status'] }}
+                                            </span>
+                                        </td>
+                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500">{{ $doc['tanggal'] }}</td>
+                                    </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                        @else
+                            <div class="text-center py-10 text-slate-400">Data dokumen kosong.</div>
                         @endif
+                    @endif
+                </div>
 
-                    </div>
-
-                    {{-- Footer --}}
-                    <div class="bg-white px-8 py-5 border-t border-slate-100 flex justify-end">
-                        <button wire:click="closeHighlightModal" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-slate-800/20 transition-all active:scale-95 text-sm">
-                            Tutup Panel
-                        </button>
-                    </div>
-
+                {{-- Modal Footer --}}
+                <div class="bg-slate-50 px-6 py-4 flex flex-row-reverse">
+                    <button wire:click="closeHighlightModal" type="button" class="w-full inline-flex justify-center rounded-xl border border-transparent shadow-sm px-6 py-2 bg-slate-800 text-base font-medium text-white hover:bg-slate-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-slate-500 sm:ml-3 sm:w-auto sm:text-sm transition-all hover:scale-105">
+                        Tutup Panel
+                    </button>
                 </div>
             </div>
         </div>
     </div>
     @endif
-
 </div>
