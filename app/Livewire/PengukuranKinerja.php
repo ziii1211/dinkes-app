@@ -40,7 +40,12 @@ class PengukuranKinerja extends Component
 
     // Form Inputs
     public $formJadwalMulai, $formJadwalSelesai;
-    public $indikatorId, $indikatorNama, $indikatorTarget, $indikatorSatuan, $realisasiInput, $catatanInput;
+    
+    // Updated: Added capaianInput and showCapaianInput
+    public $indikatorId, $indikatorNama, $indikatorTarget, $indikatorSatuan;
+    public $realisasiInput, $capaianInput, $catatanInput; 
+    public $showCapaianInput = false;
+
     public $aksiId, $aksiNama, $aksiTarget, $aksiSatuan, $realisasiAksiInput;
     public $formAksiNama, $formAksiTarget, $formAksiSatuan;
     public $tanggapanInput;
@@ -113,31 +118,41 @@ class PengukuranKinerja extends Component
                     $indikator->catatan_bulan = $data ? $data->catatan : null;
                     $indikator->tanggapan_bulan = $data ? $data->tanggapan : null; 
 
-                    // --- PERBAIKAN: Gunakan parseNumber untuk menangani koma ---
-                    $target = $this->parseNumber($indikator->target_tahunan);
-                    $realisasi = $this->parseNumber($indikator->realisasi_bulan);
-
-                    // Deteksi Arah
-                    $arah = strtolower(trim($indikator->arah ?? ''));
-                    $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
-
-                    if ($indikator->realisasi_bulan !== null && $target > 0) {
-                        if ($isNegative) {
-                            // Rumus Negatif (Turun)
-                            // ((2 * Target) - Realisasi) / Target * 100
-                            $capaian = ((2 * $target) - $realisasi) / $target * 100;
-                        } else {
-                            // Rumus Positif (Naik)
-                            // (Realisasi / Target) * 100
-                            $capaian = ($realisasi / $target) * 100;
-                        }
+                    // --- LOGIKA PERHITUNGAN CAPAIAN ---
+                    
+                    // 1. Cek apakah ada Capaian Manual di Database?
+                    if ($data && $data->capaian !== null) {
+                        // Jika ada manual (biasanya untuk indikator arah turun), gunakan itu
+                        $indikator->capaian_bulan = number_format($data->capaian, 2, ',', '.') . '%';
+                    } 
+                    // 2. Jika tidak ada manual, hitung otomatis jika realisasi terisi
+                    elseif ($indikator->realisasi_bulan !== null) {
+                        $target = $this->parseNumber($indikator->target_tahunan);
+                        $realisasi = $this->parseNumber($indikator->realisasi_bulan);
                         
-                        // Capping 100% dan floor 0%
-                        if ($capaian > 100) $capaian = 100;
-                        if ($capaian < 0) $capaian = 0;
+                        if ($target > 0) {
+                            // Deteksi Arah
+                            $arah = strtolower(trim($indikator->arah ?? ''));
+                            $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
 
-                        // Tampilkan dengan koma sebagai desimal (format Indonesia)
-                        $indikator->capaian_bulan = number_format($capaian, 2, ',', '.') . '%';
+                            if ($isNegative) {
+                                // Rumus Negatif (Turun) Default
+                                // ((2 * Target) - Realisasi) / Target * 100
+                                $capaian = ((2 * $target) - $realisasi) / $target * 100;
+                            } else {
+                                // Rumus Positif (Naik) Default
+                                // (Realisasi / Target) * 100
+                                $capaian = ($realisasi / $target) * 100;
+                            }
+                            
+                            // Capping 100% dan floor 0%
+                            if ($capaian > 100) $capaian = 100;
+                            if ($capaian < 0) $capaian = 0;
+
+                            $indikator->capaian_bulan = number_format($capaian, 2, ',', '.') . '%';
+                        } else {
+                            $indikator->capaian_bulan = '-';
+                        }
                     } else {
                         $indikator->capaian_bulan = '-';
                     }
@@ -265,23 +280,58 @@ class PengukuranKinerja extends Component
         session()->flash('message', 'Jadwal pengisian berhasil diperbarui.');
     }
 
-    public function openRealisasi($id, $nama, $target, $satuan) {
-        $this->indikatorId = $id; $this->indikatorNama = $nama; $this->indikatorTarget = $target; $this->indikatorSatuan = $satuan;
-        $data = RealisasiKinerja::where('indikator_id', $id)->where('bulan', $this->selectedMonth)->where('tahun', $this->tahun)->first();
-        $this->realisasiInput = $data ? $data->realisasi : ''; $this->catatanInput = $data ? $data->catatan : '';
+    // --- UPDATED: Menambahkan parameter $arah ---
+    public function openRealisasi($id, $nama, $target, $satuan, $arah = '') {
+        $this->indikatorId = $id; 
+        $this->indikatorNama = $nama; 
+        $this->indikatorTarget = $target; 
+        $this->indikatorSatuan = $satuan;
+        
+        // Deteksi apakah arah turun/negatif
+        $arahClean = strtolower(trim($arah));
+        $this->showCapaianInput = in_array($arahClean, ['menurun', 'turun', 'negative', 'negatif', 'min']);
+
+        $data = RealisasiKinerja::where('indikator_id', $id)
+                    ->where('bulan', $this->selectedMonth)
+                    ->where('tahun', $this->tahun)
+                    ->first();
+        
+        $this->realisasiInput = $data ? $data->realisasi : '';
+        // Load capaian jika ada, ubah titik ke koma untuk input
+        $this->capaianInput = $data && $data->capaian !== null ? str_replace('.', ',', $data->capaian) : '';
+        $this->catatanInput = $data ? $data->catatan : '';
+        
         $this->isOpenRealisasi = true;
     }
+
     public function closeRealisasi() { $this->isOpenRealisasi = false; }
+    
     public function simpanRealisasi() {
         // Validasi input angka bisa koma atau titik
         $this->validate(['realisasiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
         
-        // Simpan ke DB dengan format titik agar konsisten
+        // Bersihkan format (ubah koma ke titik)
         $cleanRealisasi = str_replace(',', '.', $this->realisasiInput);
         
-        RealisasiKinerja::updateOrCreate(['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['realisasi' => $cleanRealisasi, 'catatan' => $this->catatanInput]);
-        $this->closeRealisasi(); $this->loadData();
+        // Proses Capaian (Hanya simpan jika ditampilkan/arah turun, jika tidak set null agar terhitung otomatis)
+        $cleanCapaian = null;
+        if ($this->showCapaianInput && $this->capaianInput !== '' && $this->capaianInput !== null) {
+             $cleanCapaian = str_replace(',', '.', $this->capaianInput);
+        }
+        
+        RealisasiKinerja::updateOrCreate(
+            ['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], 
+            [
+                'realisasi' => $cleanRealisasi, 
+                'capaian' => $cleanCapaian, // Simpan capaian manual
+                'catatan' => $this->catatanInput
+            ]
+        );
+        
+        $this->closeRealisasi(); 
+        $this->loadData();
     }
+
     public function openRealisasiAksi($id) {
         $this->aksiId = $id; $aksi = RencanaAksi::find($id);
         $this->aksiNama = $aksi->nama_aksi; $this->aksiTarget = $aksi->target; $this->aksiSatuan = $aksi->satuan;
@@ -308,23 +358,17 @@ class PengukuranKinerja extends Component
         $this->closeTambahAksi(); $this->loadData();
     }
 
-    // --- FUNGSI HAPUS RENCANA AKSI (YANG DITAMBAHKAN) ---
     public function deleteRencanaAksi($id)
     {
         $aksi = RencanaAksi::find($id);
 
         if ($aksi) {
-            // Hapus realisasi terkait terlebih dahulu untuk menjaga integritas data
             RealisasiRencanaAksi::where('rencana_aksi_id', $id)->delete();
-            
-            // Hapus Rencana Aksi
             $aksi->delete();
-            
             $this->loadData();
             session()->flash('message', 'Rencana Aksi berhasil dihapus.');
         }
     }
-    // ----------------------------------------------------
 
     public function openTanggapan($id, $nama) {
         $this->indikatorId = $id; $this->indikatorNama = $nama;

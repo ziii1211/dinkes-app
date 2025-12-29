@@ -196,7 +196,8 @@
                                         <td class="px-4 py-4 text-center align-middle">
                                             @if(auth()->check() && auth()->user()->role !== 'pimpinan')
                                                 @if($isScheduleOpen)
-                                                    <button wire:click="openRealisasi({{ $ind->id }}, '{{ addslashes($ind->nama_indikator) }}', '{{ $ind->target_tahunan }}', '{{ $ind->satuan }}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center justify-center gap-1 mx-auto transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> {{ $ind->realisasi_bulan ? 'Edit' : 'Isi Realisasi' }}</button>
+                                                    {{-- UPDATE: Passing parameter $ind->arah --}}
+                                                    <button wire:click="openRealisasi({{ $ind->id }}, '{{ addslashes($ind->nama_indikator) }}', '{{ $ind->target_tahunan }}', '{{ $ind->satuan }}', '{{ $ind->arah ?? '' }}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center justify-center gap-1 mx-auto transition-colors"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> {{ $ind->realisasi_bulan ? 'Edit' : 'Isi Realisasi' }}</button>
                                                 @else
                                                     <button disabled class="px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded flex items-center justify-center gap-1 mx-auto cursor-not-allowed border border-gray-200"><svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> Terkunci</button>
                                                 @endif
@@ -399,6 +400,23 @@
                     <input type="number" step="0.01" wire:model="realisasiInput" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     @error('realisasiInput') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
+
+                {{-- UPDATE: Input Capaian Manual (Hanya muncul jika $showCapaianInput / arah turun) --}}
+                @if($showCapaianInput)
+                <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 animate-fade-in-down">
+                    <label class="block text-sm font-semibold text-yellow-800 mb-1 flex items-center gap-2">
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                        Capaian Manual
+                    </label>
+                    <p class="text-xs text-yellow-600 mb-2">Indikator ini memiliki arah <strong>menurun/negatif</strong>. Silakan isi capaian manual jika diperlukan.</p>
+                    <div class="flex items-center gap-2">
+                        <input type="number" step="0.01" wire:model="capaianInput" class="w-full border border-yellow-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="Contoh: 100">
+                        <span class="font-bold text-gray-500">%</span>
+                    </div>
+                </div>
+                @endif
+                {{-- -------------------------------------------------------------------------------- --}}
+
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Catatan</label>
                     <textarea wire:model="catatanInput" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
