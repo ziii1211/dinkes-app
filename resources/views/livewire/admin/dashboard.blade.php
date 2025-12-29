@@ -105,7 +105,7 @@
     {{-- MAIN CONTENT WRAPPER --}}
     <div class="max-w-[1600px] mx-auto px-6 space-y-8 font-jakarta">
 
-        {{-- ALERT BANNER (UPDATED DYNAMIC LOGIC) --}}
+        {{-- ALERT BANNER (TANPA TOMBOL ATUR JADWAL) --}}
         @if($deadline)
         <div class="animate-entry relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 shadow-xl shadow-indigo-500/20 p-1">
             <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>
@@ -127,16 +127,14 @@
                             </p>
                         </div>
                     </div>
-                    {{-- LINK KE HALAMAN ATUR JADWAL --}}
-                    <a href="{{ route('admin.atur-jadwal') }}" class="px-6 py-3 bg-white text-indigo-700 text-sm font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
-                        Atur Jadwal
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                    </a>
+                    
+                    {{-- TOMBOL ATUR JADWAL DIHAPUS --}}
+                    
                 </div>
             </div>
         </div>
         @else
-        {{-- Banner Jika Tidak Ada Jadwal Aktif --}}
+        {{-- Banner Jika Tidak Ada Jadwal Aktif (TANPA TOMBOL ATUR JADWAL) --}}
         <div class="animate-entry relative overflow-hidden rounded-3xl bg-slate-100 border border-slate-200 p-6">
             <div class="flex items-center gap-4 text-slate-500">
                 <div class="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center">
@@ -144,9 +142,11 @@
                 </div>
                 <div>
                     <h3 class="font-bold text-slate-700">Tidak ada jadwal aktif</h3>
-                    <p class="text-xs">Silakan atur jadwal pengukuran kinerja untuk bulan ini.</p>
+                    <p class="text-xs">Silakan hubungi Admin untuk mengatur jadwal pengukuran kinerja.</p>
                 </div>
-                <a href="{{ route('admin.atur-jadwal') }}" class="ml-auto text-xs font-bold text-indigo-600 hover:underline">Buka Pengaturan &rarr;</a>
+                
+                {{-- TOMBOL BUKA PENGATURAN DIHAPUS --}}
+                
             </div>
         </div>
         @endif
@@ -154,7 +154,7 @@
         {{-- BENTO GRID LAYOUT --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-entry delay-100">
             
-            {{-- CHART SECTION --}}
+            {{-- CHART SECTION (Modernized) --}}
             <div class="lg:col-span-8 glass-card rounded-[2.5rem] p-8 relative overflow-hidden group">
                 <div class="flex items-center justify-between mb-8 relative z-10">
                     <div>
