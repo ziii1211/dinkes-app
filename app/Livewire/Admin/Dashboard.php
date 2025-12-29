@@ -6,7 +6,7 @@ use Livewire\Component;
 use App\Models\RealisasiKinerja;
 use App\Models\PkAnggaran;
 use App\Models\PerjanjianKinerja;
-use App\Models\JadwalPengukuran;
+use App\Models\JadwalPengukuran; // Model Jadwal
 use App\Models\Jabatan; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
@@ -51,6 +51,7 @@ class Dashboard extends Component
 
     private function loadDetailData()
     {
+        // Load Detail Data (Tidak diubah, tetap sama seperti sebelumnya)
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -77,7 +78,6 @@ class Dashboard extends Component
         $this->detailIsuKritis = [];
 
         foreach ($rawPerformance as $row) {
-            // KONVERSI ANGKA DENGAN KOMA
             $target = (float) str_replace(',', '.', $row->target_tahun);
             $realisasi = (float) str_replace(',', '.', $row->realisasi);
             $arah = strtolower(trim($row->arah ?? ''));
@@ -153,8 +153,10 @@ class Dashboard extends Component
 
     public function render()
     {
+        Carbon::setLocale('id'); // Pastikan locale Indonesia
         $jabatans = Jabatan::orderBy('nama', 'asc')->get();
 
+        // --- HITUNG LOGIKA DASHBOARD ---
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -184,7 +186,6 @@ class Dashboard extends Component
         $isuKritisNames = [];
 
         foreach ($rawPerformance as $row) {
-            // KONVERSI ANGKA DENGAN KOMA
             $target = (float) str_replace(',', '.', $row->target_tahun);
             $realisasi = (float) str_replace(',', '.', $row->realisasi);
             $arah = strtolower(trim($row->arah ?? ''));
@@ -256,6 +257,7 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
+        // --- CHART DATA ---
         $chartData = RealisasiKinerja::selectRaw('bulan, AVG(capaian) as rata_rata')
             ->where('tahun', date('Y'))
             ->groupBy('bulan')
@@ -276,6 +278,7 @@ class Dashboard extends Component
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
 
+        // --- ACTIVITY LOGS ---
         $activities = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -326,15 +329,40 @@ class Dashboard extends Component
                 ];
             });
 
+        // --- LOGIKA DEADLINE TERHUBUNG DENGAN JADWAL PENGUKURAN ---
+        $now = Carbon::now();
+        
+        // Cari jadwal yang sedang AKTIF saat ini (Hari ini berada di antara tgl mulai dan selesai)
+        // Dan pastikan active flag true
         $activeSchedule = JadwalPengukuran::where('is_active', true)
-            ->whereDate('tanggal_mulai', '<=', now()) 
-            ->whereDate('tanggal_selesai', '>=', now()) 
-            ->orderBy('tanggal_selesai', 'asc') 
+            ->whereDate('tanggal_mulai', '<=', $now)
+            ->whereDate('tanggal_selesai', '>=', $now)
             ->first();
 
+        // Variabel untuk view
+        $deadlineData = null;
         $sisaHari = 0;
+        $bulanNama = '';
+
         if ($activeSchedule) {
-            $sisaHari = (int) now()->startOfDay()->diffInDays($activeSchedule->tanggal_selesai->startOfDay(), false);
+            // Hitung sisa hari dari sekarang sampai deadline akhir hari
+            $end = Carbon::parse($activeSchedule->tanggal_selesai)->endOfDay();
+            
+            // Diff in days (absolute false agar bisa negatif jika lewat, tapi query sudah memfilter)
+            $sisaHari = (int) $now->diffInDays($end, false);
+            
+            // Jika sisa hari 0 (hari terakhir), tampilkan "Hari Ini" atau sisa jam
+            if ($sisaHari < 0) $sisaHari = 0;
+
+            // Mapping Nama Bulan
+            $bulanList = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            $bulanNama = $bulanList[$activeSchedule->bulan] ?? 'Bulan Ini';
+
+            $deadlineData = $activeSchedule;
         }
 
         $data = [
@@ -372,8 +400,11 @@ class Dashboard extends Component
             'chart_data' => $normalizedChart,
             'chart_labels' => $bulanLabels,
             'is_dummy_chart' => !$hasRealChartData,
-            'deadline' => $activeSchedule,
+            
+            // DATA BARU UNTUK BANNER DEADLINE
+            'deadline' => $deadlineData,
             'sisa_hari' => $sisaHari,
+            'bulan_nama' => $bulanNama,
             'jabatans' => $jabatans 
         ];
 

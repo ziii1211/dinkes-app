@@ -105,7 +105,7 @@
     {{-- MAIN CONTENT WRAPPER --}}
     <div class="max-w-[1600px] mx-auto px-6 space-y-8 font-jakarta">
 
-        {{-- ALERT BANNER (Modern Gradient) --}}
+        {{-- ALERT BANNER (UPDATED DYNAMIC LOGIC) --}}
         @if($deadline)
         <div class="animate-entry relative overflow-hidden rounded-3xl bg-gradient-to-r from-violet-600 via-indigo-600 to-blue-600 shadow-xl shadow-indigo-500/20 p-1">
             <div class="absolute inset-0 bg-[url('https://grainy-gradients.vercel.app/noise.svg')] opacity-20 mix-blend-soft-light"></div>
@@ -117,17 +117,36 @@
                             <svg class="w-7 h-7 text-white animate-bounce" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         </div>
                         <div>
-                            <h3 class="text-xl font-bold">Laporan {{ Carbon\Carbon::createFromFormat('m', $deadline->bulan)->isoFormat('MMMM') }}</h3>
+                            <h3 class="text-xl font-bold">Jadwal Pengisian: {{ $bulan_nama }} {{ $deadline->tahun }}</h3>
                             <p class="text-indigo-100 font-medium text-sm mt-0.5 opacity-90">
-                                Deadline dalam <span class="bg-white text-indigo-700 px-2 py-0.5 rounded-md font-bold mx-1 shadow-sm">{{ $sisa_hari }} Hari</span> lagi. Pastikan data terinput dengan benar.
+                                @if($sisa_hari > 0)
+                                    Batas waktu pengisian berakhir dalam <span class="bg-white text-indigo-700 px-2 py-0.5 rounded-md font-bold mx-1 shadow-sm">{{ $sisa_hari }} Hari</span> lagi.
+                                @else
+                                    <span class="bg-rose-500 text-white px-2 py-0.5 rounded-md font-bold mx-1 shadow-sm">Hari Terakhir!</span> Segera selesaikan pengisian data.
+                                @endif
                             </p>
                         </div>
                     </div>
-                    <button class="px-6 py-3 bg-white text-indigo-700 text-sm font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2">
-                        Periksa Status
+                    {{-- LINK KE HALAMAN ATUR JADWAL --}}
+                    <a href="{{ route('admin.atur-jadwal') }}" class="px-6 py-3 bg-white text-indigo-700 text-sm font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2 cursor-pointer">
+                        Atur Jadwal
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path></svg>
-                    </button>
+                    </a>
                 </div>
+            </div>
+        </div>
+        @else
+        {{-- Banner Jika Tidak Ada Jadwal Aktif --}}
+        <div class="animate-entry relative overflow-hidden rounded-3xl bg-slate-100 border border-slate-200 p-6">
+            <div class="flex items-center gap-4 text-slate-500">
+                <div class="w-10 h-10 rounded-xl bg-slate-200 flex items-center justify-center">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg>
+                </div>
+                <div>
+                    <h3 class="font-bold text-slate-700">Tidak ada jadwal aktif</h3>
+                    <p class="text-xs">Silakan atur jadwal pengukuran kinerja untuk bulan ini.</p>
+                </div>
+                <a href="{{ route('admin.atur-jadwal') }}" class="ml-auto text-xs font-bold text-indigo-600 hover:underline">Buka Pengaturan &rarr;</a>
             </div>
         </div>
         @endif
@@ -135,7 +154,7 @@
         {{-- BENTO GRID LAYOUT --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-entry delay-100">
             
-            {{-- CHART SECTION (Modernized) --}}
+            {{-- CHART SECTION --}}
             <div class="lg:col-span-8 glass-card rounded-[2.5rem] p-8 relative overflow-hidden group">
                 <div class="flex items-center justify-between mb-8 relative z-10">
                     <div>

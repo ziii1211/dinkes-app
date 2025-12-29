@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Storage; // <--- PENTING: Import Library Storage
 use App\Livewire\Auth\Login;
 use App\Livewire\Dashboard;
 use App\Livewire\Admin\Dashboard as AdminDashboard;
+use App\Livewire\Admin\AturJadwal; // <--- TAMBAHAN: Import Komponen AturJadwal
 use App\Livewire\Pimpinan\Dashboard as PimpinanDashboard;
 use App\Livewire\StrukturOrganisasi;
 use App\Livewire\DokumenRenstra;
@@ -69,6 +70,9 @@ Route::middleware('auth')->group(function () {
     // 3. AREA ADMIN (Role: Admin)
     Route::middleware('role:admin')->group(function () {
         Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
+        
+        // --- PERBAIKAN: MENAMBAHKAN ROUTE UNTUK ATUR JADWAL ---
+        Route::get('/admin/atur-jadwal', AturJadwal::class)->name('admin.atur-jadwal');
     });
 
 
