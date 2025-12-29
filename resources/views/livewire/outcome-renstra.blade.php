@@ -247,6 +247,7 @@
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Satuan Indikator <span class="text-red-500">*</span></label>
                         <div class="relative">
+                            {{-- UPDATE DROPDOWN DISINI --}}
                             <select wire:model.live="ind_satuan" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white appearance-none cursor-pointer">
                                 <option value="">-- Pilih Satuan --</option>
                                 <option value="Angka">Angka</option>
@@ -259,7 +260,9 @@
                                 <option value="Inovasi">Inovasi</option>
                                 <option value="Kab/Kota">Kab/Kota</option>
                                 <option value="Kegiatan">Kegiatan</option>
+                                <option value="Keluarga">Keluarga</option> {{-- TAMBAHAN --}}
                                 <option value="Laporan">Laporan</option>
+                                <option value="Layanan">Layanan</option> {{-- TAMBAHAN --}}
                                 <option value="Level">Level</option>
                                 <option value="Nilai">Nilai</option>
                                 <option value="Orang">Orang</option>

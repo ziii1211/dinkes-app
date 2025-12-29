@@ -232,7 +232,9 @@
                             <option value="Inovasi">Inovasi</option>
                             <option value="Kab/Kota">Kab/Kota</option>
                             <option value="Kegiatan">Kegiatan</option>
+                            <option value="Keluarga">Keluarga</option> 
                             <option value="Laporan">Laporan</option>
+                            <option value="Layanan">Layanan</option> 
                             <option value="Level">Level</option>
                             <option value="Nilai">Nilai</option>
                             <option value="Orang">Orang</option>

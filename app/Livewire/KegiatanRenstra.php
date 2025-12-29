@@ -68,11 +68,12 @@ class KegiatanRenstra extends Component
     public function render()
     {
         return view('livewire.kegiatan-renstra', [
-            // PERBAIKAN DI SINI:
-            // Menggunakan 'jabatan.pegawai' agar data status pegawai (Definitif/PLT) terbaca di View
+            // --- PERBAIKAN DI SINI ---
+            // Mengubah sorting dari 'kode' menjadi 'id' 'asc'.
+            // Ini memastikan data yang baru diinput (ID lebih besar) akan selalu berada di paling bawah.
             'kegiatans' => Kegiatan::with(['indikators', 'jabatan.pegawai'])
                 ->where('program_id', $this->program->id)
-                ->orderBy('kode', 'asc')
+                ->orderBy('id', 'asc') // UBAH KE 'id' AGAR URUT BERDASARKAN INPUT
                 ->get(),
             'jabatans' => Jabatan::all(),
         ]);

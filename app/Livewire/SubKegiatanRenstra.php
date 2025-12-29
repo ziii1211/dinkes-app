@@ -49,9 +49,12 @@ class SubKegiatanRenstra extends Component
     public function render()
     {
         return view('livewire.sub-kegiatan-renstra', [
+            // PERBAIKAN DI SINI:
+            // Mengubah sorting dari 'kode' menjadi 'id' 'asc'.
+            // Agar data lama tetap di atas dan data baru masuk ke bawah.
             'sub_kegiatans' => SubKegiatan::with(['indikators', 'jabatan'])
                 ->where('kegiatan_id', $this->kegiatan->id)
-                ->orderBy('kode', 'asc')
+                ->orderBy('id', 'asc') // UBAH KE 'id'
                 ->get(),
             'jabatans' => Jabatan::all()
         ]);
@@ -202,28 +205,18 @@ class SubKegiatanRenstra extends Component
             $this->target_satuan = $ind->satuan;
             foreach([2025,2026,2027,2028,2029,2030] as $y) {
                 $this->{'target_'.$y} = $ind->{'target_'.$y};
-                
-                // Optional: Saat load data, format angka agar tampil dengan format Indonesia di form
-                // Jika Anda ingin form menampilkan '1.000.000', aktifkan baris ini:
-                // $this->{'pagu_'.$y} = number_format($ind->{'pagu_'.$y}, 0, ',', '.');
-                // Namun, jika ingin edit angka mentah, gunakan yang default ini:
                 $this->{'pagu_'.$y} = $ind->{'pagu_'.$y};
             }
             $this->isOpenTarget = true;
         }
     }
 
-    // PERBAIKAN DI SINI: Helper untuk membersihkan format Rupiah
+    // Helper untuk membersihkan format Rupiah
     private function bersihkanAngka($nilai)
     {
         if (empty($nilai)) return 0;
-        
-        // 1. Hapus titik (pemisah ribuan) -> "2.468.688.200,00" jadi "2468688200,00"
         $bersih = str_replace('.', '', $nilai);
-        
-        // 2. Ganti koma dengan titik (format desimal database) -> "2468688200,00" jadi "2468688200.00"
         $bersih = str_replace(',', '.', $bersih);
-        
         return $bersih;
     }
 
@@ -233,8 +226,6 @@ class SubKegiatanRenstra extends Component
             $data = [];
             foreach([2025,2026,2027,2028,2029,2030] as $y) {
                 $data['target_'.$y] = $this->{'target_'.$y};
-                
-                // PERBAIKAN: Bersihkan input Pagu sebelum disimpan
                 $data['pagu_'.$y] = $this->bersihkanAngka($this->{'pagu_'.$y});
             }
             $ind->update($data);

@@ -115,10 +115,6 @@
                                                 </span>
                                             </div>
 
-                                            {{-- ======================================================== --}}
-                                            {{-- LOGIKA TOMBOL PENANGGUNG JAWAB (DINAMIS) --}}
-                                            {{-- HANYA JABATAN (Tanpa Nama Pegawai) --}}
-                                            {{-- ======================================================== --}}
                                             @php
                                                 $pjClass = 'bg-gray-100 text-gray-600 border-gray-200 hover:bg-gray-200';
                                                 $pjText = 'Pilih PJ'; 
@@ -138,7 +134,6 @@
                                                             $pjClass = 'bg-blue-100 text-blue-700 border-blue-200 hover:bg-blue-200';
                                                         }
                                                     } else {
-                                                        // Ada Jabatan tapi Kosong -> Merah Muda
                                                         $pjClass = 'bg-red-50 text-red-600 border-red-100 hover:bg-red-100';
                                                     }
                                                 }
@@ -150,7 +145,6 @@
                                                 <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                                                 <span class="font-bold mr-1">{{ Str::limit($pjText, 60) }}</span>
                                             </button>
-                                            {{-- ======================================================== --}}
                                         </div>
                                     </td>
                                     <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
@@ -323,7 +317,9 @@
                         <option value="Inovasi">Inovasi</option>
                         <option value="Kab/Kota">Kab/Kota</option>
                         <option value="Kegiatan">Kegiatan</option>
+                        <option value="Keluarga">Keluarga</option> {{-- TAMBAHAN --}}
                         <option value="Laporan">Laporan</option>
+                        <option value="Layanan">Layanan</option> {{-- TAMBAHAN --}}
                         <option value="Level">Level</option>
                         <option value="Nilai">Nilai</option>
                         <option value="Orang">Orang</option>

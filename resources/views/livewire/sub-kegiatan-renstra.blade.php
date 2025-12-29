@@ -300,7 +300,7 @@
     {{-- MODAL HANYA RENDER JIKA ADMIN --}}
     @if(auth()->user()->hasRole('admin'))
         
-        {{-- MODAL UTAMA: TAMBAH / EDIT SUB KEGIATAN (DIPERKECIL / KOMPAK) --}}
+        {{-- MODAL UTAMA: TAMBAH / EDIT SUB KEGIATAN --}}
         @if($isOpen)
         <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
             <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden flex flex-col max-h-[90vh]">
@@ -348,6 +348,7 @@
                                 </div>
                                 <div>
                                     <label class="block text-xs font-medium text-gray-600 mb-1">Satuan</label>
+                                    {{-- UPDATE DROPDOWN DISINI --}}
                                     <select wire:model="ind_satuan" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:ring-blue-500 outline-none">
                                         <option value="">Pilih Satuan</option>
                                         <option value="Angka">Angka</option>
@@ -360,7 +361,9 @@
                                         <option value="Inovasi">Inovasi</option>
                                         <option value="Kab/Kota">Kab/Kota</option>
                                         <option value="Kegiatan">Kegiatan</option>
+                                        <option value="Keluarga">Keluarga</option> {{-- TAMBAHAN BARU --}}
                                         <option value="Laporan">Laporan</option>
+                                        <option value="Layanan">Layanan</option> {{-- TAMBAHAN BARU --}}
                                         <option value="Level">Level</option>
                                         <option value="Nilai">Nilai</option>
                                         <option value="Orang">Orang</option>
@@ -409,6 +412,7 @@
                     </div>
                     <div>
                         <label class="text-sm font-medium text-gray-700">Satuan</label>
+                        {{-- UPDATE DROPDOWN DISINI --}}
                         <select wire:model="ind_satuan" class="w-full border rounded-lg px-3 py-2 bg-white text-sm focus:ring-blue-500 focus:border-blue-500 outline-none mt-1">
                             <option value="">Pilih Satuan</option>
                             <option value="Angka">Angka</option>
@@ -421,7 +425,9 @@
                             <option value="Inovasi">Inovasi</option>
                             <option value="Kab/Kota">Kab/Kota</option>
                             <option value="Kegiatan">Kegiatan</option>
+                            <option value="Keluarga">Keluarga</option> {{-- TAMBAHAN BARU --}}
                             <option value="Laporan">Laporan</option>
+                            <option value="Layanan">Layanan</option> {{-- TAMBAHAN BARU --}}
                             <option value="Level">Level</option>
                             <option value="Nilai">Nilai</option>
                             <option value="Orang">Orang</option>

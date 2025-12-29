@@ -216,6 +216,7 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label>
+                        {{-- UPDATE DROPDOWN DISINI --}}
                         <select wire:model="ind_satuan" class="w-full border rounded px-3 py-2">
                             <option value="">Pilih Satuan</option>
                             <option value="Angka">Angka</option>
@@ -228,7 +229,9 @@
                             <option value="Inovasi">Inovasi</option>
                             <option value="Kab/Kota">Kab/Kota</option>
                             <option value="Kegiatan">Kegiatan</option>
+                            <option value="Keluarga">Keluarga</option> 
                             <option value="Laporan">Laporan</option>
+                            <option value="Layanan">Layanan</option> 
                             <option value="Level">Level</option>
                             <option value="Nilai">Nilai</option>
                             <option value="Orang">Orang</option>
