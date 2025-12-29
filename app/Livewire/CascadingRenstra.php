@@ -5,8 +5,8 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithPagination;
 use App\Models\Tujuan;
-use App\Models\PohonKinerja as ModelPohon;      // Model Lama (Tabel Bawah)
-use App\Models\VisualisasiRenstra;              // Model Baru (Visualisasi)
+use App\Models\PohonKinerja as ModelPohon;
+use App\Models\VisualisasiRenstra;
 use App\Models\IndikatorPohonKinerja;
 use App\Models\Jabatan;
 
@@ -18,25 +18,24 @@ class CascadingRenstra extends Component
     // 1. STATES & PROPERTIES
     // ==========================================
 
-    // UI States
     public $isOpen = false;
     public $isOpenIndikator = false;
     public $isChild = false;
     public $isEditMode = false;
     public $modalPreviewOpen = false;
 
-    // Properties DB Lama (Legacy - Tabel Bawah)
+    // Properties DB Lama
     public $pohon_id, $tujuan_id, $nama_pohon, $parent_id;
     
-    // Properties Indikator (UPDATED: Hapus Nilai & Satuan)
+    // Properties Indikator
     public $indikator_input; 
     public $indikator_list = [];
 
-    // Properties Visualisasi (Data Utama Canvas)
+    // Properties Visualisasi
     public $visualNodes = [];
 
     // ==========================================
-    // 2. LIFECYCLE: MOUNT & RENDER
+    // 2. LIFECYCLE
     // ==========================================
 
     public function mount()
@@ -46,19 +45,21 @@ class CascadingRenstra extends Component
 
     public function render()
     {
-        // 1. Build Tree untuk Visualisasi
+        // 1. Build Visual Tree
         $manualTree = $this->buildVisualTreeStructure();
 
-        // 2. Data Dropdown Jabatan
-        $listJabatans = Jabatan::orderBy('level', 'asc')->orderBy('id', 'asc')->get();
+        // 2. Data Jabatan (Tree Sorted) - LOGIKA BARU
+        // Mengambil semua jabatan lalu diurutkan sesuai hierarki parent-child
+        $allJabatans = Jabatan::orderBy('id', 'asc')->get(); 
+        $sortedJabatans = $this->sortJabatanTree($allJabatans);
 
-        // 3. Data Tabel Lama (Bawah)
+        // 3. Data Tabel Lama
         $treeData = $this->getFlatTree(); 
         $masterPohons = ModelPohon::with('tujuan')->orderBy('id', 'asc')->get();
 
         return view('livewire.cascading-renstra', [
             'manualTree' => $manualTree,
-            'listJabatans' => $listJabatans,
+            'listJabatans' => $sortedJabatans, // Mengirim data yang sudah terurut
             'pohons' => $treeData, 
             'sasaran_rpjmds' => Tujuan::select('id', 'sasaran_rpjmd')->get(),
             'opsiPohon' => $masterPohons,
@@ -66,7 +67,33 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // 3. ACTIONS: PREVIEW MODAL
+    // HELPER: SORT JABATAN SESUAI STRUKTUR
+    // ==========================================
+    
+    private function sortJabatanTree($elements, $parentId = null, $depth = 0)
+    {
+        $branch = collect();
+        
+        // Cari elemen yang parent_id nya sesuai argumen (Mulai dari null/Root)
+        $children = $elements->where('parent_id', $parentId)->sortBy('id');
+
+        foreach ($children as $child) {
+            $child->depth = $depth; // Simpan kedalaman untuk styling di view
+            $branch->push($child);
+            
+            // Rekursif untuk mencari anak dari elemen ini
+            $grandChildren = $this->sortJabatanTree($elements, $child->id, $depth + 1);
+            
+            if ($grandChildren->isNotEmpty()) {
+                $branch = $branch->merge($grandChildren);
+            }
+        }
+
+        return $branch;
+    }
+
+    // ==========================================
+    // 3. ACTIONS
     // ==========================================
 
     public function openPreview() { $this->modalPreviewOpen = true; }
@@ -99,7 +126,7 @@ class CascadingRenstra extends Component
         return [
             'id' => $dbNode->id,
             'parent_id' => $dbNode->parent_id,
-            'jabatan' => $dbNode->jabatan,
+            'jabatan' => $dbNode->jabatan, // ID Jabatan
             'is_locked' => $dbNode->is_locked,
             'kinerja_items' => $items,
         ];
@@ -124,7 +151,7 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // 6. SAVE & UPDATE LOGIC (VISUALISASI)
+    // 6. SAVE & UPDATE LOGIC
     // ==========================================
 
     public function saveNodeData($nodeIndex, $silent = false)
@@ -151,6 +178,7 @@ class CascadingRenstra extends Component
             $this->visualNodes[$nodeIndex]['id'] = $newNode->id;
             $this->visualNodes[$nodeIndex]['is_locked'] = true;
 
+            // Update parent_id di array lokal untuk anak-anaknya
             foreach($this->visualNodes as $key => $vNode) {
                 if($vNode['parent_id'] === $oldId) {
                     $this->visualNodes[$key]['parent_id'] = $newNode->id;
@@ -213,11 +241,15 @@ class CascadingRenstra extends Component
 
     public function deleteManualNode($id)
     {
-        if(is_numeric($id)) { VisualisasiRenstra::destroy($id); }
+        if(is_numeric($id)) { 
+            // Hapus children recursive (logic sederhana, bisa dikembangkan)
+            VisualisasiRenstra::where('parent_id', $id)->delete();
+            VisualisasiRenstra::destroy($id); 
+        }
         $this->loadVisualData();
     }
 
-    // --- ITEM ACTIONS (KINERJA & INDIKATOR VISUAL) ---
+    // --- ITEM ACTIONS ---
     public function addKinerjaItem($nodeIndex) { $this->visualNodes[$nodeIndex]['kinerja_items'][] = ['kinerja_utama' => '', 'indikators' => []]; if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
     public function removeKinerjaItem($nodeIndex, $kinerjaIndex) { unset($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]); $this->visualNodes[$nodeIndex]['kinerja_items'] = array_values($this->visualNodes[$nodeIndex]['kinerja_items']); if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
     public function addIndikatorItem($nodeIndex, $kinerjaIndex) { $this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'][] = ['nama' => '', 'nilai' => '', 'satuan' => '']; if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
@@ -225,7 +257,7 @@ class CascadingRenstra extends Component
 
 
     // ==========================================
-    // 9. LOGIC DB LAMA (LEGACY - TABEL BAWAH)
+    // 9. LOGIC DB LAMA (LEGACY)
     // ==========================================
     
     private function getFlatTree() { $allNodes = ModelPohon::with(['tujuan', 'indikators'])->orderBy('created_at', 'asc')->get(); $roots = $allNodes->whereNull('parent_id'); $flatList = collect([]); foreach ($roots as $root) { $this->formatTree($root, $allNodes, $flatList, 0); } return $flatList; }
@@ -239,42 +271,15 @@ class CascadingRenstra extends Component
     public function store() { $rules = ['nama_pohon' => 'required']; if (!$this->isChild && !$this->parent_id) { $rules['tujuan_id'] = 'required'; } $this->validate($rules); if ($this->isEditMode) { ModelPohon::find($this->pohon_id)->update(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon]); } else { ModelPohon::create(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon, 'parent_id' => $this->parent_id]); } $this->closeModal(); session()->flash('message', 'Data disimpan.'); }
     public function delete($id) { $pohon = ModelPohon::find($id); if($pohon) { $pohon->delete(); session()->flash('message', 'Dihapus.'); } }
 
-    // --- MANAGE INDIKATOR LEGACY (UPDATED: NO NILAI/SATUAN) ---
-    
+    // --- MANAGE INDIKATOR LEGACY ---
     public function openIndikator($pohonId) { 
         $this->pohon_id = $pohonId; 
         $this->reset(['indikator_input', 'indikator_list']); 
-        
         $existing = IndikatorPohonKinerja::where('pohon_kinerja_id', $pohonId)->get(); 
-        foreach($existing as $ind) { 
-            $this->indikator_list[] = ['id' => $ind->id, 'nama' => $ind->nama_indikator]; 
-        } 
+        foreach($existing as $ind) { $this->indikator_list[] = ['id' => $ind->id, 'nama' => $ind->nama_indikator]; } 
         $this->isOpenIndikator = true; 
     }
-    
-    public function addIndikatorToList() { 
-        $this->validate(['indikator_input' => 'required']); 
-        $this->indikator_list[] = ['id' => 'temp_' . uniqid(), 'nama' => $this->indikator_input]; 
-        $this->reset(['indikator_input']); 
-    }
-    
-    public function removeIndikatorFromList($index) { 
-        unset($this->indikator_list[$index]); 
-        $this->indikator_list = array_values($this->indikator_list); 
-    }
-    
-    public function saveIndikators() { 
-        IndikatorPohonKinerja::where('pohon_kinerja_id', $this->pohon_id)->delete(); 
-        
-        foreach($this->indikator_list as $ind) { 
-            IndikatorPohonKinerja::create([
-                'pohon_kinerja_id' => $this->pohon_id, 
-                'nama_indikator' => $ind['nama'],
-                'target' => 0, // Default Dummy
-                'satuan' => '-' // Default Dummy
-            ]); 
-        } 
-        $this->closeModal(); 
-        session()->flash('message', 'Indikator disimpan.'); 
-    }
+    public function addIndikatorToList() { $this->validate(['indikator_input' => 'required']); $this->indikator_list[] = ['id' => 'temp_' . uniqid(), 'nama' => $this->indikator_input]; $this->reset(['indikator_input']); }
+    public function removeIndikatorFromList($index) { unset($this->indikator_list[$index]); $this->indikator_list = array_values($this->indikator_list); }
+    public function saveIndikators() { IndikatorPohonKinerja::where('pohon_kinerja_id', $this->pohon_id)->delete(); foreach($this->indikator_list as $ind) { IndikatorPohonKinerja::create(['pohon_kinerja_id' => $this->pohon_id, 'nama_indikator' => $ind['nama'], 'target' => 0, 'satuan' => '-']); } $this->closeModal(); session()->flash('message', 'Indikator disimpan.'); }
 }

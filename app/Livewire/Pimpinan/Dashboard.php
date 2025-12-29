@@ -394,4 +394,4 @@ class Dashboard extends Component
 
         return view('livewire.pimpinan.dashboard', $data);
     }
-}
+}          

@@ -4,7 +4,7 @@
     
     {{-- 1. KARTU DATA (NODE) --}}
     <div class="relative z-10 flex flex-col items-center">
-        {{-- Panggil Manual Card yang sudah kita buat sebelumnya --}}
+        {{-- Memanggil komponen isi kartu (Input/Dropdown ada di sini) --}}
         @include('livewire.partials.manual-card', ['node' => $node])
     </div>
 
