@@ -6,23 +6,22 @@ use Livewire\Component;
 use App\Models\RealisasiKinerja;
 use App\Models\PkAnggaran;
 use App\Models\PerjanjianKinerja;
-use App\Models\JadwalPengukuran;
-use App\Models\Jabatan;
+use App\Models\JadwalPengukuran; 
+use App\Models\Jabatan; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
 
 class Dashboard extends Component
 {
-    // Filter State
     public $periode = 'Renstra 2026-2030';
     public $perangkat_daerah = ''; 
 
-    // Modal State
+    // State Modal & Tabs
     public $isOpenHighlight = false;
     public $activeTab = 'performer';
 
-    // Data Detail
+    // Data Detail untuk Modal
     public $detailPerformers = [];
     public $detailIsuKritis = [];
     public $detailDokumen = [];
@@ -65,6 +64,7 @@ class Dashboard extends Component
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
+                'pk_indikators.arah', 
                 'realisasi_kinerjas.realisasi',
                 'realisasi_kinerjas.tahun',
                 DB::raw("CASE 
@@ -79,13 +79,19 @@ class Dashboard extends Component
         $this->detailIsuKritis = [];
 
         foreach ($rawPerformance as $row) {
-            // PERBAIKAN: Casting ke float untuk mencegah error non-numeric
-            $target = (float) $row->target_tahun;
-            $realisasi = (float) $row->realisasi;
+            $target = (float) str_replace(',', '.', $row->target_tahun);
+            $realisasi = (float) str_replace(',', '.', $row->realisasi);
+            $arah = strtolower(trim($row->arah ?? ''));
+            $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
 
             if ($target > 0) {
-                $rawCapaian = ($realisasi / $target) * 100;
-                $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
+                if ($isNegative) {
+                    $rawCapaian = ((2 * $target) - $realisasi) / $target * 100;
+                } else {
+                    $rawCapaian = ($realisasi / $target) * 100;
+                }
+                
+                $cappedCapaian = $rawCapaian > 100 ? 100 : ($rawCapaian < 0 ? 0 : $rawCapaian);
 
                 if (!isset($tempScores[$row->jabatan])) {
                     $tempScores[$row->jabatan] = ['total' => 0, 'count' => 0];
@@ -148,6 +154,7 @@ class Dashboard extends Component
 
     public function render()
     {
+        Carbon::setLocale('id'); 
         $jabatans = Jabatan::orderBy('nama', 'asc')->get();
 
         $rawPerformance = DB::table('realisasi_kinerjas')
@@ -161,6 +168,7 @@ class Dashboard extends Component
             ->select(
                 'jabatans.nama as jabatan',
                 'pk_indikators.nama_indikator',
+                'pk_indikators.arah', 
                 'realisasi_kinerjas.realisasi',
                 'realisasi_kinerjas.tahun',
                 DB::raw("CASE 
@@ -178,13 +186,19 @@ class Dashboard extends Component
         $isuKritisNames = [];
 
         foreach ($rawPerformance as $row) {
-            // PERBAIKAN: Casting ke float untuk mencegah error non-numeric
-            $target = (float) $row->target_tahun;
-            $realisasi = (float) $row->realisasi;
+            $target = (float) str_replace(',', '.', $row->target_tahun);
+            $realisasi = (float) str_replace(',', '.', $row->realisasi);
+            $arah = strtolower(trim($row->arah ?? ''));
+            $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
 
             if ($target > 0) {
-                $rawCapaian = ($realisasi / $target) * 100;
-                $cappedCapaian = $rawCapaian > 100 ? 100 : $rawCapaian;
+                if ($isNegative) {
+                    $rawCapaian = ((2 * $target) - $realisasi) / $target * 100;
+                } else {
+                    $rawCapaian = ($realisasi / $target) * 100;
+                }
+                
+                $cappedCapaian = $rawCapaian > 100 ? 100 : ($rawCapaian < 0 ? 0 : $rawCapaian);
                 
                 $totalGlobalCapaian += $cappedCapaian;
                 $countGlobalData++;
@@ -313,15 +327,29 @@ class Dashboard extends Component
                 ];
             });
 
+        $now = Carbon::now();
         $activeSchedule = JadwalPengukuran::where('is_active', true)
-            ->whereDate('tanggal_mulai', '<=', now()) 
-            ->whereDate('tanggal_selesai', '>=', now()) 
-            ->orderBy('tanggal_selesai', 'asc') 
+            ->whereDate('tanggal_mulai', '<=', $now)
+            ->whereDate('tanggal_selesai', '>=', $now)
             ->first();
 
+        $deadlineData = null;
         $sisaHari = 0;
+        $bulanNama = '';
+
         if ($activeSchedule) {
-            $sisaHari = (int) now()->startOfDay()->diffInDays($activeSchedule->tanggal_selesai->startOfDay(), false);
+            $end = Carbon::parse($activeSchedule->tanggal_selesai)->endOfDay();
+            $sisaHari = (int) $now->diffInDays($end, false);
+            if ($sisaHari < 0) $sisaHari = 0;
+
+            $bulanList = [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ];
+            $bulanNama = $bulanList[$activeSchedule->bulan] ?? 'Bulan Ini';
+
+            $deadlineData = $activeSchedule;
         }
 
         $data = [
@@ -359,8 +387,10 @@ class Dashboard extends Component
             'chart_data' => $normalizedChart,
             'chart_labels' => $bulanLabels,
             'is_dummy_chart' => !$hasRealChartData,
-            'deadline' => $activeSchedule,
+            
+            'deadline' => $deadlineData,
             'sisa_hari' => $sisaHari,
+            'bulan_nama' => $bulanNama,
             'jabatans' => $jabatans 
         ];
 
