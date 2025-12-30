@@ -33,27 +33,44 @@ class PengukuranKinerjaExport implements FromView, ShouldAutoSize, WithStyles
             5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 
             9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
         ];
+        
         $this->namaBulan = $months[$bulan] ?? 'Bulan';
         
-        // Format tanggal cetak (misal: Banjarmasin, 29 Desember 2025)
+        // Format tanggal cetak (misal: 30 Desember 2025)
         $this->tanggalCetak = date('d') . ' ' . ($months[date('n')] ?? '') . ' ' . date('Y');
     }
 
     public function styles(Worksheet $sheet)
     {
-        // Mengatur default font menjadi Arial 10 untuk kesan resmi
+        // 1. Set Default Font: Arial 10
         $sheet->getParent()->getDefaultStyle()->getFont()->setName('Arial');
         $sheet->getParent()->getDefaultStyle()->getFont()->setSize(10);
         
-        // Alignment vertical center untuk semua sel agar rapi
+        // 2. Default Alignment: Vertical Center & Wrap Text (Penting agar teks panjang turun ke bawah)
         $sheet->getParent()->getDefaultStyle()->getAlignment()->setVertical(Alignment::VERTICAL_CENTER);
+        $sheet->getParent()->getDefaultStyle()->getAlignment()->setWrapText(true);
 
         return [
-            // Baris Header Tabel (Baris ke-8) Bold & Center
-            8 => [
-                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+            // Style untuk Judul Utama (Baris 2)
+            2 => [
+                'font' => ['bold' => true, 'size' => 14],
                 'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER],
-                'fill' => ['fillType' => 'solid', 'startColor' => ['rgb' => '4B5563']], // Abu Gelap
+            ],
+            
+            // Style untuk Header Tabel (Baris 6 dan 7)
+            6 => [
+                'font' => ['bold' => true],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                ],
+            ],
+            7 => [
+                'font' => ['bold' => true],
+                'alignment' => ['horizontal' => Alignment::HORIZONTAL_CENTER, 'vertical' => Alignment::VERTICAL_CENTER],
+                'borders' => [
+                    'allBorders' => ['borderStyle' => Border::BORDER_THIN],
+                ],
             ],
         ];
     }

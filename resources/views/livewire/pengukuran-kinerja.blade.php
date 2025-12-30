@@ -339,8 +339,10 @@
                             <option value="Indeks">Indeks</option>
                             <option value="Inovasi">Inovasi</option>
                             <option value="Kab/Kota">Kab/Kota</option>
+                            <option value="Keluarga">Keluarga</option>
                             <option value="Kegiatan">Kegiatan</option>
                             <option value="Laporan">Laporan</option>
+                            <option value="layanan">layanan</option>
                             <option value="Level">Level</option>
                             <option value="Nilai">Nilai</option>
                             <option value="Orang">Orang</option>
