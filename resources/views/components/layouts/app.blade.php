@@ -3,7 +3,7 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-   <title>Dinas kesehatan{{ isset($title) && $title ? ' . '.$title : '' }}</title>
+    <title>Dinas kesehatan{{ isset($title) && $title ? ' . '.$title : '' }}</title>
     <link rel="icon" href="{{ asset('logo pemprov.png') }}" type="image/png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -12,7 +12,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
-            darkMode: 'class', // Penting!
+            darkMode: 'class', 
             theme: {
                 extend: {
                     fontFamily: { sans: ['Inter', 'sans-serif'] },
@@ -31,9 +31,8 @@
         }
     </script>
     
-    {{-- Script Pencegah FOUC (Flash of Unstyled Content) --}}
+    {{-- Script Pencegah FOUC --}}
     <script>
-        // Cek Local Storage sebelum halaman render sepenuhnya
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
         } else {
@@ -47,17 +46,14 @@
 <body class="bg-gray-100 dark:bg-slate-900 font-sans antialiased text-gray-600 dark:text-slate-300 transition-colors duration-300"
       x-data="{ 
           openUser: false,
-          // Ambil state awal dari Local Storage
           isDark: localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches),
           
-          // Fungsi Init berjalan setiap kali navigasi terjadi (wire:navigate)
           init() {
               this.updateTheme();
           },
 
           toggleTheme() {
               this.isDark = !this.isDark;
-              // Simpan ke Local Storage
               localStorage.setItem('color-theme', this.isDark ? 'dark' : 'light');
               this.updateTheme();
           },
@@ -79,10 +75,7 @@
                     
                     {{-- Logo Container --}}
                     <div class="flex items-center flex-shrink-0 gap-4">
-                        {{-- Logo GERMAS --}}
                         <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" alt="Logo GERMAS" class="h-24 w-auto object-contain drop-shadow-sm">
-                        
-                        {{-- Logo Pemprov --}}
                         <img src="{{ asset('logo pemprov.png') }}" alt="Logo Pemprov" class="h-20 w-auto object-contain drop-shadow-sm">
                     </div>
 
@@ -94,7 +87,8 @@
                             if(auth()->user()->role == 'pimpinan') $dashboardRoute = route('pimpinan.dashboard');
                         @endphp
                         
-                        <a href="{{ $dashboardRoute }}" wire:navigate class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('pimpinan.dashboard') ? 'text-blue-700 dark:text-blue-400' : '' }}">
+                        {{-- HAPUS wire:navigate DISINI --}}
+                        <a href="{{ $dashboardRoute }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('pimpinan.dashboard') ? 'text-blue-700 dark:text-blue-400' : '' }}">
                             Dashboard
                         </a>
 
@@ -106,7 +100,8 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="{{ route('pengukuran.bulanan') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">
+                                    {{-- HAPUS wire:navigate DISINI --}}
+                                    <a href="{{ route('pengukuran.bulanan') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">
                                         Pengukuran Bulanan
                                     </a>
                                 </div>
@@ -118,7 +113,8 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="/struktur-organisasi" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+                                    {{-- HAPUS wire:navigate DISINI --}}
+                                    <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                         Struktur Organisasi
                                     </a>
                                 </div>
@@ -131,11 +127,12 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                   <a href="{{ route('matrik.dokumen') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Dokumen Renstra</a>
-                                    <a href="/matrik-renstra/tujuan" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Tujuan</a>
-                                    <a href="/matrik-renstra/sasaran" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Sasaran</a>
-                                    <a href="/matrik-renstra/outcome" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Outcome</a>
-                                    <a href="/matrik-renstra/program-kegiatan-sub" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Program/Kegiatan/Sub</a>
+                                   {{-- HAPUS wire:navigate DI BAWAH INI --}}
+                                   <a href="{{ route('matrik.dokumen') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Dokumen Renstra</a>
+                                    <a href="/matrik-renstra/tujuan" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Tujuan</a>
+                                    <a href="/matrik-renstra/sasaran" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Sasaran</a>
+                                    <a href="/matrik-renstra/outcome" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Outcome</a>
+                                    <a href="/matrik-renstra/program-kegiatan-sub" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Program/Kegiatan/Sub</a>
                                 </div>
                             </div>
 
@@ -145,8 +142,9 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="{{ route('cascading.renstra') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Cascading Renstra</a>
-                                    <a href="{{ route('perjanjian.kinerja') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Perjanjian Kinerja</a>
+                                    {{-- HAPUS wire:navigate DI BAWAH INI --}}
+                                    <a href="{{ route('cascading.renstra') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Cascading Renstra</a>
+                                    <a href="{{ route('perjanjian.kinerja') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Perjanjian Kinerja</a>
                                 </div>
                             </div>
 
@@ -156,7 +154,8 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="{{ route('pengukuran.bulanan') }}" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Pengukuran Bulanan</a>
+                                    {{-- HAPUS wire:navigate DISINI --}}
+                                    <a href="{{ route('pengukuran.bulanan') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Pengukuran Bulanan</a>
                                 </div>
                             </div>
 
@@ -166,7 +165,8 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    <a href="/struktur-organisasi" wire:navigate class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
+                                    {{-- HAPUS wire:navigate DISINI --}}
+                                    <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
                                 </div>
                             </div>
 
@@ -176,10 +176,8 @@
 
                     {{-- BAGIAN USER PROFILE --}}
                     <div class="flex items-center gap-4 flex-shrink-0 relative">
-                        {{-- MENAMPILKAN NAMA DAN JABATAN (PERBAIKAN DISINI) --}}
                         <div class="hidden md:flex flex-col text-right cursor-pointer" @click="openUser = !openUser">
                             <span class="text-sm font-bold text-gray-800 dark:text-slate-200">{{ auth()->user()->name ?? 'Administrator' }}</span>
-                            {{-- GANTI ROLE DENGAN JABATAN --}}
                             <span class="text-xs text-gray-600 dark:text-slate-400 uppercase tracking-wide">
                                 {{ auth()->user()->jabatan ?? 'Pegawai' }}
                             </span>
@@ -195,16 +193,10 @@
                             {{-- BUTTON TOGGLE DARK MODE --}}
                             <button @click="toggleTheme()" class="w-full text-left px-4 py-3 text-sm text-gray-700 dark:text-slate-300 hover:bg-gray-100 dark:hover:bg-slate-700 flex items-center justify-between transition-colors">
                                 <div class="flex items-center">
-                                    {{-- Icon Sun (Light Mode) --}}
                                     <svg x-show="!isDark" class="w-4 h-4 mr-3 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m9-9h-1M4 12H3m15.364 6.364l-.707-.707M6.343 6.343l-.707-.707m12.728 0l-.707.707M6.343 17.657l-.707.707M16 12a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
-                                    
-                                    {{-- Icon Moon (Dark Mode) --}}
                                     <svg x-show="isDark" style="display: none;" class="w-4 h-4 mr-3 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path></svg>
-                                    
                                     <span x-text="isDark ? 'Mode Terang' : 'Mode Gelap'"></span>
                                 </div>
-                                
-                                {{-- Switch Toggle UI --}}
                                 <div class="relative inline-flex items-center cursor-pointer">
                                     <div class="w-9 h-5 bg-gray-200 dark:bg-slate-600 rounded-full peer-focus:outline-none transition-colors"></div>
                                     <div class="absolute left-[2px] top-[2px] bg-white border border-gray-300 rounded-full h-4 w-4 transition-transform duration-300 ease-in-out" :class="isDark ? 'translate-x-full border-white bg-blue-500' : 'translate-x-0'"></div>
@@ -221,8 +213,6 @@
                                     Keluar
                                 </button>
                             </form>
-                            {{-- END LOGOUT --}}
-
                         </div>
                     </div>
 
@@ -233,7 +223,8 @@
         <div class="bg-blue-600 dark:bg-blue-900 pb-48 pt-10 transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center text-blue-100 text-sm mb-6">
-                    <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : (auth()->user()->role === 'pimpinan' ? route('pimpinan.dashboard') : route('dashboard')) }}" wire:navigate class="hover:text-white transition-colors">
+                    {{-- HAPUS wire:navigate DISINI --}}
+                    <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : (auth()->user()->role === 'pimpinan' ? route('pimpinan.dashboard') : route('dashboard')) }}" class="hover:text-white transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     </a>
                     
