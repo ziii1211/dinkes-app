@@ -1,5 +1,6 @@
 <div class="min-h-screen bg-[#F8FAFC] font-sans text-slate-600 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-20">
-
+    
+    <x-slot:title>Dashboard</x-slot>
     {{-- CUSTOM STYLES & ANIMATIONS --}}
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap');
