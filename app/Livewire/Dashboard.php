@@ -157,6 +157,7 @@ class Dashboard extends Component
         Carbon::setLocale('id'); 
         $jabatans = Jabatan::orderBy('nama', 'asc')->get();
 
+        // 1. DATA KINERJA UTAMA (Highlight & Isu Kritis)
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -239,6 +240,7 @@ class Dashboard extends Component
             $isuKritisDesc = "{$isuKritisCount} Isu: {$listNames}.";
         }
 
+        // 2. STATISTIK DOKUMEN PK
         $pkStats = PerjanjianKinerja::query()
             ->when($this->perangkat_daerah, function($query) {
                 $query->where('jabatan_id', $this->perangkat_daerah);
@@ -257,26 +259,43 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        $chartData = RealisasiKinerja::selectRaw('bulan, AVG(capaian) as rata_rata')
-            ->where('tahun', date('Y'))
-            ->groupBy('bulan')
-            ->orderBy('bulan')
-            ->pluck('rata_rata', 'bulan')
+        // 3. GRAFIK ANALISIS CAPAIAN (PERBAIKAN DINAMIS)
+        // -----------------------------------------------------
+        // Query disesuaikan dengan filter perangkat daerah
+        $queryChart = RealisasiKinerja::query()
+            ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
+            ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
+            ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
+            ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
+            ->where('realisasi_kinerjas.tahun', date('Y'));
+
+        if ($this->perangkat_daerah) {
+            $queryChart->where('jabatans.id', $this->perangkat_daerah);
+        }
+
+        $chartData = $queryChart->selectRaw('realisasi_kinerjas.bulan, AVG(realisasi_kinerjas.capaian) as rata_rata')
+            ->groupBy('realisasi_kinerjas.bulan')
+            ->orderBy('realisasi_kinerjas.bulan')
+            ->pluck('rata_rata', 'realisasi_kinerjas.bulan')
             ->toArray();
         
         $normalizedChart = [];
-        $hasRealChartData = false;
+        $hasRealChartData = count($chartData) > 0;
         $bulanLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         
-        if(count($chartData) > 0) {
-            $hasRealChartData = true;
+        if($hasRealChartData) {
             for ($i = 1; $i <= 12; $i++) {
-                $normalizedChart[] = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
+                $val = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
+                // Cap di 100% untuk visualisasi agar grafik tidak rusak jika ada outlier
+                $normalizedChart[] = $val > 100 ? 100 : $val;
             }
         } else {
+            // Data Simulasi (Dummy) jika database kosong
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
+        // -----------------------------------------------------
 
+        // 4. AKTIVITAS TERKINI (LOG)
         $activities = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -327,6 +346,7 @@ class Dashboard extends Component
                 ];
             });
 
+        // 5. JADWAL / DEADLINE
         $now = Carbon::now();
         $activeSchedule = JadwalPengukuran::where('is_active', true)
             ->whereDate('tanggal_mulai', '<=', $now)

@@ -3,7 +3,7 @@
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <style>
-        /* Kita minimalkan style CSS karena styling utama dilakukan via Export Class PHP */
+        /* Styling minimal, border dan warna diatur via Export PHP */
         .text-center { text-align: center; vertical-align: middle; }
         .text-top { vertical-align: top; }
         .text-bold { font-weight: bold; }
@@ -38,7 +38,7 @@
     </table>
 
     {{-- TABEL UTAMA --}}
-    <table border="1"> {{-- Border=1 membantu excel mendeteksi grid dasar --}}
+    <table border="1">
         <thead>
             <tr>
                 <th rowspan="2" width="5">No.</th>
