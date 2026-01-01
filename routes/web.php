@@ -147,7 +147,7 @@ Route::middleware('auth')->group(function () {
         Route::get('/tujuan', TujuanRenstra::class);
         Route::get('/sasaran', SasaranRenstra::class);
         Route::get('/outcome', OutcomeRenstra::class);
-        Route::get('/program-kegiatan-sub', ProgramKegiatan::class);
+        Route::get('/program-kegiatan-sub', ProgramKegiatan::class)->name('matrik.program');
         Route::get('/program-kegiatan-sub/kegiatan/{id}', KegiatanRenstra::class)->name('matrik.kegiatan');
         Route::get('/renstra/kegiatan/{id}/sub-kegiatan', SubKegiatanRenstra::class)->name('renstra.sub_kegiatan');
     });

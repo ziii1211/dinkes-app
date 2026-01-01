@@ -3,7 +3,8 @@
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Sistem Informasi Kinerja Terintegrasi' }}</title>
+   <title>Dinas kesehatan{{ isset($title) && $title ? ' . '.$title : '' }}</title>
+    <link rel="icon" href="{{ asset('logo pemprov.png') }}" type="image/png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
