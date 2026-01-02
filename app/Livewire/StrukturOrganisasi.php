@@ -42,10 +42,7 @@ class StrukturOrganisasi extends Component
             ->get();
 
         return view('livewire.struktur-organisasi', [
-            // Data Jabatan (Tree)
             'jabatans' => $sortedJabatans,
-            
-            // Data Pegawai (Filtered)
             'pegawais' => $pegawais
         ]);
     }
@@ -73,16 +70,18 @@ class StrukturOrganisasi extends Component
     
     public function createJabatan()
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
         $this->reset(['jab_id', 'jab_nama', 'jab_parent_id', 'isEditMode']);
+        $this->resetValidation(); 
         $this->modalJabatanOpen = true;
     }
 
     public function editJabatan($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
         $jabatan = Jabatan::find($id);
         if($jabatan) {
+            $this->resetValidation();
             $this->jab_id = $id;
             $this->jab_nama = $jabatan->nama;
             $this->jab_parent_id = $jabatan->parent_id;
@@ -93,7 +92,7 @@ class StrukturOrganisasi extends Component
 
     public function storeJabatan()
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
         $this->validate(['jab_nama' => 'required']);
         
         $level = 0;
@@ -109,21 +108,32 @@ class StrukturOrganisasi extends Component
                 'parent_id' => $this->jab_parent_id ?: null,
                 'level' => $level
             ]);
+            $message = 'Data Jabatan berhasil diperbarui.';
         } else {
             Jabatan::create([
                 'nama' => $this->jab_nama,
                 'parent_id' => $this->jab_parent_id ?: null,
                 'level' => $level
             ]);
+            $message = 'Data Jabatan berhasil ditambahkan.';
         }
-        $this->modalJabatanOpen = false;
+
+        // REVISI: Menggunakan redirect agar halaman refresh total
+        session()->flash('success', $message);
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteJabatan($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
+        
         $jabatan = Jabatan::find($id);
-        if($jabatan) $jabatan->delete();
+        if($jabatan) {
+            $jabatan->delete();
+            // REVISI: Menggunakan redirect agar halaman refresh total
+            session()->flash('success', 'Data Jabatan berhasil dihapus.');
+            return redirect(request()->header('Referer'));
+        }
     }
 
     // =================================================================
@@ -132,17 +142,19 @@ class StrukturOrganisasi extends Component
 
     public function createPegawai()
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
         $this->reset(['peg_id', 'peg_nama', 'peg_nip', 'peg_status', 'peg_jabatan_id', 'peg_foto', 'isEditMode']);
+        $this->resetValidation();
         $this->peg_status = 'Definitif'; 
         $this->modalPegawaiOpen = true;
     }
 
     public function editPegawai($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
         $pegawai = Pegawai::find($id);
         if($pegawai) {
+            $this->resetValidation();
             $this->peg_id = $id;
             $this->peg_nama = $pegawai->nama;
             $this->peg_nip = $pegawai->nip;
@@ -156,7 +168,8 @@ class StrukturOrganisasi extends Component
 
     public function storePegawai()
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
+        
         $this->validate([
             'peg_nama' => 'required',
             'peg_nip' => 'required',
@@ -182,19 +195,29 @@ class StrukturOrganisasi extends Component
 
         if ($this->isEditMode) {
             Pegawai::find($this->peg_id)->update($data);
+            $message = 'Data Pegawai berhasil diperbarui.';
         } else {
             Pegawai::create($data);
+            $message = 'Data Pegawai berhasil ditambahkan.';
         }
-        $this->modalPegawaiOpen = false;
+        
+        // REVISI: Menggunakan redirect agar halaman refresh total
+        session()->flash('success', $message);
+        return redirect(request()->header('Referer'));
     }
 
     public function deletePegawai($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return; // Proteksi
+        if (auth()->user()->hasRole('pimpinan')) return;
+        
         $pegawai = Pegawai::find($id);
         if ($pegawai) {
             if ($pegawai->foto) Storage::disk('public')->delete($pegawai->foto);
             $pegawai->delete();
+            
+            // REVISI: Menggunakan redirect agar halaman refresh total
+            session()->flash('success', 'Data Pegawai berhasil dihapus.');
+            return redirect(request()->header('Referer'));
         }
     }
 
@@ -202,5 +225,6 @@ class StrukturOrganisasi extends Component
     {
         $this->modalJabatanOpen = false;
         $this->modalPegawaiOpen = false;
+        $this->resetValidation();
     }
 }

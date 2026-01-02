@@ -1,4 +1,17 @@
 <div>
+    {{-- TAMBAHAN: NOTIFIKASI SUKSES (FLASH MESSAGE) --}}
+    @if (session()->has('success'))
+        <div class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-sm relative mx-auto max-w-7xl mt-4" role="alert">
+            <div class="flex items-center">
+                <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <p class="font-bold">Berhasil!</p>
+            </div>
+            <p class="ml-8">{{ session('success') }}</p>
+        </div>
+    @endif
+
     {{-- Konfigurasi Judul Halaman & Breadcrumb --}}
     <x-slot:title>Struktur Organisasi</x-slot>
 
@@ -54,10 +67,11 @@
             </div>
 
             <div class="p-6">
-                <div class="overflow-x-auto">
+                {{-- TABEL SCROLLABLE --}}
+                <div class="overflow-x-auto max-h-[500px] overflow-y-auto relative">
                     <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-gray-200 bg-gray-50">
+                        <thead class="sticky top-0 z-10">
+                            <tr class="border-b border-gray-200 bg-gray-50 shadow-sm">
                                 <th class="p-3 text-sm font-bold text-gray-700 w-16 text-center">#</th>
                                 <th class="p-3 text-sm font-bold text-gray-700">Nama Jabatan</th>
                                 {{-- KOLOM MENU HANYA UNTUK ADMIN --}}
@@ -73,6 +87,7 @@
                                 <td class="p-4 text-sm text-gray-600 text-center font-medium">{{ $index + 1 }}</td>
                                 <td class="p-4 text-sm text-gray-800 font-semibold">
                                     <div class="flex items-center">
+                                        {{-- Tampilan Tabel Tetap Menggunakan Panah agar Visual Pohon Jelas --}}
                                         @if ($jabatan->level == 1) <span class="text-gray-400 mr-3 ml-6 text-lg font-bold">↳</span>
                                         @elseif ($jabatan->level >= 2) <span class="text-gray-400 mr-3 ml-12 text-lg font-bold">↳ ↳</span>
                                         @endif
@@ -145,10 +160,11 @@
                     </div>
                 </div>
 
-                <div class="overflow-x-auto">
+                {{-- TABEL PEGAWAI SCROLLABLE --}}
+                <div class="overflow-x-auto max-h-[500px] overflow-y-auto relative">
                     <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr class="border-b border-gray-200 bg-white">
+                        <thead class="sticky top-0 z-10">
+                            <tr class="border-b border-gray-200 bg-white shadow-sm">
                                 <th class="p-3 text-sm font-bold text-gray-700 w-12 text-center">#</th>
                                 <th class="p-3 text-sm font-bold text-gray-700 w-20 text-center">Foto</th>
                                 <th class="p-3 text-sm font-bold text-gray-700">Nama</th>
@@ -248,12 +264,23 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-gray-700 mb-2">Jabatan Atasan</label>
-                        <select wire:model="jab_parent_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-blue-500 outline-none bg-white">
-                            <option value="">Pilih Jabatan Diatasnya</option>
+                        {{-- PERBAIKAN: Tampilan Dropdown Standar Pemerintahan (Strip / Dash) --}}
+                        <select wire:model="jab_parent_id" class="w-full border border-gray-300 rounded-lg px-4 py-3 text-sm focus:ring-blue-500 outline-none bg-white font-sans">
+                            <option value="">-- Pilih Jabatan Atasan (Unit Kerja Induk) --</option>
                             @foreach($jabatans as $jab)
-                            @if($jab->id != $jab_id) <option value="{{ $jab->id }}">{{ $jab->nama }}</option> @endif
+                                @if($jab->id != $jab_id)
+                                <option value="{{ $jab->id }}">
+                                    @if($jab->level == 0)
+                                        {{ strtoupper($jab->nama) }}
+                                    @else
+                                        {{-- Menggunakan indentasi standar strip (-) berulang sesuai level --}}
+                                        {{ str_repeat('-', $jab->level) }} {{ $jab->nama }}
+                                    @endif
+                                </option>
+                                @endif
                             @endforeach
                         </select>
+                        <p class="mt-1 text-xs text-gray-500">*Kosongkan jika ini adalah Jabatan Tertinggi (Kepala Dinas)</p>
                     </div>
                 </div>
                 <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
@@ -307,10 +334,17 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="block text-sm font-medium text-gray-700 mb-1">Jabatan</label>
-                            <select wire:model="peg_jabatan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 outline-none bg-white">
-                                <option value="">Pilih Jabatan</option>
+                            {{-- PERBAIKAN: Tampilan Dropdown Jabatan pada Pegawai --}}
+                            <select wire:model="peg_jabatan_id" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-blue-500 outline-none bg-white font-sans">
+                                <option value="">-- Pilih Jabatan --</option>
                                 @foreach($jabatans as $jab)
-                                <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+                                <option value="{{ $jab->id }}">
+                                    @if($jab->level == 0)
+                                        {{ strtoupper($jab->nama) }}
+                                    @else
+                                        {{ str_repeat('-', $jab->level) }} {{ $jab->nama }}
+                                    @endif
+                                </option>
                                 @endforeach
                             </select>
                         </div>
