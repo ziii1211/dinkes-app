@@ -1,5 +1,5 @@
 <div>
-    {{-- TAMBAHAN: NOTIFIKASI SUKSES (FLASH MESSAGE) --}}
+    {{-- NOTIFIKASI SUKSES --}}
     @if (session()->has('success'))
         <div class="mb-4 bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded shadow-sm relative mx-auto max-w-7xl mt-4" role="alert">
             <div class="flex items-center">
@@ -146,25 +146,19 @@
             </div>
 
             <div class="p-6">
-                <div class="flex flex-col md:flex-row justify-between items-center mb-6 gap-4">
-                    <div class="flex items-center text-sm text-gray-600">
-                        Show <select class="mx-2 border border-gray-300 rounded px-2 py-1 text-sm focus:ring-blue-500">
-                            <option>10</option>
-                            <option>25</option>
-                        </select> entries
-                    </div>
-
+                <div class="flex justify-end items-center mb-6">
                     <div class="flex items-center">
                         <span class="text-sm text-gray-600 mr-2">Search:</span>
                         <input type="text" wire:model.live.debounce.300ms="search" placeholder="Nama / NIP..." class="border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 bg-gray-50 w-48">
                     </div>
                 </div>
 
-                {{-- TABEL PEGAWAI SCROLLABLE --}}
-                <div class="overflow-x-auto max-h-[500px] overflow-y-auto relative">
+                {{-- TABEL PEGAWAI --}}
+                {{-- Note: Class overflow dihapus karena pagination butuh ruang --}}
+                <div class="overflow-x-auto relative">
                     <table class="w-full text-left border-collapse">
-                        <thead class="sticky top-0 z-10">
-                            <tr class="border-b border-gray-200 bg-white shadow-sm">
+                        <thead class="bg-gray-50">
+                            <tr class="border-b border-gray-200">
                                 <th class="p-3 text-sm font-bold text-gray-700 w-12 text-center">#</th>
                                 <th class="p-3 text-sm font-bold text-gray-700 w-20 text-center">Foto</th>
                                 <th class="p-3 text-sm font-bold text-gray-700">Nama</th>
@@ -180,9 +174,10 @@
                             @if ($pegawais->count() > 0)
                             @foreach ($pegawais as $index => $pegawai)
                             <tr class="hover:bg-blue-50 transition-colors">
-                                <td class="p-4 text-sm text-gray-600 text-center font-medium">{{ $index + 1 }}</td>
+                                {{-- Menghitung nomor urut berdasarkan halaman pagination --}}
+                                <td class="p-4 text-sm text-gray-600 text-center font-medium">{{ $pegawais->firstItem() + $index }}</td>
                                 <td class="p-4 text-center">
-                                    <img src="{{ $pegawai->foto ? asset('storage/'.$pegawai->foto) : 'https://ui-avatars.com/api/?name='.urlencode($pegawai->nama).'&background=0D8ABC&color=fff&size=128' }}" class="w-10 h-10 rounded-full object-cover mx-auto border border-gray-200 shadow-sm">
+                                    <img src="{{ $pegawai->foto ? asset('storage/'.$pegawai->foto) : 'https://ui-avatars.com/api/?name='.urlencode($pegawai->nama).'&background=0D8ABC&color=fff&size=128' }}" class="w-10 h-10 rounded-full object-cover mx-auto border border-gray-200 shadow-sm" loading="lazy">
                                 </td>
                                 <td class="p-4">
                                     <div class="flex flex-col">
@@ -239,6 +234,11 @@
                             @endif
                         </tbody>
                     </table>
+                </div>
+
+                {{-- NAVIGASI PAGINATION --}}
+                <div class="mt-4">
+                    {{ $pegawais->links() }} 
                 </div>
             </div>
         </div>

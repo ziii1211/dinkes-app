@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
+use Livewire\WithPagination; // 1. IMPORT PAGINATION
 use App\Models\Jabatan;
 use App\Models\Pegawai;
 use Illuminate\Support\Facades\Storage;
@@ -11,6 +12,7 @@ use Illuminate\Support\Facades\Storage;
 class StrukturOrganisasi extends Component
 {
     use WithFileUploads;
+    use WithPagination; // 2. GUNAKAN TRAIT PAGINATION
 
     // --- STATE PENCARIAN ---
     public $search = '';
@@ -26,20 +28,26 @@ class StrukturOrganisasi extends Component
     // --- FORM PEGAWAI ---
     public $peg_id, $peg_nama, $peg_nip, $peg_status = 'Definitif', $peg_jabatan_id, $peg_foto, $peg_foto_lama;
 
+    // Agar saat mengetik search, halaman kembali ke page 1
+    public function updatingSearch()
+    {
+        $this->resetPage();
+    }
+
     public function render()
     {
         // LOGIKA BARU: Hierarchical Tree Sorting
         $allJabatans = Jabatan::all();
         $sortedJabatans = $this->sortJabatanTree($allJabatans);
 
-        // LOGIKA PENCARIAN PEGAWAI
+        // LOGIKA PENCARIAN PEGAWAI DENGAN PAGINATION
         $pegawais = Pegawai::with('jabatan')
             ->when($this->search, function($query) {
                 $query->where('nama', 'like', '%' . $this->search . '%')
                       ->orWhere('nip', 'like', '%' . $this->search . '%');
             })
             ->orderBy('id', 'asc')
-            ->get();
+            ->paginate(10); // 3. GANTI GET() JADI PAGINATE(10)
 
         return view('livewire.struktur-organisasi', [
             'jabatans' => $sortedJabatans,
@@ -118,7 +126,6 @@ class StrukturOrganisasi extends Component
             $message = 'Data Jabatan berhasil ditambahkan.';
         }
 
-        // REVISI: Menggunakan redirect agar halaman refresh total
         session()->flash('success', $message);
         return redirect(request()->header('Referer'));
     }
@@ -130,7 +137,6 @@ class StrukturOrganisasi extends Component
         $jabatan = Jabatan::find($id);
         if($jabatan) {
             $jabatan->delete();
-            // REVISI: Menggunakan redirect agar halaman refresh total
             session()->flash('success', 'Data Jabatan berhasil dihapus.');
             return redirect(request()->header('Referer'));
         }
@@ -201,7 +207,6 @@ class StrukturOrganisasi extends Component
             $message = 'Data Pegawai berhasil ditambahkan.';
         }
         
-        // REVISI: Menggunakan redirect agar halaman refresh total
         session()->flash('success', $message);
         return redirect(request()->header('Referer'));
     }
@@ -215,7 +220,6 @@ class StrukturOrganisasi extends Component
             if ($pegawai->foto) Storage::disk('public')->delete($pegawai->foto);
             $pegawai->delete();
             
-            // REVISI: Menggunakan redirect agar halaman refresh total
             session()->flash('success', 'Data Pegawai berhasil dihapus.');
             return redirect(request()->header('Referer'));
         }
