@@ -8,10 +8,17 @@
 
     <div class="min-h-screen bg-gray-100 p-6 space-y-6">
 
+        {{-- NOTIFIKASI SUKSES (Tampil setelah refresh) --}}
         @if (session()->has('message'))
-            <div class="max-w-7xl mx-auto bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded relative flex justify-between items-center animate-fade-in-down">
-                <span class="block sm:inline">{{ session('message') }}</span>
-                <button type="button" class="text-green-700" onclick="this.parentElement.remove()"><svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            <div class="max-w-7xl mx-auto bg-green-100 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded shadow-sm relative flex justify-between items-center animate-fade-in-down mb-6">
+                <div class="flex items-center">
+                    <svg class="w-6 h-6 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    <span class="font-bold mr-1">Berhasil!</span>
+                    <span class="block sm:inline">{{ session('message') }}</span>
+                </div>
+                <button type="button" class="text-green-700 hover:text-green-900" onclick="this.parentElement.remove()">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
         @endif
 

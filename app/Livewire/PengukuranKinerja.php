@@ -79,13 +79,16 @@ class PengukuranKinerja extends Component
     public function setTahun($year)
     {
         $this->tahun = $year;
-        $this->loadData(); // Reload data sesuai tahun baru
+        // Redirect agar halaman refresh saat ganti tahun (opsional, tapi konsisten)
+        return redirect(request()->fullUrlWithQuery(['tahun' => $year]));
     }
 
     public function selectMonth($month)
     {
         $this->selectedMonth = $month;
         $this->loadData(); 
+        // Jika ingin refresh saat ganti bulan juga, uncomment baris bawah:
+        // return redirect(request()->header('Referer'));
     }
 
     // HELPER: Konversi angka string (koma) ke float (titik)
@@ -99,7 +102,6 @@ class PengukuranKinerja extends Component
     // --- METHOD DOWNLOAD EXCEL (BARU) ---
     public function downloadExcel()
     {
-        // Pastikan data terbaru sudah ter-load dan terhitung
         $this->loadData();
 
         $namaFile = 'Laporan_Kinerja_' . str_replace(' ', '_', $this->jabatan->nama) . '_Bulan_' . $this->selectedMonth . '_' . $this->tahun . '.xlsx';
@@ -287,9 +289,9 @@ class PengukuranKinerja extends Component
             ]
         );
 
-        $this->closeAturJadwal();
-        $this->loadData();
+        // REFRESH PAGE
         session()->flash('message', 'Jadwal pengisian berhasil diperbarui.');
+        return redirect(request()->header('Referer'));
     }
 
     // --- MANAJEMEN REALISASI INDIKATOR ---
@@ -299,7 +301,6 @@ class PengukuranKinerja extends Component
         $this->indikatorTarget = $target; 
         $this->indikatorSatuan = $satuan;
         
-        // Deteksi arah untuk menampilkan input manual
         $arahClean = strtolower(trim($arah));
         $this->showCapaianInput = in_array($arahClean, ['menurun', 'turun', 'negative', 'negatif', 'min']);
 
@@ -309,7 +310,6 @@ class PengukuranKinerja extends Component
                     ->first();
         
         $this->realisasiInput = $data ? $data->realisasi : '';
-        // Ubah titik ke koma untuk tampilan input
         $this->capaianInput = $data && $data->capaian !== null ? str_replace('.', ',', $data->capaian) : '';
         $this->catatanInput = $data ? $data->catatan : '';
         
@@ -323,7 +323,6 @@ class PengukuranKinerja extends Component
         
         $cleanRealisasi = str_replace(',', '.', $this->realisasiInput);
         
-        // Proses Capaian Manual
         $cleanCapaian = null;
         if ($this->showCapaianInput && $this->capaianInput !== '' && $this->capaianInput !== null) {
              $cleanCapaian = str_replace(',', '.', $this->capaianInput);
@@ -333,13 +332,14 @@ class PengukuranKinerja extends Component
             ['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], 
             [
                 'realisasi' => $cleanRealisasi, 
-                'capaian' => $cleanCapaian, // Simpan capaian manual
+                'capaian' => $cleanCapaian, 
                 'catatan' => $this->catatanInput
             ]
         );
         
-        $this->closeRealisasi(); 
-        $this->loadData();
+        // REFRESH PAGE
+        session()->flash('message', 'Data realisasi berhasil disimpan.');
+        return redirect(request()->header('Referer'));
     }
 
     // --- MANAJEMEN REALISASI RENCANA AKSI ---
@@ -350,21 +350,31 @@ class PengukuranKinerja extends Component
         $this->realisasiAksiInput = $data ? $data->realisasi : ''; $this->isOpenRealisasiAksi = true;
     }
     public function closeRealisasiAksi() { $this->isOpenRealisasiAksi = false; }
+    
     public function simpanRealisasiAksi() {
         $this->validate(['realisasiAksiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
         $cleanRealisasi = str_replace(',', '.', $this->realisasiAksiInput);
+        
         RealisasiRencanaAksi::updateOrCreate(['rencana_aksi_id' => $this->aksiId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['realisasi' => $cleanRealisasi]);
-        $this->closeRealisasiAksi(); $this->loadData();
+        
+        // REFRESH PAGE
+        session()->flash('message', 'Realisasi aksi berhasil disimpan.');
+        return redirect(request()->header('Referer'));
     }
 
     // --- MANAJEMEN TAMBAH RENCANA AKSI MANUAL ---
     public function openTambahAksi() { $this->reset(['formAksiNama', 'formAksiTarget', 'formAksiSatuan']); $this->isOpenTambahAksi = true; }
     public function closeTambahAksi() { $this->isOpenTambahAksi = false; }
+    
     public function storeRencanaAksi() {
         $this->validate(['formAksiNama' => 'required', 'formAksiTarget' => 'required', 'formAksiSatuan' => 'required']);
         $cleanTarget = str_replace(',', '.', $this->formAksiTarget);
+        
         RencanaAksi::create(['jabatan_id' => $this->jabatan->id, 'tahun' => $this->tahun, 'nama_aksi' => $this->formAksiNama, 'target' => $cleanTarget, 'satuan' => $this->formAksiSatuan]);
-        $this->closeTambahAksi(); $this->loadData();
+        
+        // REFRESH PAGE
+        session()->flash('message', 'Rencana aksi berhasil ditambahkan.');
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteRencanaAksi($id)
@@ -373,8 +383,10 @@ class PengukuranKinerja extends Component
         if ($aksi) {
             RealisasiRencanaAksi::where('rencana_aksi_id', $id)->delete();
             $aksi->delete();
-            $this->loadData();
+            
+            // REFRESH PAGE
             session()->flash('message', 'Rencana Aksi berhasil dihapus.');
+            return redirect(request()->header('Referer'));
         }
     }
 
@@ -385,10 +397,14 @@ class PengukuranKinerja extends Component
         $this->tanggapanInput = $data ? $data->tanggapan : ''; $this->isOpenTanggapan = true;
     }
     public function closeTanggapan() { $this->isOpenTanggapan = false; }
+    
     public function simpanTanggapan() {
         if (Auth::user()->role !== 'pimpinan') return;
         RealisasiKinerja::updateOrCreate(['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['tanggapan' => $this->tanggapanInput]);
-        $this->closeTanggapan(); $this->loadData();
+        
+        // REFRESH PAGE
+        session()->flash('message', 'Tanggapan berhasil disimpan.');
+        return redirect(request()->header('Referer'));
     }
 
     public function render()
