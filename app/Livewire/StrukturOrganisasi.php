@@ -4,15 +4,16 @@ namespace App\Livewire;
 
 use Livewire\Component;
 use Livewire\WithFileUploads;
-use Livewire\WithPagination; // 1. IMPORT PAGINATION
+use Livewire\WithPagination;
 use App\Models\Jabatan;
 use App\Models\Pegawai;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Cache;
 
 class StrukturOrganisasi extends Component
 {
     use WithFileUploads;
-    use WithPagination; // 2. GUNAKAN TRAIT PAGINATION
+    use WithPagination;
 
     // --- STATE PENCARIAN ---
     public $search = '';
@@ -28,7 +29,7 @@ class StrukturOrganisasi extends Component
     // --- FORM PEGAWAI ---
     public $peg_id, $peg_nama, $peg_nip, $peg_status = 'Definitif', $peg_jabatan_id, $peg_foto, $peg_foto_lama;
 
-    // Agar saat mengetik search, halaman kembali ke page 1
+    // Reset pagination saat mengetik pencarian
     public function updatingSearch()
     {
         $this->resetPage();
@@ -36,18 +37,21 @@ class StrukturOrganisasi extends Component
 
     public function render()
     {
-        // LOGIKA BARU: Hierarchical Tree Sorting
-        $allJabatans = Jabatan::all();
-        $sortedJabatans = $this->sortJabatanTree($allJabatans);
+        // 1. OPTIMASI: Caching Tree Jabatan selama 24 jam (agar loading cepat)
+        // Cache akan dihapus otomatis jika ada Create/Update/Delete Jabatan
+        $sortedJabatans = Cache::remember('jabatan_tree', 60 * 60 * 24, function () {
+            $allJabatans = Jabatan::all();
+            return $this->sortJabatanTree($allJabatans);
+        });
 
-        // LOGIKA PENCARIAN PEGAWAI DENGAN PAGINATION
+        // 2. OPTIMASI: Pagination Pegawai (10 data per halaman)
         $pegawais = Pegawai::with('jabatan')
             ->when($this->search, function($query) {
                 $query->where('nama', 'like', '%' . $this->search . '%')
                       ->orWhere('nip', 'like', '%' . $this->search . '%');
             })
             ->orderBy('id', 'asc')
-            ->paginate(10); // 3. GANTI GET() JADI PAGINATE(10)
+            ->paginate(10);
 
         return view('livewire.struktur-organisasi', [
             'jabatans' => $sortedJabatans,
@@ -55,7 +59,7 @@ class StrukturOrganisasi extends Component
         ]);
     }
 
-    // --- FUNGSI HELPER UNTUK MENGURUTKAN JABATAN SEPERTI POHON ---
+    // Fungsi Rekursif untuk menyusun hirarki jabatan
     private function sortJabatanTree($elements, $parentId = null)
     {
         $branch = collect();
@@ -68,17 +72,20 @@ class StrukturOrganisasi extends Component
                 $branch = $branch->merge($grandChildren);
             }
         }
-
         return $branch;
     }
 
     // =================================================================
-    // LOGIC JABATAN (PROTECTED)
+    // LOGIC JABATAN (DILINDUNGI SERVER-SIDE)
     // =================================================================
     
     public function createJabatan()
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role di Server (Backend)
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
+
         $this->reset(['jab_id', 'jab_nama', 'jab_parent_id', 'isEditMode']);
         $this->resetValidation(); 
         $this->modalJabatanOpen = true;
@@ -86,7 +93,11 @@ class StrukturOrganisasi extends Component
 
     public function editJabatan($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
+
         $jabatan = Jabatan::find($id);
         if($jabatan) {
             $this->resetValidation();
@@ -100,7 +111,11 @@ class StrukturOrganisasi extends Component
 
     public function storeJabatan()
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
+
         $this->validate(['jab_nama' => 'required']);
         
         $level = 0;
@@ -126,29 +141,40 @@ class StrukturOrganisasi extends Component
             $message = 'Data Jabatan berhasil ditambahkan.';
         }
 
+        // Hapus Cache agar perubahan struktur langsung terlihat
+        Cache::forget('jabatan_tree');
+
         session()->flash('success', $message);
         return redirect(request()->header('Referer'));
     }
 
     public function deleteJabatan($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
         
         $jabatan = Jabatan::find($id);
         if($jabatan) {
             $jabatan->delete();
+            Cache::forget('jabatan_tree'); // Hapus cache
             session()->flash('success', 'Data Jabatan berhasil dihapus.');
             return redirect(request()->header('Referer'));
         }
     }
 
     // =================================================================
-    // LOGIC PEGAWAI (PROTECTED)
+    // LOGIC PEGAWAI (DILINDUNGI SERVER-SIDE & VALIDASI KETAT)
     // =================================================================
 
     public function createPegawai()
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
+
         $this->reset(['peg_id', 'peg_nama', 'peg_nip', 'peg_status', 'peg_jabatan_id', 'peg_foto', 'isEditMode']);
         $this->resetValidation();
         $this->peg_status = 'Definitif'; 
@@ -157,7 +183,11 @@ class StrukturOrganisasi extends Component
 
     public function editPegawai($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
+
         $pegawai = Pegawai::find($id);
         if($pegawai) {
             $this->resetValidation();
@@ -174,13 +204,22 @@ class StrukturOrganisasi extends Component
 
     public function storePegawai()
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
         
+        // [KEAMANAN 3] Validasi File Super Ketat
         $this->validate([
             'peg_nama' => 'required',
-            'peg_nip' => 'required',
+            'peg_nip' => 'required', // Idealnya tambahkan unique:pegawais,nip,id_saat_edit
             'peg_status' => 'required',
-            'peg_foto' => 'nullable|image|max:2048',
+            // VALIDASI FOTO:
+            // - nullable: Boleh kosong
+            // - image: Harus file gambar
+            // - mimes: Ekstensi harus jpeg, png, jpg, atau webp (TOLAK .php, .exe)
+            // - max: Ukuran maksimal 2048 KB (2MB)
+            'peg_foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
         ]);
 
         $data = [
@@ -191,6 +230,7 @@ class StrukturOrganisasi extends Component
         ];
 
         if ($this->peg_foto) {
+            // Livewire otomatis memberi nama acak pada file, ini juga fitur keamanan
             $filename = $this->peg_foto->store('fotos_pegawai', 'public');
             $data['foto'] = $filename;
             
@@ -213,7 +253,10 @@ class StrukturOrganisasi extends Component
 
     public function deletePegawai($id)
     {
-        if (auth()->user()->hasRole('pimpinan')) return;
+        // [KEAMANAN 2] Cek Role
+        if (auth()->user()->role !== 'admin') {
+            abort(403, 'Akses Ditolak! Anda bukan Administrator.');
+        }
         
         $pegawai = Pegawai::find($id);
         if ($pegawai) {
