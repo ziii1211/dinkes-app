@@ -46,10 +46,12 @@ class PerjanjianKinerjaDetail extends Component
             ->when($this->search, function($q) {
                 $q->where('keterangan', 'like', '%' . $this->search . '%');
             })
-            ->orderBy('tahun', 'desc')
+            // --- PERBAIKAN SORTING ---
+            // Menggunakan 'id' 'asc' agar data baru (ID besar) masuk di urutan paling bawah
+            ->orderBy('id', 'asc')
             ->paginate(10);
 
-        // --- PERBAIKAN LOGIKA STATISTIK ---
+        // --- LOGIKA STATISTIK ---
         $totalPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)->count();
         
         // Hitung Draft (status_verifikasi = draft)
@@ -80,7 +82,7 @@ class PerjanjianKinerjaDetail extends Component
         $this->atasan_jabatan = null;
 
         if ($this->is_kepala_dinas) {
-            // Gubernur
+            // Gubernur logic (jika ada)
         } elseif ($this->jabatan->parent_id) {
             $parentJabatan = Jabatan::find($this->jabatan->parent_id);
             if ($parentJabatan) {
@@ -110,12 +112,13 @@ class PerjanjianKinerjaDetail extends Component
             'tahun' => $this->tahun,
             'keterangan' => $this->keterangan,
             'status' => 'draft',
-            
-            // --- PERBAIKAN: Set status_verifikasi awal ---
             'status_verifikasi' => 'draft', 
             'tanggal_penetapan' => now()
         ]);
 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 }

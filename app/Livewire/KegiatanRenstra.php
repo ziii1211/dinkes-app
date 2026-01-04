@@ -14,50 +14,32 @@ class KegiatanRenstra extends Component
 
     // --- STATES MODAL ---
     public $isOpen = false;
-
     public $isOpenOutput = false;
-
     public $isOpenIndikator = false;
-
     public $isOpenTarget = false;
-
     public $isOpenPJ = false;
-
     public $isEditMode = false;
 
     // --- FORM VARIABLES ---
     public $kegiatan_id;
-
     public $kode;
-
     public $nama;
-
     public $output;
 
     public $pj_kegiatan_text;
-
     public $pj_jabatan_id;
 
     public $indikator_id;
-
     public $selected_kegiatan_id;
-
     public $ind_keterangan;
-
     public $ind_satuan;
 
     public $target_2025;
-
     public $target_2026;
-
     public $target_2027;
-
     public $target_2028;
-
     public $target_2029;
-
     public $target_2030;
-
     public $target_satuan;
 
     public function mount($id)
@@ -68,23 +50,25 @@ class KegiatanRenstra extends Component
     public function render()
     {
         return view('livewire.kegiatan-renstra', [
-            // --- PERBAIKAN DI SINI ---
-            // Mengubah sorting dari 'kode' menjadi 'id' 'asc'.
-            // Ini memastikan data yang baru diinput (ID lebih besar) akan selalu berada di paling bawah.
+            // --- PERBAIKAN UTAMA DI SINI ---
+            // Kita kirim variabel 'program' secara eksplisit agar dikenali di Blade
+            'program' => $this->program,
+
+            // Mengubah sorting dari 'kode' menjadi 'id' 'asc' agar data baru di bawah
             'kegiatans' => Kegiatan::with(['indikators', 'jabatan.pegawai'])
                 ->where('program_id', $this->program->id)
-                ->orderBy('id', 'asc') // UBAH KE 'id' AGAR URUT BERDASARKAN INPUT
+                ->orderBy('id', 'asc')
                 ->get(),
+                
             'jabatans' => Jabatan::all(),
         ]);
     }
 
-    // --- FUNGSI NAVIGASI KE SUB KEGIATAN (PENTING) ---
+    // --- FUNGSI NAVIGASI KE SUB KEGIATAN ---
     public function openSubKegiatan($kegiatanId)
     {
-        return redirect()->route('matrik.subkegiatan', [
-            'programId' => $this->program->id,
-            'kegiatanId' => $kegiatanId,
+        return redirect()->route('renstra.sub_kegiatan', [ // Pastikan nama route sesuai (matrik.subkegiatan atau renstra.sub_kegiatan)
+            'id' => $kegiatanId, // Sesuaikan parameter route di web.php
         ]);
     }
 
@@ -120,6 +104,7 @@ class KegiatanRenstra extends Component
     public function store()
     {
         $this->validate(['kode' => 'required', 'nama' => 'required']);
+        
         if ($this->isEditMode) {
             Kegiatan::find($this->kegiatan_id)->update([
                 'kode' => $this->kode, 
@@ -135,6 +120,9 @@ class KegiatanRenstra extends Component
             ]);
         } 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function edit($id)
@@ -156,6 +144,9 @@ class KegiatanRenstra extends Component
         if ($data) {
             $data->delete();
         }
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function tambahOutput($id)
@@ -181,6 +172,9 @@ class KegiatanRenstra extends Component
             $kegiatan->update(['output' => $this->output]);
         } 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function hapusOutput($id)
@@ -189,6 +183,9 @@ class KegiatanRenstra extends Component
         if ($kegiatan) {
             $kegiatan->update(['output' => null]);
         }
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function pilihPenanggungJawab($id)
@@ -209,6 +206,9 @@ class KegiatanRenstra extends Component
             $data->update(['jabatan_id' => $this->pj_jabatan_id ?: null]);
         } 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function tambahIndikator($kegiatanId)
@@ -246,6 +246,9 @@ class KegiatanRenstra extends Component
             IndikatorKegiatan::create($data);
         } 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteIndikator($id)
@@ -254,6 +257,9 @@ class KegiatanRenstra extends Component
         if ($ind) {
             $ind->delete();
         }
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function aturTarget($id)
@@ -286,5 +292,8 @@ class KegiatanRenstra extends Component
             ]);
         } 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 }

@@ -48,8 +48,7 @@ class CascadingRenstra extends Component
         // 1. Build Visual Tree
         $manualTree = $this->buildVisualTreeStructure();
 
-        // 2. Data Jabatan (Tree Sorted) - LOGIKA BARU
-        // Mengambil semua jabatan lalu diurutkan sesuai hierarki parent-child
+        // 2. Data Jabatan (Tree Sorted)
         $allJabatans = Jabatan::orderBy('id', 'asc')->get(); 
         $sortedJabatans = $this->sortJabatanTree($allJabatans);
 
@@ -59,7 +58,7 @@ class CascadingRenstra extends Component
 
         return view('livewire.cascading-renstra', [
             'manualTree' => $manualTree,
-            'listJabatans' => $sortedJabatans, // Mengirim data yang sudah terurut
+            'listJabatans' => $sortedJabatans,
             'pohons' => $treeData, 
             'sasaran_rpjmds' => Tujuan::select('id', 'sasaran_rpjmd')->get(),
             'opsiPohon' => $masterPohons,
@@ -73,17 +72,13 @@ class CascadingRenstra extends Component
     private function sortJabatanTree($elements, $parentId = null, $depth = 0)
     {
         $branch = collect();
-        
-        // Cari elemen yang parent_id nya sesuai argumen (Mulai dari null/Root)
         $children = $elements->where('parent_id', $parentId)->sortBy('id');
 
         foreach ($children as $child) {
-            $child->depth = $depth; // Simpan kedalaman untuk styling di view
+            $child->depth = $depth; 
             $branch->push($child);
             
-            // Rekursif untuk mencari anak dari elemen ini
             $grandChildren = $this->sortJabatanTree($elements, $child->id, $depth + 1);
-            
             if ($grandChildren->isNotEmpty()) {
                 $branch = $branch->merge($grandChildren);
             }
@@ -126,7 +121,7 @@ class CascadingRenstra extends Component
         return [
             'id' => $dbNode->id,
             'parent_id' => $dbNode->parent_id,
-            'jabatan' => $dbNode->jabatan, // ID Jabatan
+            'jabatan' => $dbNode->jabatan,
             'is_locked' => $dbNode->is_locked,
             'kinerja_items' => $items,
         ];
@@ -151,7 +146,7 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // 6. SAVE & UPDATE LOGIC
+    // 6. SAVE & UPDATE LOGIC (VISUALISASI)
     // ==========================================
 
     public function saveNodeData($nodeIndex, $silent = false)
@@ -178,7 +173,6 @@ class CascadingRenstra extends Component
             $this->visualNodes[$nodeIndex]['id'] = $newNode->id;
             $this->visualNodes[$nodeIndex]['is_locked'] = true;
 
-            // Update parent_id di array lokal untuk anak-anaknya
             foreach($this->visualNodes as $key => $vNode) {
                 if($vNode['parent_id'] === $oldId) {
                     $this->visualNodes[$key]['parent_id'] = $newNode->id;
@@ -225,7 +219,7 @@ class CascadingRenstra extends Component
     }
 
     // ==========================================
-    // 8. CRUD ACTIONS (VISUALISASI)
+    // 8. CRUD ACTIONS (VISUALISASI MANUAL)
     // ==========================================
 
     public function addManualRoot()
@@ -242,14 +236,16 @@ class CascadingRenstra extends Component
     public function deleteManualNode($id)
     {
         if(is_numeric($id)) { 
-            // Hapus children recursive (logic sederhana, bisa dikembangkan)
             VisualisasiRenstra::where('parent_id', $id)->delete();
             VisualisasiRenstra::destroy($id); 
         }
-        $this->loadVisualData();
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
-    // --- ITEM ACTIONS ---
+    // --- ITEM ACTIONS (VISUALISASI) ---
+    // Tidak diberi refresh karena bersifat auto-save real-time
     public function addKinerjaItem($nodeIndex) { $this->visualNodes[$nodeIndex]['kinerja_items'][] = ['kinerja_utama' => '', 'indikators' => []]; if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
     public function removeKinerjaItem($nodeIndex, $kinerjaIndex) { unset($this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]); $this->visualNodes[$nodeIndex]['kinerja_items'] = array_values($this->visualNodes[$nodeIndex]['kinerja_items']); if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
     public function addIndikatorItem($nodeIndex, $kinerjaIndex) { $this->visualNodes[$nodeIndex]['kinerja_items'][$kinerjaIndex]['indikators'][] = ['nama' => '', 'nilai' => '', 'satuan' => '']; if(is_numeric($this->visualNodes[$nodeIndex]['id'])) $this->saveNodeData($nodeIndex, true); }
@@ -257,7 +253,7 @@ class CascadingRenstra extends Component
 
 
     // ==========================================
-    // 9. LOGIC DB LAMA (LEGACY)
+    // 9. LOGIC DB LAMA (LEGACY / TABEL)
     // ==========================================
     
     private function getFlatTree() { $allNodes = ModelPohon::with(['tujuan', 'indikators'])->orderBy('created_at', 'asc')->get(); $roots = $allNodes->whereNull('parent_id'); $flatList = collect([]); foreach ($roots as $root) { $this->formatTree($root, $allNodes, $flatList, 0); } return $flatList; }
@@ -265,11 +261,57 @@ class CascadingRenstra extends Component
 
     private function resetForm() { $this->reset(['tujuan_id', 'nama_pohon', 'parent_id', 'pohon_id', 'isChild', 'isEditMode', 'indikator_input', 'indikator_list']); $this->resetValidation(); }
     public function openModal() { $this->resetForm(); $this->isOpen = true; }
-    public function addChild($parentId) { $this->resetForm(); $this->parent_id = $parentId; $this->isChild = true; $parent = ModelPohon::find($parentId); $this->tujuan_id = $parent ? $parent->tujuan_id : null; $this->isOpen = true; }
-    public function edit($id) { $this->resetForm(); $pohon = ModelPohon::find($id); if ($pohon) { $this->pohon_id = $id; $this->tujuan_id = $pohon->tujuan_id; $this->nama_pohon = $pohon->nama_pohon; $this->parent_id = $pohon->parent_id; $this->isChild = $pohon->parent_id ? true : false; $this->isEditMode = true; $this->isOpen = true; } }
+    
+    public function addChild($parentId) { 
+        $this->resetForm(); 
+        $this->parent_id = $parentId; 
+        $this->isChild = true; 
+        $parent = ModelPohon::find($parentId); 
+        $this->tujuan_id = $parent ? $parent->tujuan_id : null; 
+        $this->isOpen = true; 
+    }
+    
+    public function edit($id) { 
+        $this->resetForm(); 
+        $pohon = ModelPohon::find($id); 
+        if ($pohon) { 
+            $this->pohon_id = $id; 
+            $this->tujuan_id = $pohon->tujuan_id; 
+            $this->nama_pohon = $pohon->nama_pohon; 
+            $this->parent_id = $pohon->parent_id; 
+            $this->isChild = $pohon->parent_id ? true : false; 
+            $this->isEditMode = true; 
+            $this->isOpen = true; 
+        } 
+    }
+    
     public function closeModal() { $this->isOpen = false; $this->isOpenIndikator = false; $this->resetValidation(); }
-    public function store() { $rules = ['nama_pohon' => 'required']; if (!$this->isChild && !$this->parent_id) { $rules['tujuan_id'] = 'required'; } $this->validate($rules); if ($this->isEditMode) { ModelPohon::find($this->pohon_id)->update(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon]); } else { ModelPohon::create(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon, 'parent_id' => $this->parent_id]); } $this->closeModal(); session()->flash('message', 'Data disimpan.'); }
-    public function delete($id) { $pohon = ModelPohon::find($id); if($pohon) { $pohon->delete(); session()->flash('message', 'Dihapus.'); } }
+    
+    public function store() { 
+        $rules = ['nama_pohon' => 'required']; 
+        if (!$this->isChild && !$this->parent_id) { $rules['tujuan_id'] = 'required'; } 
+        $this->validate($rules); 
+        
+        if ($this->isEditMode) { 
+            ModelPohon::find($this->pohon_id)->update(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon]); 
+        } else { 
+            ModelPohon::create(['tujuan_id' => $this->tujuan_id, 'nama_pohon' => $this->nama_pohon, 'parent_id' => $this->parent_id]); 
+        } 
+        $this->closeModal(); 
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
+    }
+    
+    public function delete($id) { 
+        $pohon = ModelPohon::find($id); 
+        if($pohon) { 
+            $pohon->delete(); 
+        }
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
+    }
 
     // --- MANAGE INDIKATOR LEGACY ---
     public function openIndikator($pohonId) { 
@@ -279,7 +321,19 @@ class CascadingRenstra extends Component
         foreach($existing as $ind) { $this->indikator_list[] = ['id' => $ind->id, 'nama' => $ind->nama_indikator]; } 
         $this->isOpenIndikator = true; 
     }
+    
     public function addIndikatorToList() { $this->validate(['indikator_input' => 'required']); $this->indikator_list[] = ['id' => 'temp_' . uniqid(), 'nama' => $this->indikator_input]; $this->reset(['indikator_input']); }
+    
     public function removeIndikatorFromList($index) { unset($this->indikator_list[$index]); $this->indikator_list = array_values($this->indikator_list); }
-    public function saveIndikators() { IndikatorPohonKinerja::where('pohon_kinerja_id', $this->pohon_id)->delete(); foreach($this->indikator_list as $ind) { IndikatorPohonKinerja::create(['pohon_kinerja_id' => $this->pohon_id, 'nama_indikator' => $ind['nama'], 'target' => 0, 'satuan' => '-']); } $this->closeModal(); session()->flash('message', 'Indikator disimpan.'); }
+    
+    public function saveIndikators() { 
+        IndikatorPohonKinerja::where('pohon_kinerja_id', $this->pohon_id)->delete(); 
+        foreach($this->indikator_list as $ind) { 
+            IndikatorPohonKinerja::create(['pohon_kinerja_id' => $this->pohon_id, 'nama_indikator' => $ind['nama'], 'target' => 0, 'satuan' => '-']); 
+        } 
+        $this->closeModal(); 
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
+    }
 }

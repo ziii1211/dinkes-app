@@ -25,10 +25,9 @@ class PengaturanKinerja extends Component
         $this->jabatan = Jabatan::with('pegawai')->findOrFail($jabatanId);
         $this->pegawai = $this->jabatan->pegawai;
 
-        // PERBAIKAN: Mengambil PK terakhir yang status_verifikasi = 'disetujui' (Terpublikasi)
-        // Sebelumnya menggunakan where('status', 'final')
+        // Mengambil PK terakhir yang status_verifikasi = 'disetujui' (Terpublikasi)
         $lastPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
-                    ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
+                    ->where('status_verifikasi', 'disetujui') 
                     ->latest('tahun')
                     ->first();
 
@@ -42,10 +41,10 @@ class PengaturanKinerja extends Component
 
     public function loadPkList()
     {
-        // PERBAIKAN: Filter query agar hanya mengambil data yang 'disetujui' (Terpublikasi)
+        // Filter query agar hanya mengambil data yang 'disetujui' (Terpublikasi)
         $this->pkList = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->filterTahun)
-            ->where('status_verifikasi', 'disetujui') // UPDATE DISINI
+            ->where('status_verifikasi', 'disetujui') 
             ->get();
             
         if ($this->pkList->count() > 0) {
@@ -106,7 +105,8 @@ class PengaturanKinerja extends Component
                 }
                 $pk->delete(); 
             }
-            $this->loadPkList();
+            // --- REFRESH HALAMAN OTOMATIS ---
+            return redirect(request()->header('Referer'));
         }
     }
 
@@ -117,6 +117,9 @@ class PengaturanKinerja extends Component
         // Saat ini hanya notifikasi sukses.
         
         session()->flash('message', 'Data Rencana Hasil Kerja (RHK) Bulan ini berhasil diperbarui!');
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function render()

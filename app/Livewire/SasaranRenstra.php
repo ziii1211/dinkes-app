@@ -34,10 +34,7 @@ class SasaranRenstra extends Component
     public function render()
     {
         return view('livewire.sasaran-renstra', [
-            // Ambil data Sasaran beserta relasi ke Induk (Tujuan), PJ (Jabatan), dan Anak (Indikator)
             'sasarans' => Sasaran::with(['tujuan', 'jabatan', 'indikators'])->get(),
-            
-            // Data untuk Dropdown
             'list_tujuan' => Tujuan::all(), 
             'jabatans' => Jabatan::all()
         ]);
@@ -74,6 +71,9 @@ class SasaranRenstra extends Component
             Sasaran::create(['tujuan_id' => $this->tujuan_id, 'sasaran' => $this->sasaran]); 
         }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function edit($id) {
@@ -87,7 +87,13 @@ class SasaranRenstra extends Component
         }
     }
     
-    public function delete($id) { $data = Sasaran::find($id); if ($data) $data->delete(); }
+    public function delete($id) { 
+        $data = Sasaran::find($id); 
+        if ($data) $data->delete();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
+    }
 
     // =================================================================
     // LOGIC PENANGGUNG JAWAB (PJ)
@@ -106,6 +112,9 @@ class SasaranRenstra extends Component
         $data = Sasaran::find($this->sasaran_id);
         if ($data) { $data->update(['jabatan_id' => $this->pj_jabatan_id ?: null]); }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // =================================================================
@@ -146,10 +155,16 @@ class SasaranRenstra extends Component
             IndikatorSasaran::create($data); 
         }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteIndikator($id) {
         $ind = IndikatorSasaran::find($id); if($ind) $ind->delete();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // =================================================================
@@ -167,9 +182,7 @@ class SasaranRenstra extends Component
             $this->target_2029 = $ind->target_2029;
             $this->target_2030 = $ind->target_2030;
             
-            // Ambil satuan untuk label dinamis di modal target
             $this->target_satuan = $ind->satuan;
-
             $this->isOpenTarget = true;
         }
     }
@@ -190,5 +203,8 @@ class SasaranRenstra extends Component
         }
 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 }

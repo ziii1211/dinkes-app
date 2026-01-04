@@ -27,6 +27,7 @@
             
             <div class="p-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-12">
+                    {{-- INFO JABATAN --}}
                     <div class="space-y-4">
                         <div class="grid grid-cols-12 gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-4 text-sm text-gray-500">Unit Kerja</div>
@@ -69,6 +70,7 @@
                         </div>
                     </div>
 
+                    {{-- STATISTIK KECIL --}}
                     <div class="bg-gray-50 rounded-xl p-6 border border-gray-100 flex flex-col justify-between">
                         <div class="space-y-3 mb-6">
                             <div class="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex justify-between items-center">
@@ -100,6 +102,7 @@
             </div>
         </div>
 
+        {{-- TABEL DAFTAR PK --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-gray-100 bg-white">
                 <h3 class="font-bold text-gray-800 text-lg flex items-center gap-2">
@@ -161,7 +164,8 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
-                                        <a href="{{ route('perjanjian.kinerja.lihat', $pk->id) }}" wire:navigate class="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium transition-colors">
+                                        {{-- PERBAIKAN DI SINI: MENGHAPUS wire:navigate UNTUK TOMBOL LIHAT --}}
+                                        <a href="{{ route('perjanjian.kinerja.lihat', $pk->id) }}" class="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium transition-colors">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             Lihat
                                         </a>

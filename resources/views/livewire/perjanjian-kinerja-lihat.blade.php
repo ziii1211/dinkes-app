@@ -34,7 +34,8 @@
                     <ol class="inline-flex items-center space-x-2 text-sm text-gray-500 font-medium">
                         <li><a href="/" class="hover:text-blue-600 transition-colors">Dashboard</a></li>
                         <li class="text-gray-300">/</li>
-                        <li><a href="{{ route('perjanjian.kinerja') }}" wire:navigate class="hover:text-blue-600 transition-colors">Perjanjian Kinerja</a></li>
+                        {{-- PERBAIKAN: HAPUS wire:navigate --}}
+                        <li><a href="{{ route('perjanjian.kinerja') }}" class="hover:text-blue-600 transition-colors">Perjanjian Kinerja</a></li>
                         <li class="text-gray-300">/</li>
                         <li class="text-gray-800 truncate max-w-[200px]">{{ $jabatan->nama ?? 'Detail' }}</li>
                     </ol>
@@ -42,7 +43,8 @@
             </div>
 
             <div class="flex flex-wrap gap-3">
-                <a href="{{ route('perjanjian.kinerja') }}" wire:navigate class="inline-flex items-center px-5 py-2.5 bg-[#6f42c1] hover:bg-[#5a32a3] text-white text-sm font-bold rounded-lg shadow-sm transition-all hover:shadow-md">
+                {{-- PERBAIKAN: HAPUS wire:navigate --}}
+                <a href="{{ route('perjanjian.kinerja') }}" class="inline-flex items-center px-5 py-2.5 bg-[#6f42c1] hover:bg-[#5a32a3] text-white text-sm font-bold rounded-lg shadow-sm transition-all hover:shadow-md">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     Kembali
                 </a>

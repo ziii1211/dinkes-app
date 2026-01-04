@@ -43,18 +43,21 @@ class SubKegiatanRenstra extends Component
     public function mount($id)
     {
         $this->kegiatan = Kegiatan::findOrFail($id);
+        // Pastikan relasi program_id ada di model Kegiatan atau table kegiatans
         $this->program = Program::findOrFail($this->kegiatan->program_id);
     }
 
     public function render()
     {
         return view('livewire.sub-kegiatan-renstra', [
-            // PERBAIKAN DI SINI:
-            // Mengubah sorting dari 'kode' menjadi 'id' 'asc'.
-            // Agar data lama tetap di atas dan data baru masuk ke bawah.
+            // PENTING: Kirim variable program & kegiatan secara eksplisit
+            // untuk mencegah error "Undefined variable" di View
+            'program' => $this->program,
+            'kegiatan' => $this->kegiatan,
+
             'sub_kegiatans' => SubKegiatan::with(['indikators', 'jabatan'])
                 ->where('kegiatan_id', $this->kegiatan->id)
-                ->orderBy('id', 'asc') // UBAH KE 'id'
+                ->orderBy('id', 'asc') // Data baru masuk di bawah
                 ->get(),
             'jabatans' => Jabatan::all()
         ]);
@@ -105,6 +108,7 @@ class SubKegiatanRenstra extends Component
                 'output' => $this->output
             ]);
 
+            // Jika ada input indikator awal saat create
             if (!empty($this->ind_keterangan) && !empty($this->ind_satuan)) {
                 IndikatorSubKegiatan::create([
                     'sub_kegiatan_id' => $sub->id,
@@ -115,6 +119,9 @@ class SubKegiatanRenstra extends Component
         }
 
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function edit($id) {
@@ -132,6 +139,9 @@ class SubKegiatanRenstra extends Component
     public function delete($id) { 
         $data = SubKegiatan::find($id); 
         if ($data) $data->delete(); 
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- PENANGGUNG JAWAB ---
@@ -151,6 +161,9 @@ class SubKegiatanRenstra extends Component
             $data->update(['jabatan_id' => $this->pj_jabatan_id ?: null]); 
         }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- INDIKATOR ---
@@ -190,11 +203,17 @@ class SubKegiatanRenstra extends Component
             IndikatorSubKegiatan::create($data); 
         }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteIndikator($id) { 
         $ind = IndikatorSubKegiatan::find($id); 
         if ($ind) $ind->delete(); 
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- TARGET & PAGU ---
@@ -231,5 +250,8 @@ class SubKegiatanRenstra extends Component
             $ind->update($data);
         }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 }

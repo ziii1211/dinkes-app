@@ -98,6 +98,8 @@ class PerjanjianKinerjaLihat extends Component
         ]);
 
         session()->flash('message', 'Perjanjian Kinerja BERHASIL DIPUBLIKASIKAN.');
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -165,6 +167,8 @@ class PerjanjianKinerjaLihat extends Component
         }
 
         session()->flash('message', 'Kinerja Utama berhasil ditambahkan.');
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -188,6 +192,8 @@ class PerjanjianKinerjaLihat extends Component
             $ind->update([$col => $this->edit_target_nilai]);
         }
         session()->flash('message', 'Target berhasil diperbarui.');
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -195,6 +201,8 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $sasaran = PkSasaran::find($id);
         if($sasaran) { $sasaran->delete(); }
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -202,11 +210,13 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $ind = PkIndikator::find($id);
         if($ind) { $ind->delete(); }
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
     // =================================================================
-    // FITUR ANGGARAN [UPDATED: MENYIMPAN KODE + NAMA]
+    // FITUR ANGGARAN
     // =================================================================
 
     public function openModalAnggaran() {
@@ -261,6 +271,8 @@ class PerjanjianKinerjaLihat extends Component
         ]);
 
         session()->flash('message', 'Anggaran berhasil ditambahkan.');
+        
+        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -269,6 +281,7 @@ class PerjanjianKinerjaLihat extends Component
         $ang = PkAnggaran::find($id);
         if($ang) { $ang->delete(); }
 
+        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -284,6 +297,8 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $jabatanId = $this->pk->jabatan_id;
         $this->pk->delete();
+        
+        // Redirect ke halaman detail (list PK)
         return redirect()->route('perjanjian.kinerja.detail', $jabatanId);
     }
 

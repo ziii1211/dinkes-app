@@ -37,11 +37,8 @@ class TujuanRenstra extends Component
     public function render()
     {
         return view('livewire.tujuan-renstra', [
-            // PERBAIKAN DISINI:
-            // Mengganti latest() menjadi orderBy('id', 'asc')
             // Agar data yang baru diinput masuk ke urutan paling bawah
             'tujuans' => Tujuan::with(['jabatan', 'indikators'])->orderBy('id', 'asc')->get(),
-            
             'jabatans' => Jabatan::all() 
         ]);
     }
@@ -72,26 +69,36 @@ class TujuanRenstra extends Component
         $this->validate(['sasaran_rpjmd' => 'required', 'tujuan' => 'required']);
         
         if ($this->isEditMode) { 
-            // Update data (urutan tidak berubah)
+            // Update data
             Tujuan::find($this->tujuan_id)->update([
                 'sasaran_rpjmd' => $this->sasaran_rpjmd, 
                 'tujuan' => $this->tujuan
             ]); 
         } else { 
-            // Create data baru (ID baru lebih besar, otomatis di paling bawah)
+            // Create data baru
             Tujuan::create([
                 'sasaran_rpjmd' => $this->sasaran_rpjmd, 
                 'tujuan' => $this->tujuan
             ]); 
         }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function edit($id) {
         $data = Tujuan::find($id);
         if ($data) { $this->tujuan_id = $id; $this->sasaran_rpjmd = $data->sasaran_rpjmd; $this->tujuan = $data->tujuan; $this->isEditMode = true; $this->openModal(); }
     }
-    public function delete($id) { $data = Tujuan::find($id); if ($data) $data->delete(); }
+
+    public function delete($id) { 
+        $data = Tujuan::find($id); 
+        if ($data) $data->delete();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
+    }
 
     // =================================================================
     // LOGIC PENANGGUNG JAWAB (PJ)
@@ -100,10 +107,14 @@ class TujuanRenstra extends Component
         $data = Tujuan::find($id);
         if ($data) { $this->tujuan_id = $id; $this->pj_tujuan_text = $data->tujuan; $this->pj_jabatan_id = $data->jabatan_id; $this->isOpenPJ = true; }
     }
+
     public function simpanPenanggungJawab() {
         $data = Tujuan::find($this->tujuan_id);
         if ($data) { $data->update(['jabatan_id' => $this->pj_jabatan_id ?: null]); }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // =================================================================
@@ -122,15 +133,23 @@ class TujuanRenstra extends Component
             $this->isEditMode = true; $this->isOpenIndikator = true;
         }
     }
+
     public function storeIndikator() {
         $this->validate(['ind_keterangan' => 'required', 'ind_satuan' => 'required', 'ind_arah' => 'required']);
         $data = ['tujuan_id' => $this->selected_tujuan_id, 'keterangan' => $this->ind_keterangan, 'satuan' => $this->ind_satuan, 'arah' => $this->ind_arah];
         if($this->isEditMode){ IndikatorTujuan::find($this->indikator_id)->update($data); } 
         else { IndikatorTujuan::create($data); }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
+
     public function deleteIndikator($id) {
         $ind = IndikatorTujuan::find($id); if($ind) $ind->delete();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // =================================================================
@@ -146,6 +165,7 @@ class TujuanRenstra extends Component
             $this->isOpenTarget = true;
         }
     }
+
     public function simpanTarget() {
         $ind = IndikatorTujuan::find($this->indikator_id);
         if ($ind) {
@@ -155,5 +175,8 @@ class TujuanRenstra extends Component
             ]);
         }
         $this->closeModal();
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 }

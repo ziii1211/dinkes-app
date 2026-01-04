@@ -70,7 +70,6 @@
                                         </div>
                                         
                                         <div>
-                                            {{-- PERBAIKAN DI SINI: class 'uppercase' dihapus agar sesuai input asli --}}
                                             <div class="font-bold text-gray-800 text-sm">{{ $jabatan->pegawai->nama }}</div>
                                             <div class="text-xs text-gray-400 mt-0.5">NIP. {{ $jabatan->pegawai->nip }}</div>
                                         </div>
@@ -82,7 +81,7 @@
 
                             <td class="px-6 py-4 text-center">
                                 @php
-                                    $status = $jabatan->pegawai->status ?? 'Definitif'; // Ambil status dari pegawai
+                                    $status = $jabatan->pegawai->status ?? 'Definitif'; 
                                     $badgeClass = '';
                                     
                                     if ($status === 'Definitif') {
@@ -107,12 +106,13 @@
 
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
-                                    <a href="{{ route('pengukuran.atur', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 rounded-md hover:bg-red-100 hover:text-red-600 transition-colors text-xs font-medium border border-red-50">
+                                    {{-- PERBAIKAN: MENGHAPUS wire:navigate UNTUK MEMAKSA REFRESH --}}
+                                    <a href="{{ route('pengukuran.atur', $jabatan->id) }}" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 rounded-md hover:bg-red-100 hover:text-red-600 transition-colors text-xs font-medium border border-red-50">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         Atur Kinerja
                                     </a>
 
-                                    <a href="{{ route('pengukuran.detail', $jabatan->id) }}" wire:navigate class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-500 rounded-md hover:bg-blue-100 hover:text-blue-600 transition-colors text-xs font-medium border border-blue-50">
+                                    <a href="{{ route('pengukuran.detail', $jabatan->id) }}" class="flex items-center gap-1.5 px-3 py-1.5 bg-blue-50 text-blue-500 rounded-md hover:bg-blue-100 hover:text-blue-600 transition-colors text-xs font-medium border border-blue-50">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                                         Pengukuran
                                     </a>
