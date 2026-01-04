@@ -11,26 +11,48 @@ return new class extends Migration
      */
     public function up(): void
     {
+        // 1. Cek dan buat kolom satu per satu (Safe)
         Schema::table('pohon_kinerjas', function (Blueprint $table) {
-            // Tambah Kolom ID (Cek dulu biar aman kalau dijalankan ulang)
             if (!Schema::hasColumn('pohon_kinerjas', 'tujuan_id')) {
                 $table->unsignedBigInteger('tujuan_id')->nullable()->after('id');
-                $table->unsignedBigInteger('sasaran_id')->nullable()->after('tujuan_id');
-                $table->unsignedBigInteger('outcome_id')->nullable()->after('sasaran_id');
-                $table->unsignedBigInteger('kegiatan_id')->nullable()->after('outcome_id');
-                $table->unsignedBigInteger('sub_kegiatan_id')->nullable()->after('kegiatan_id');
+            }
+            // Logic penempatan 'after' yang dinamis
+            $afterSasaran = Schema::hasColumn('pohon_kinerjas', 'tujuan_id') ? 'tujuan_id' : 'id';
+            if (!Schema::hasColumn('pohon_kinerjas', 'sasaran_id')) {
+                $table->unsignedBigInteger('sasaran_id')->nullable()->after($afterSasaran);
             }
 
-            // --- PERBAIKAN DI SINI ---
-            // Kita beri nama index manual 'idx_pohon_rel' supaya tidak kepanjangan & error
-            $table->index([
-                'tujuan_id', 
-                'sasaran_id', 
-                'outcome_id', 
-                'kegiatan_id', 
-                'sub_kegiatan_id'
-            ], 'idx_pohon_rel'); 
+            $afterOutcome = Schema::hasColumn('pohon_kinerjas', 'sasaran_id') ? 'sasaran_id' : $afterSasaran;
+            if (!Schema::hasColumn('pohon_kinerjas', 'outcome_id')) {
+                $table->unsignedBigInteger('outcome_id')->nullable()->after($afterOutcome);
+            }
+
+            $afterKegiatan = Schema::hasColumn('pohon_kinerjas', 'outcome_id') ? 'outcome_id' : $afterOutcome;
+            if (!Schema::hasColumn('pohon_kinerjas', 'kegiatan_id')) {
+                $table->unsignedBigInteger('kegiatan_id')->nullable()->after($afterKegiatan);
+            }
+
+            $afterSub = Schema::hasColumn('pohon_kinerjas', 'kegiatan_id') ? 'kegiatan_id' : $afterKegiatan;
+            if (!Schema::hasColumn('pohon_kinerjas', 'sub_kegiatan_id')) {
+                $table->unsignedBigInteger('sub_kegiatan_id')->nullable()->after($afterSub);
+            }
         });
+
+        // 2. Buat Index dalam blok Try-Catch
+        // Ini solusi paling ampuh: Coba bikin index, kalau error (karena sudah ada), abaikan saja.
+        try {
+            Schema::table('pohon_kinerjas', function (Blueprint $table) {
+                $table->index([
+                    'tujuan_id', 
+                    'sasaran_id', 
+                    'outcome_id', 
+                    'kegiatan_id', 
+                    'sub_kegiatan_id'
+                ], 'idx_pohon_rel');
+            });
+        } catch (\Throwable $e) {
+            // Index sudah ada atau error lain, kita skip saja biar migrasi tetap jalan
+        }
     }
 
     /**
