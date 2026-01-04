@@ -154,7 +154,6 @@
                 </div>
 
                 {{-- TABEL PEGAWAI --}}
-                {{-- Note: Class overflow dihapus karena pagination butuh ruang --}}
                 <div class="overflow-x-auto relative">
                     <table class="w-full text-left border-collapse">
                         <thead class="bg-gray-50">
@@ -174,14 +173,14 @@
                             @if ($pegawais->count() > 0)
                             @foreach ($pegawais as $index => $pegawai)
                             <tr class="hover:bg-blue-50 transition-colors">
-                                {{-- Menghitung nomor urut berdasarkan halaman pagination --}}
                                 <td class="p-4 text-sm text-gray-600 text-center font-medium">{{ $pegawais->firstItem() + $index }}</td>
                                 <td class="p-4 text-center">
                                     <img src="{{ $pegawai->foto ? asset('storage/'.$pegawai->foto) : 'https://ui-avatars.com/api/?name='.urlencode($pegawai->nama).'&background=0D8ABC&color=fff&size=128' }}" class="w-10 h-10 rounded-full object-cover mx-auto border border-gray-200 shadow-sm" loading="lazy">
                                 </td>
                                 <td class="p-4">
                                     <div class="flex flex-col">
-                                        <span class="text-sm font-bold text-gray-800">{{ $pegawai->nama }}</span>
+                                        {{-- PERBAIKAN: Menghapus font-bold, hanya menyisakan text-sm dan text-gray-800 --}}
+                                        <span class="text-sm text-gray-800">{{ $pegawai->nama }}</span>
                                         <span class="text-xs text-gray-500 mt-0.5">{{ $pegawai->jabatan ? $pegawai->jabatan->nama : '-' }}</span>
                                     </div>
                                 </td>
@@ -273,7 +272,6 @@
                                     @if($jab->level == 0)
                                         {{ strtoupper($jab->nama) }}
                                     @else
-                                        {{-- Menggunakan indentasi standar strip (-) berulang sesuai level --}}
                                         {{ str_repeat('-', $jab->level) }} {{ $jab->nama }}
                                     @endif
                                 </option>

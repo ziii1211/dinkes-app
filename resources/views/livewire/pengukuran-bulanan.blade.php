@@ -70,7 +70,8 @@
                                         </div>
                                         
                                         <div>
-                                            <div class="font-bold text-gray-800 text-sm">{{ $jabatan->pegawai->nama }}</div>
+                                            {{-- PERBAIKAN: Menghapus font-bold, hanya menyisakan text-gray-800 dan text-sm --}}
+                                            <div class="text-gray-800 text-sm">{{ $jabatan->pegawai->nama }}</div>
                                             <div class="text-xs text-gray-400 mt-0.5">NIP. {{ $jabatan->pegawai->nip }}</div>
                                         </div>
                                     </div>
