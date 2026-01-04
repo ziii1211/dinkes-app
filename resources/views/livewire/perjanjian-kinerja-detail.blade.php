@@ -93,10 +93,13 @@
                             </div>
                         </div>
 
+                        {{-- PERBAIKAN: HANYA ADMIN YANG BISA BUAT PK --}}
+                        @if(auth()->user()->hasRole('admin'))
                         <button wire:click="openModal" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-transform transform active:scale-95 flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                             Buat PK
                         </button>
+                        @endif
                     </div>
                 </div>
             </div>
@@ -164,7 +167,6 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
-                                        {{-- PERBAIKAN DI SINI: MENGHAPUS wire:navigate UNTUK TOMBOL LIHAT --}}
                                         <a href="{{ route('perjanjian.kinerja.lihat', $pk->id) }}" class="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium transition-colors">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             Lihat

@@ -76,11 +76,11 @@ class PerjanjianKinerjaLihat extends Component
         }
     }
 
+    // --- PERBAIKAN UTAMA: HANYA ADMIN YANG BISA EDIT ---
     public function canEdit()
     {
-        if (Auth::user()->role == 'admin') return true;
-        if ($this->pk->status_verifikasi == 'draft') return true;
-        return false;
+        // Hanya ROLE ADMIN yang boleh melakukan perubahan
+        return Auth::user()->hasRole('admin');
     }
 
     public function ajukan()
@@ -99,7 +99,6 @@ class PerjanjianKinerjaLihat extends Component
 
         session()->flash('message', 'Perjanjian Kinerja BERHASIL DIPUBLIKASIKAN.');
         
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -168,7 +167,6 @@ class PerjanjianKinerjaLihat extends Component
 
         session()->flash('message', 'Kinerja Utama berhasil ditambahkan.');
         
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -193,7 +191,6 @@ class PerjanjianKinerjaLihat extends Component
         }
         session()->flash('message', 'Target berhasil diperbarui.');
         
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -202,7 +199,6 @@ class PerjanjianKinerjaLihat extends Component
         $sasaran = PkSasaran::find($id);
         if($sasaran) { $sasaran->delete(); }
         
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -211,7 +207,6 @@ class PerjanjianKinerjaLihat extends Component
         $ind = PkIndikator::find($id);
         if($ind) { $ind->delete(); }
         
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -240,18 +235,15 @@ class PerjanjianKinerjaLihat extends Component
         $sub_kegiatan_id = null;
         $nama_program_kegiatan = '-';
 
-        // [MODIFIKASI] Mengambil Kode dan Nama untuk disimpan
         if ($tipe == 'program') {
             $prog = Program::find($id);
             if($prog) {
-                // Simpan format: "1.01.01 Nama Program"
                 $nama_program_kegiatan = $prog->kode . ' ' . $prog->nama;
                 $sub_kegiatan_id = null;
             }
         } elseif ($tipe == 'kegiatan') {
             $keg = Kegiatan::find($id);
             if($keg) {
-                // Simpan format: "1.01.01.2.01 Nama Kegiatan"
                 $nama_program_kegiatan = $keg->kode . ' ' . $keg->nama;
                 $sub_kegiatan_id = null;
             }
@@ -272,7 +264,6 @@ class PerjanjianKinerjaLihat extends Component
 
         session()->flash('message', 'Anggaran berhasil ditambahkan.');
         
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -281,7 +272,6 @@ class PerjanjianKinerjaLihat extends Component
         $ang = PkAnggaran::find($id);
         if($ang) { $ang->delete(); }
 
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -298,7 +288,6 @@ class PerjanjianKinerjaLihat extends Component
         $jabatanId = $this->pk->jabatan_id;
         $this->pk->delete();
         
-        // Redirect ke halaman detail (list PK)
         return redirect()->route('perjanjian.kinerja.detail', $jabatanId);
     }
 
