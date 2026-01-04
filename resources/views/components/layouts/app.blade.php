@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dinas kesehatan{{ isset($title) && $title ? ' . '.$title : '' }}</title>
     
-    {{-- PERUBAHAN DISINI: Mengganti logo favicon --}}
     <link rel="icon" href="{{ asset('Coat_of_arms_of_South_Kalimantan.svg.png') }}" type="image/png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -33,7 +32,6 @@
         }
     </script>
     
-    {{-- Script Pencegah FOUC --}}
     <script>
         if (localStorage.getItem('color-theme') === 'dark' || (!('color-theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
             document.documentElement.classList.add('dark');
@@ -89,7 +87,6 @@
                             if(auth()->user()->role == 'pimpinan') $dashboardRoute = route('pimpinan.dashboard');
                         @endphp
                         
-                        {{-- HAPUS wire:navigate DISINI --}}
                         <a href="{{ $dashboardRoute }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('dashboard') || request()->routeIs('admin.dashboard') || request()->routeIs('pimpinan.dashboard') ? 'text-blue-700 dark:text-blue-400' : '' }}">
                             Dashboard
                         </a>
@@ -102,7 +99,6 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    {{-- HAPUS wire:navigate DISINI --}}
                                     <a href="{{ route('pengukuran.bulanan') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">
                                         Pengukuran Bulanan
                                     </a>
@@ -115,7 +111,6 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    {{-- HAPUS wire:navigate DISINI --}}
                                     <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                                         Struktur Organisasi
                                     </a>
@@ -129,7 +124,6 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                   {{-- HAPUS wire:navigate DI BAWAH INI --}}
                                    <a href="{{ route('matrik.dokumen') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Dokumen Renstra</a>
                                     <a href="/matrik-renstra/tujuan" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Tujuan</a>
                                     <a href="/matrik-renstra/sasaran" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Sasaran</a>
@@ -144,7 +138,6 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    {{-- HAPUS wire:navigate DI BAWAH INI --}}
                                     <a href="{{ route('cascading.renstra') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700">Cascading Renstra</a>
                                     <a href="{{ route('perjanjian.kinerja') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Perjanjian Kinerja</a>
                                 </div>
@@ -156,7 +149,6 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    {{-- HAPUS wire:navigate DISINI --}}
                                     <a href="{{ route('pengukuran.bulanan') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Pengukuran Bulanan</a>
                                 </div>
                             </div>
@@ -167,7 +159,6 @@
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                    {{-- HAPUS wire:navigate DISINI --}}
                                     <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
                                 </div>
                             </div>
@@ -225,7 +216,6 @@
         <div class="bg-blue-600 dark:bg-blue-900 pb-48 pt-10 transition-colors duration-300">
             <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center text-blue-100 text-sm mb-6">
-                    {{-- HAPUS wire:navigate DISINI --}}
                     <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : (auth()->user()->role === 'pimpinan' ? route('pimpinan.dashboard') : route('dashboard')) }}" class="hover:text-white transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
                     </a>
@@ -260,6 +250,63 @@
         </main>
 
     </div>
+
+    {{-- SWEETALERT2 CDN & SCRIPT --}}
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script>
+        document.addEventListener('livewire:initialized', () => {
+            
+            // Konfigurasi Toast Modern
+            const Toast = Swal.mixin({
+                toast: true,
+                position: 'top-end',
+                showConfirmButton: false,
+                timer: 3000,
+                timerProgressBar: true,
+                background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff',
+                color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1f2937',
+                didOpen: (toast) => {
+                    toast.addEventListener('mouseenter', Swal.stopTimer)
+                    toast.addEventListener('mouseleave', Swal.resumeTimer)
+                }
+            });
+
+            // Listener Global untuk Event 'alert' dari Livewire
+            Livewire.on('alert', (event) => {
+                // Livewire 3 mengirim parameter sebagai array, ambil elemen pertama
+                const data = event[0]; 
+
+                Toast.fire({
+                    icon: data.type,   // 'success', 'error', 'warning', 'info'
+                    title: data.title, // Judul besar (opsional)
+                    text: data.message // Pesan kecil
+                });
+            });
+
+            // Listener Global untuk Konfirmasi Hapus (Opsional tapi Profesional)
+            Livewire.on('confirmDelete', (event) => {
+                const id = event[0];
+                Swal.fire({
+                    title: 'Apakah Anda yakin?',
+                    text: "Data yang dihapus tidak dapat dikembalikan!",
+                    icon: 'warning',
+                    showCancelButton: true,
+                    confirmButtonColor: '#3085d6',
+                    cancelButtonColor: '#d33',
+                    confirmButtonText: 'Ya, Hapus!',
+                    cancelButtonText: 'Batal',
+                    background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff',
+                    color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1f2937'
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        // Panggil method di komponen Livewire
+                        Livewire.dispatch('deleteConfirmed', { id: id }); 
+                    }
+                })
+            });
+        });
+    </script>
+
     @livewireScripts
 </body>
 </html>
