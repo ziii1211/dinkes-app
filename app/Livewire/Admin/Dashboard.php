@@ -32,6 +32,23 @@ class Dashboard extends Component
         return number_format($num, 0, ',', '.');
     }
 
+    // --- FUNGSI SORTING HIERARKI JABATAN ---
+    // Fungsi ini memastikan urutan jabatan: Kepala -> Sekretaris -> Bidang -> Seksi
+    private function sortJabatanTree($elements, $parentId = null)
+    {
+        $branch = collect();
+        $children = $elements->where('parent_id', $parentId)->sortBy('id');
+
+        foreach ($children as $child) {
+            $branch->push($child);
+            $grandChildren = $this->sortJabatanTree($elements, $child->id);
+            if ($grandChildren->isNotEmpty()) {
+                $branch = $branch->merge($grandChildren);
+            }
+        }
+        return $branch;
+    }
+
     public function openHighlightModal($tab = 'performer')
     {
         $this->activeTab = $tab;
@@ -153,7 +170,10 @@ class Dashboard extends Component
     public function render()
     {
         Carbon::setLocale('id'); 
-        $jabatans = Jabatan::orderBy('nama', 'asc')->get();
+        
+        // PERBAIKAN: Mengambil semua jabatan lalu di-sort hierarki menggunakan fungsi sortJabatanTree
+        $allJabatans = Jabatan::all();
+        $jabatans = $this->sortJabatanTree($allJabatans);
 
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
@@ -255,7 +275,7 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        // --- MULAI PERBAIKAN GRAFIK DINAMIS ---
+        // --- CHART DATA ---
         $queryChart = RealisasiKinerja::query()
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -285,7 +305,6 @@ class Dashboard extends Component
         } else {
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
-        // --- SELESAI PERBAIKAN GRAFIK ---
 
         $activities = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')

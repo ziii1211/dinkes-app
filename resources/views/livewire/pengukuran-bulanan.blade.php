@@ -70,8 +70,8 @@
                                         </div>
                                         
                                         <div>
-                                            {{-- PERBAIKAN: Menghapus font-bold, hanya menyisakan text-gray-800 dan text-sm --}}
-                                            <div class="text-gray-800 text-sm">{{ $jabatan->pegawai->nama }}</div>
+                                            {{-- PERBAIKAN: Menggunakan font-medium (sedang) --}}
+                                            <div class="text-gray-800 text-sm font-medium">{{ $jabatan->pegawai->nama }}</div>
                                             <div class="text-xs text-gray-400 mt-0.5">NIP. {{ $jabatan->pegawai->nip }}</div>
                                         </div>
                                     </div>
@@ -107,7 +107,6 @@
 
                             <td class="px-6 py-4">
                                 <div class="flex items-center justify-center gap-2">
-                                    {{-- PERBAIKAN: MENGHAPUS wire:navigate UNTUK MEMAKSA REFRESH --}}
                                     <a href="{{ route('pengukuran.atur', $jabatan->id) }}" class="flex items-center gap-1.5 px-3 py-1.5 bg-red-50 text-red-500 rounded-md hover:bg-red-100 hover:text-red-600 transition-colors text-xs font-medium border border-red-50">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"></path></svg>
                                         Atur Kinerja

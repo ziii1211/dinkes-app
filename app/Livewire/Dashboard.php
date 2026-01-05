@@ -34,6 +34,22 @@ class Dashboard extends Component
         return number_format($num, 0, ',', '.');
     }
 
+    // --- FUNGSI SORTING HIERARKI JABATAN ---
+    private function sortJabatanTree($elements, $parentId = null)
+    {
+        $branch = collect();
+        $children = $elements->where('parent_id', $parentId)->sortBy('id');
+
+        foreach ($children as $child) {
+            $branch->push($child);
+            $grandChildren = $this->sortJabatanTree($elements, $child->id);
+            if ($grandChildren->isNotEmpty()) {
+                $branch = $branch->merge($grandChildren);
+            }
+        }
+        return $branch;
+    }
+
     public function openHighlightModal($tab = 'performer')
     {
         $this->activeTab = $tab;
@@ -155,7 +171,10 @@ class Dashboard extends Component
     public function render()
     {
         Carbon::setLocale('id'); 
-        $jabatans = Jabatan::orderBy('nama', 'asc')->get();
+        
+        // PERBAIKAN: Mengambil semua jabatan lalu di-sort sesuai hierarki
+        $allJabatans = Jabatan::all();
+        $jabatans = $this->sortJabatanTree($allJabatans);
 
         // 1. DATA KINERJA UTAMA (Highlight & Isu Kritis)
         $rawPerformance = DB::table('realisasi_kinerjas')
@@ -259,9 +278,7 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        // 3. GRAFIK ANALISIS CAPAIAN (PERBAIKAN DINAMIS)
-        // -----------------------------------------------------
-        // Query disesuaikan dengan filter perangkat daerah
+        // 3. GRAFIK ANALISIS CAPAIAN
         $queryChart = RealisasiKinerja::query()
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -286,14 +303,11 @@ class Dashboard extends Component
         if($hasRealChartData) {
             for ($i = 1; $i <= 12; $i++) {
                 $val = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
-                // Cap di 100% untuk visualisasi agar grafik tidak rusak jika ada outlier
                 $normalizedChart[] = $val > 100 ? 100 : $val;
             }
         } else {
-            // Data Simulasi (Dummy) jika database kosong
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
-        // -----------------------------------------------------
 
         // 4. AKTIVITAS TERKINI (LOG)
         $activities = DB::table('realisasi_kinerjas')

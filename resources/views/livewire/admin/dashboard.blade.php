@@ -93,8 +93,15 @@
                     <div class="relative group">
                         <select wire:model.live="perangkat_daerah" class="appearance-none pl-10 pr-8 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer w-full sm:w-64 transition-all hover:bg-slate-100">
                             <option value="">Semua Unit Kerja</option>
+                            {{-- PERBAIKAN: List Jabatan sudah terurut hierarki, tanda strip dihilangkan --}}
                             @foreach($jabatans as $jab)
-                                <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+                                <option value="{{ $jab->id }}">
+                                    @if($jab->level == 0)
+                                        {{ strtoupper($jab->nama) }}
+                                    @else
+                                        {{ $jab->nama }}
+                                    @endif
+                                </option>
                             @endforeach
                         </select>
                         <svg class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>

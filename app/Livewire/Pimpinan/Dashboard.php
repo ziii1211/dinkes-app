@@ -17,9 +17,11 @@ class Dashboard extends Component
     public $periode = 'Renstra 2026-2030';
     public $perangkat_daerah = ''; 
 
+    // State Modal & Tabs
     public $isOpenHighlight = false;
     public $activeTab = 'performer';
 
+    // Data Detail untuk Modal
     public $detailPerformers = [];
     public $detailIsuKritis = [];
     public $detailDokumen = [];
@@ -30,6 +32,22 @@ class Dashboard extends Component
         if ($num >= 1000000000) return round($num / 1000000000, 2) . 'M';
         if ($num >= 1000000) return round($num / 1000000, 2) . 'Jt';
         return number_format($num, 0, ',', '.');
+    }
+
+    // --- FUNGSI SORTING HIERARKI JABATAN ---
+    private function sortJabatanTree($elements, $parentId = null)
+    {
+        $branch = collect();
+        $children = $elements->where('parent_id', $parentId)->sortBy('id');
+
+        foreach ($children as $child) {
+            $branch->push($child);
+            $grandChildren = $this->sortJabatanTree($elements, $child->id);
+            if ($grandChildren->isNotEmpty()) {
+                $branch = $branch->merge($grandChildren);
+            }
+        }
+        return $branch;
     }
 
     public function openHighlightModal($tab = 'performer')
@@ -153,8 +171,12 @@ class Dashboard extends Component
     public function render()
     {
         Carbon::setLocale('id'); 
-        $jabatans = Jabatan::orderBy('nama', 'asc')->get();
+        
+        // PERBAIKAN: Mengambil semua jabatan lalu di-sort hierarki
+        $allJabatans = Jabatan::all();
+        $jabatans = $this->sortJabatanTree($allJabatans);
 
+        // 1. DATA KINERJA UTAMA (Highlight & Isu Kritis)
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -237,6 +259,7 @@ class Dashboard extends Component
             $isuKritisDesc = "{$isuKritisCount} Isu: {$listNames}.";
         }
 
+        // 2. STATISTIK DOKUMEN PK
         $pkStats = PerjanjianKinerja::query()
             ->when($this->perangkat_daerah, function($query) {
                 $query->where('jabatan_id', $this->perangkat_daerah);
@@ -255,7 +278,8 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        // --- MULAI PERBAIKAN GRAFIK DINAMIS ---
+        // 3. GRAFIK ANALISIS CAPAIAN (PERBAIKAN DINAMIS)
+        // -----------------------------------------------------
         $queryChart = RealisasiKinerja::query()
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -285,8 +309,9 @@ class Dashboard extends Component
         } else {
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
-        // --- SELESAI PERBAIKAN GRAFIK ---
+        // -----------------------------------------------------
 
+        // 4. AKTIVITAS TERKINI (LOG)
         $activities = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -337,6 +362,7 @@ class Dashboard extends Component
                 ];
             });
 
+        // 5. JADWAL / DEADLINE
         $now = Carbon::now();
         $activeSchedule = JadwalPengukuran::where('is_active', true)
             ->whereDate('tanggal_mulai', '<=', $now)
