@@ -8,7 +8,7 @@
 
     <div class="min-h-screen bg-gray-100 p-6 space-y-6">
 
-        {{-- NOTIFIKASI SUKSES (Tampil setelah refresh) --}}
+        {{-- NOTIFIKASI SUKSES (Livewire Flash) --}}
         @if (session()->has('message'))
             <div class="max-w-7xl mx-auto bg-green-100 border-l-4 border-green-500 text-green-700 px-4 py-3 rounded shadow-sm relative flex justify-between items-center animate-fade-in-down mb-6">
                 <div class="flex items-center">
@@ -16,7 +16,7 @@
                     <span class="font-bold mr-1">Berhasil!</span>
                     <span class="block sm:inline">{{ session('message') }}</span>
                 </div>
-                <button type="button" class="text-green-700 hover:text-green-900" onclick="this.parentElement.remove()">
+                <button type="button" class="text-green-700 hover:text-green-900" wire:click="$refresh">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
             </div>
@@ -30,7 +30,7 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
             {{-- INFORMASI TAHUN & JABATAN --}}
             <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
-                
+                {{-- Dropdown Tahun --}}
                 <div class="border border-gray-100 rounded-lg p-4 bg-gray-50 relative" x-data="{ open: false, search: '' }">
                     <label class="text-xs text-gray-400 uppercase font-bold mb-1 block">Tahun</label>
                     <button @click="open = !open" @click.outside="open = false" type="button" class="flex items-center justify-between w-full bg-white border border-gray-200 text-gray-800 text-lg font-bold py-1 px-3 rounded hover:border-blue-400 focus:outline-none focus:ring-2 focus:ring-blue-200 transition-all">
@@ -51,6 +51,7 @@
                     </div>
                 </div>
 
+                {{-- Informasi Unit Kerja --}}
                 <div class="border border-gray-100 rounded-lg p-4 bg-gray-50">
                     <label class="text-xs text-gray-400 uppercase font-bold mb-1 block">Perangkat Daerah</label>
                     <div class="text-sm font-bold text-gray-800 uppercase">DINAS KESEHATAN</div>
@@ -96,6 +97,12 @@
                 </div>
                 
                 <div class="flex gap-2">
+                    {{-- TOMBOL EXPORT EXCEL --}}
+                    <button wire:click="downloadExcel" wire:loading.attr="disabled" class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2 transition-colors">
+                        <svg wire:loading.remove class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                        <svg wire:loading class="w-4 h-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                        Export Excel
+                    </button>
 
                     @if(auth()->check() && auth()->user()->role === 'admin')
                         <button wire:click="openAturJadwal" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white text-xs font-bold rounded-lg shadow-sm flex items-center gap-2 transition-colors">
@@ -138,7 +145,7 @@
             @endif
         </div>
 
-        {{-- TABEL RHK --}}
+        {{-- TABEL RHK (Indikator & Realisasi) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-6 py-5 border-b border-gray-100">
                 <h3 class="text-lg font-bold text-gray-800">Rencana Hasil Kerja (RHK)</h3>
@@ -167,7 +174,6 @@
                                         <td class="px-4 py-4 text-center align-middle text-gray-800">{{ $ind->realisasi_bulan ?? '-' }}</td>
                                         <td class="px-4 py-4 text-center align-middle text-gray-800">{{ $ind->capaian_bulan ?? '-' }}</td>
                                         <td class="px-4 py-4 text-gray-500 align-middle text-xs italic">{{ $ind->catatan_bulan ?? '-' }}</td>
-                                        
                                         <td class="px-4 py-4 align-middle text-center">
                                             <div class="text-xs text-gray-700 mb-2 font-medium {{ $ind->tanggapan_bulan ? 'block' : 'hidden' }}">{{ $ind->tanggapan_bulan ?? '-' }}</div>
                                             <div class="{{ !$ind->tanggapan_bulan ? 'block' : 'hidden' }} text-gray-400 text-xs mb-2">-</div>
@@ -177,7 +183,6 @@
                                                 </button>
                                             @endif
                                         </td>
-
                                         <td class="px-4 py-4 text-center align-middle">
                                             @if(auth()->check() && auth()->user()->role !== 'pimpinan')
                                                 @if($isScheduleOpen)
@@ -253,30 +258,84 @@
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                                         {{ $aksi->realisasi_bulan ? 'Edit' : 'Isi' }}
                                                     </button>
-                                                    <button wire:click="deleteRencanaAksi({{ $aksi->id }})" 
-                                                            wire:confirm="Yakin ingin menghapus rencana aksi ini?" 
-                                                            class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border border-red-200 text-xs font-bold rounded shadow-sm flex items-center justify-center transition-colors"
-                                                            title="Hapus Rencana Aksi">
+                                                    <button wire:click="deleteRencanaAksi({{ $aksi->id }})" wire:confirm="Yakin ingin menghapus rencana aksi ini?" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border border-red-200 text-xs font-bold rounded shadow-sm flex items-center justify-center transition-colors">
                                                         <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                     </button>
                                                 </div>
                                             @else
                                                 <button disabled class="px-3 py-1.5 bg-gray-100 text-gray-400 text-xs font-bold rounded flex items-center justify-center gap-1 mx-auto cursor-not-allowed border border-gray-200">
-                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> 
-                                                    Terkunci
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> Terkunci
                                                 </button>
                                             @endif
                                         @endif
                                     </td>
                                 </tr>
                             @empty
-                                <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400 italic"><div class="flex flex-col items-center justify-center gap-2"><svg class="w-10 h-10 text-gray-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg><span>Belum ada data Rencana Aksi.</span></div></td></tr>
+                                <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data Rencana Aksi.</td></tr>
                             @endforelse
                         </tbody>
                     </table>
                 </div>
             </div>
         </div>
+
+        {{-- TABEL BARU: PENJELASAN PER INDIKATOR KINERJA (3 KOLOM SPESIFIK) --}}
+        <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
+            <div class="px-6 py-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <h3 class="text-lg font-bold text-gray-800">Penjelasan per Indikator Kinerja</h3>
+                <div class="flex gap-2">
+                    @if(auth()->check() && auth()->user()->role !== 'pimpinan')
+                        @if($isScheduleOpen)
+                            <button wire:click="openTambahPenjelasan" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded-lg flex items-center gap-2 shadow-sm transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Penjelasan
+                            </button>
+                        @else
+                            <button disabled class="px-4 py-2 bg-gray-100 text-gray-400 text-xs font-bold rounded-lg flex items-center gap-2 cursor-not-allowed border border-gray-200">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg> Terkunci
+                            </button>
+                        @endif
+                    @endif
+                </div>
+            </div>
+
+            <div class="p-6">
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                            <tr>
+                                <th class="px-6 py-4 w-16 text-center">NO</th>
+                                <th class="px-4 py-4 w-1/3">UPAYA</th>
+                                <th class="px-4 py-4 w-1/3">HAMBATAN</th>
+                                <th class="px-4 py-4 w-1/3">RENCANA TINDAK LANJUT</th>
+                                <th class="px-4 py-4 w-32 text-center">AKSI</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-100 text-gray-700">
+                            @forelse($penjelasans as $item)
+                                <tr class="hover:bg-gray-50 transition-colors">
+                                    <td class="px-6 py-4 text-center text-gray-500">{{ $loop->iteration }}</td>
+                                    <td class="px-4 py-4 align-middle text-gray-800 leading-relaxed">{{ $item->upaya ?? '-' }}</td>
+                                    <td class="px-4 py-4 align-middle text-gray-800 leading-relaxed">{{ $item->hambatan ?? '-' }}</td>
+                                    <td class="px-4 py-4 align-middle text-gray-800 leading-relaxed">{{ $item->tindak_lanjut ?? '-' }}</td>
+                                    <td class="px-4 py-4 text-center align-middle">
+                                        @if($isScheduleOpen && auth()->user()->role !== 'pimpinan')
+                                            <button wire:click="hapusPenjelasan({{ $item->id }})" wire:confirm="Yakin ingin menghapus poin ini?" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border border-red-200 text-xs font-bold rounded shadow-sm transition-colors">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        @else
+                                            <span class="text-xs text-gray-400 italic">Locked</span>
+                                        @endif
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data penjelasan.</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     {{-- MODAL ATUR JADWAL --}}
@@ -367,7 +426,7 @@
     </div>
     @endif
 
-    {{-- MODAL REALISASI INDIKATOR (DENGAN CAPAIAN MANUAL) --}}
+    {{-- MODAL REALISASI INDIKATOR --}}
     @if($isOpenRealisasi)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform transition-all">
@@ -389,13 +448,10 @@
                     <input type="number" step="0.01" wire:model="realisasiInput" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
                     @error('realisasiInput') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
-
-                {{-- INPUT CAPAIAN MANUAL (Hanya Muncul Jika Arah Negatif/Menurun) --}}
                 @if($showCapaianInput)
                 <div class="bg-yellow-50 p-3 rounded-lg border border-yellow-200 animate-fade-in-down">
                     <label class="block text-sm font-semibold text-yellow-800 mb-1 flex items-center gap-2">
-                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
-                        Capaian Manual
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg> Capaian Manual
                     </label>
                     <p class="text-xs text-yellow-600 mb-2">Indikator ini memiliki arah <strong>menurun/negatif</strong>. Silakan isi capaian manual jika diperlukan.</p>
                     <div class="flex items-center gap-2">
@@ -404,7 +460,6 @@
                     </div>
                 </div>
                 @endif
-
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Catatan</label>
                     <textarea wire:model="catatanInput" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
@@ -424,9 +479,7 @@
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 overflow-hidden transform transition-all">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
                 <h3 class="text-lg font-bold text-gray-800">Beri Tanggapan Pimpinan</h3>
-                <button wire:click="closeTanggapan" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
-                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                </button>
+                <button wire:click="closeTanggapan" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="p-6 space-y-4">
                 <div class="bg-blue-50 border border-blue-200 rounded-lg p-3">
@@ -435,9 +488,7 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Isi Tanggapan</label>
-                    <textarea wire:model="tanggapanInput" rows="4" 
-                              class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" 
-                              placeholder="Berikan masukan atau arahan terkait capaian ini..."></textarea>
+                    <textarea wire:model="tanggapanInput" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Berikan masukan atau arahan terkait capaian ini..."></textarea>
                     @error('tanggapanInput') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -475,6 +526,46 @@
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                 <button wire:click="closeRealisasiAksi" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">Batal</button>
                 <button wire:click="simpanRealisasiAksi" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm">Simpan</button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- [BARU] MODAL TAMBAH PENJELASAN (INPUT 3 KOLOM) - WARNA NETRAL --}}
+    @if($isOpenTambahPenjelasan)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity" x-data>
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden transform transition-all">
+            <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
+                <h3 class="text-lg font-bold text-gray-800">Tambah Penjelasan Kinerja</h3>
+                <button wire:click="closeTambahPenjelasan" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
+            </div>
+            <div class="p-6 space-y-4">
+                
+                {{-- FIELD UPAYA (WARNA NETRAL/GRAY) --}}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Upaya</label>
+                    <textarea wire:model="formUpaya" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan upaya yang dilakukan..."></textarea>
+                    @error('formUpaya') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+
+                {{-- FIELD HAMBATAN (WARNA NETRAL/GRAY) --}}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Hambatan</label>
+                    <textarea wire:model="formHambatan" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan hambatan yang ditemui..."></textarea>
+                    @error('formHambatan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+
+                {{-- FIELD RTL (WARNA NETRAL/GRAY) --}}
+                <div>
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Rencana Tindak Lanjut</label>
+                    <textarea wire:model="formRtl" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan rencana tindak lanjut..."></textarea>
+                    @error('formRtl') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                </div>
+
+            </div>
+            <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
+                <button wire:click="closeTambahPenjelasan" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">Batal</button>
+                <button wire:click="simpanPenjelasan" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm">Simpan</button>
             </div>
         </div>
     </div>

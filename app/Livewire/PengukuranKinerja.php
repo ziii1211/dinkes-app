@@ -9,10 +9,7 @@ use App\Models\RencanaAksi;
 use App\Models\RealisasiKinerja;
 use App\Models\RealisasiRencanaAksi;
 use App\Models\JadwalPengukuran;
-// --- IMPORT TAMBAHAN UNTUK EXCEL ---
-use App\Exports\PengukuranKinerjaExport; 
-use Maatwebsite\Excel\Facades\Excel;
-// ------------------------------------
+use App\Models\PenjelasanKinerja; 
 use Illuminate\Support\Facades\DB; 
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -30,6 +27,14 @@ class PengukuranKinerja extends Component
     public $pk = null;
     public $rencanaAksis = []; 
 
+    // Properti Penjelasan Kinerja (Tabel 3 Kolom)
+    public $penjelasans = []; 
+    
+    // Form Input Penjelasan (3 Field Manual)
+    public $formUpaya;
+    public $formHambatan;
+    public $formRtl;
+
     // Status Jadwal
     public $isScheduleOpen = false;
     public $deadlineDate = null;
@@ -39,17 +44,15 @@ class PengukuranKinerja extends Component
     public $isOpenRealisasi = false;
     public $isOpenRealisasiAksi = false;
     public $isOpenTambahAksi = false;
+    public $isOpenTambahPenjelasan = false; 
     public $isOpenTanggapan = false;
     public $isOpenAturJadwal = false;
 
-    // Form Inputs
+    // Form Inputs Lainnya
     public $formJadwalMulai, $formJadwalSelesai;
-    
-    // Properti Realisasi (Termasuk Capaian Manual)
     public $indikatorId, $indikatorNama, $indikatorTarget, $indikatorSatuan;
     public $realisasiInput, $capaianInput, $catatanInput; 
     public $showCapaianInput = false;
-
     public $aksiId, $aksiNama, $aksiTarget, $aksiSatuan, $realisasiAksiInput;
     public $formAksiNama, $formAksiTarget, $formAksiSatuan;
     public $tanggapanInput;
@@ -59,7 +62,6 @@ class PengukuranKinerja extends Component
         $this->jabatan = Jabatan::with('pegawai')->findOrFail($jabatanId);
         $this->pegawai = $this->jabatan->pegawai;
 
-        // Ambil PK terakhir yang disetujui
         $lastPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
                     ->where('status_verifikasi', 'disetujui')
                     ->latest('tahun')
@@ -68,18 +70,16 @@ class PengukuranKinerja extends Component
         $this->tahun = $lastPk ? $lastPk->tahun : date('Y');
         $this->selectedMonth = (int) date('n');
 
-        // MEMBUAT LIST TAHUN (Wajib ada untuk dropdown)
         $currentYear = date('Y');
         $this->availableYears = range($currentYear - 2, $currentYear + 5);
 
         $this->loadData();
     }
 
-    // FUNGSI UNTUK MENGUBAH TAHUN
     public function setTahun($year)
     {
         $this->tahun = $year;
-        // Redirect agar halaman refresh saat ganti tahun (opsional, tapi konsisten)
+        // Khusus ganti tahun, kita refresh halaman agar URL query string terupdate rapi
         return redirect(request()->fullUrlWithQuery(['tahun' => $year]));
     }
 
@@ -87,40 +87,19 @@ class PengukuranKinerja extends Component
     {
         $this->selectedMonth = $month;
         $this->loadData(); 
-        // Jika ingin refresh saat ganti bulan juga, uncomment baris bawah:
-        // return redirect(request()->header('Referer'));
     }
 
-    // HELPER: Konversi angka string (koma) ke float (titik)
     private function parseNumber($value)
     {
         if (is_null($value)) return 0;
-        // Ganti koma dengan titik, lalu cast ke float
         return (float) str_replace(',', '.', (string) $value);
     }
-
-    // --- METHOD DOWNLOAD EXCEL (BARU) ---
-    public function downloadExcel()
-    {
-        $this->loadData();
-
-        $namaFile = 'Laporan_Kinerja_' . str_replace(' ', '_', $this->jabatan->nama) . '_Bulan_' . $this->selectedMonth . '_' . $this->tahun . '.xlsx';
-
-        return Excel::download(new PengukuranKinerjaExport(
-            $this->pk, 
-            $this->rencanaAksis, 
-            $this->jabatan, 
-            $this->tahun, 
-            $this->selectedMonth
-        ), $namaFile);
-    }
-    // ------------------------------------
 
     public function loadData()
     {
         $this->checkScheduleStatus();
 
-        // Ambil PK sesuai tahun yang dipilih ($this->tahun)
+        // 1. Ambil PK Utama
         $this->pk = PerjanjianKinerja::with(['sasarans.indikators'])
             ->where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
@@ -142,9 +121,7 @@ class PengukuranKinerja extends Component
                     $indikator->catatan_bulan = $data ? $data->catatan : null;
                     $indikator->tanggapan_bulan = $data ? $data->tanggapan : null; 
 
-                    // --- LOGIKA PERHITUNGAN CAPAIAN (Auto/Manual) ---
                     if ($data && $data->capaian !== null) {
-                        // Gunakan capaian manual dari DB jika ada
                         $indikator->capaian_bulan = number_format($data->capaian, 2, ',', '.') . '%';
                     } 
                     elseif ($indikator->realisasi_bulan !== null) {
@@ -156,10 +133,8 @@ class PengukuranKinerja extends Component
                             $isNegative = in_array($arah, ['menurun', 'turun', 'negative', 'negatif', 'min']);
 
                             if ($isNegative) {
-                                // Rumus Negatif (Turun)
                                 $capaian = ((2 * $target) - $realisasi) / $target * 100;
                             } else {
-                                // Rumus Positif (Naik)
                                 $capaian = ($realisasi / $target) * 100;
                             }
                             
@@ -177,6 +152,7 @@ class PengukuranKinerja extends Component
             }
         }
 
+        // 2. Ambil Rencana Aksi
         $this->rencanaAksis = RencanaAksi::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
             ->get();
@@ -198,14 +174,92 @@ class PengukuranKinerja extends Component
                 $capaian = ($realisasiAksi / $targetAksi) * 100;
                 if ($capaian > 100) $capaian = 100;
                 if ($capaian < 0) $capaian = 0;
-                
                 $aksi->capaian_bulan = round($capaian);
             } else {
                 $aksi->capaian_bulan = null;
             }
         }
+
+        // 3. Ambil Penjelasan Kinerja (Format Baru)
+        if (class_exists(PenjelasanKinerja::class)) {
+            $this->penjelasans = PenjelasanKinerja::where('jabatan_id', $this->jabatan->id)
+                ->where('bulan', $this->selectedMonth)
+                ->where('tahun', $this->tahun)
+                ->orderBy('created_at', 'asc')
+                ->get();
+        } else {
+            $this->penjelasans = collect([]);
+        }
     }
 
+    // --- MANAJEMEN PENJELASAN KINERJA (3 KOLOM) ---
+    public function openTambahPenjelasan() {
+        $this->reset(['formUpaya', 'formHambatan', 'formRtl']);
+        $this->isOpenTambahPenjelasan = true;
+    }
+    public function closeTambahPenjelasan() {
+        $this->isOpenTambahPenjelasan = false;
+    }
+
+    public function simpanPenjelasan()
+    {
+        $this->validate([
+            'formUpaya' => 'nullable|string',
+            'formHambatan' => 'nullable|string',
+            'formRtl' => 'nullable|string',
+        ]);
+
+        PenjelasanKinerja::create([
+            'jabatan_id' => $this->jabatan->id,
+            'bulan' => $this->selectedMonth,
+            'tahun' => $this->tahun,
+            'upaya' => $this->formUpaya,
+            'hambatan' => $this->formHambatan,
+            'tindak_lanjut' => $this->formRtl,
+        ]);
+
+        $this->closeTambahPenjelasan();
+        $this->loadData(); // Refresh data tanpa reload page
+        session()->flash('message', 'Penjelasan kinerja berhasil ditambahkan.');
+    }
+
+    public function hapusPenjelasan($id)
+    {
+        $item = PenjelasanKinerja::find($id);
+        if ($item && $item->jabatan_id == $this->jabatan->id) {
+            $item->delete();
+            $this->loadData(); // Refresh data tanpa reload page
+            session()->flash('message', 'Penjelasan dihapus.');
+        }
+    }
+
+    // --- DOWNLOAD EXCEL ---
+    public function downloadExcel()
+    {
+        $this->loadData();
+
+        $jabatan = $this->jabatan;
+        $bulan = $this->selectedMonth;
+        $tahun = $this->tahun;
+        $namaBulan = Carbon::create()->month($bulan)->translatedFormat('F');
+        $namaFile = "Laporan_Kinerja_{$jabatan->nama}_{$namaBulan}_{$tahun}.xls";
+
+        $data = [
+            'jabatan' => $jabatan,
+            'pk' => $this->pk,
+            'rencanaAksis' => $this->rencanaAksis,
+            'bulan' => $bulan,
+            'tahun' => $tahun,
+            'nama_bulan' => $namaBulan,
+            'penjelasans' => $this->penjelasans,
+        ];
+
+        return response()->streamDownload(function () use ($data) {
+            echo view('cetak.dokumen-renstra-excel', $data); 
+        }, $namaFile);
+    }
+
+    // --- STATUS JADWAL ---
     public function checkScheduleStatus()
     {
         if (!class_exists(JadwalPengukuran::class)) {
@@ -249,12 +303,10 @@ class PengukuranKinerja extends Component
         }
     }
 
+    // --- MODAL JADWAL ---
     public function openAturJadwal()
     {
-        $jadwal = JadwalPengukuran::where('tahun', $this->tahun)
-                    ->where('bulan', $this->selectedMonth)
-                    ->first();
-        
+        $jadwal = JadwalPengukuran::where('tahun', $this->tahun)->where('bulan', $this->selectedMonth)->first();
         if ($jadwal) {
             $this->formJadwalMulai = $jadwal->tanggal_mulai->format('Y-m-d');
             $this->formJadwalSelesai = $jadwal->tanggal_selesai->format('Y-m-d');
@@ -262,87 +314,56 @@ class PengukuranKinerja extends Component
             $this->formJadwalMulai = date('Y-m-d');
             $this->formJadwalSelesai = Carbon::now()->addDays(7)->format('Y-m-d');
         }
-        
         $this->isOpenAturJadwal = true;
     }
-
-    public function closeAturJadwal()
-    {
-        $this->isOpenAturJadwal = false;
-    }
+    public function closeAturJadwal() { $this->isOpenAturJadwal = false; }
 
     public function simpanJadwal()
     {
         if (Auth::user()->role !== 'admin') return;
-
         $this->validate([
             'formJadwalMulai' => 'required|date',
             'formJadwalSelesai' => 'required|date|after_or_equal:formJadwalMulai',
         ]);
-
         JadwalPengukuran::updateOrCreate(
             ['tahun' => $this->tahun, 'bulan' => $this->selectedMonth],
-            [
-                'tanggal_mulai' => $this->formJadwalMulai,
-                'tanggal_selesai' => $this->formJadwalSelesai,
-                'is_active' => true
-            ]
+            ['tanggal_mulai' => $this->formJadwalMulai, 'tanggal_selesai' => $this->formJadwalSelesai, 'is_active' => true]
         );
-
-        // REFRESH PAGE
+        $this->closeAturJadwal();
+        $this->loadData();
         session()->flash('message', 'Jadwal pengisian berhasil diperbarui.');
-        return redirect(request()->header('Referer'));
     }
 
-    // --- MANAJEMEN REALISASI INDIKATOR ---
+    // --- REALISASI INDIKATOR ---
     public function openRealisasi($id, $nama, $target, $satuan, $arah = '') {
-        $this->indikatorId = $id; 
-        $this->indikatorNama = $nama; 
-        $this->indikatorTarget = $target; 
-        $this->indikatorSatuan = $satuan;
-        
+        $this->indikatorId = $id; $this->indikatorNama = $nama; $this->indikatorTarget = $target; $this->indikatorSatuan = $satuan;
         $arahClean = strtolower(trim($arah));
         $this->showCapaianInput = in_array($arahClean, ['menurun', 'turun', 'negative', 'negatif', 'min']);
-
-        $data = RealisasiKinerja::where('indikator_id', $id)
-                    ->where('bulan', $this->selectedMonth)
-                    ->where('tahun', $this->tahun)
-                    ->first();
-        
+        $data = RealisasiKinerja::where('indikator_id', $id)->where('bulan', $this->selectedMonth)->where('tahun', $this->tahun)->first();
         $this->realisasiInput = $data ? $data->realisasi : '';
         $this->capaianInput = $data && $data->capaian !== null ? str_replace('.', ',', $data->capaian) : '';
         $this->catatanInput = $data ? $data->catatan : '';
-        
         $this->isOpenRealisasi = true;
     }
-
     public function closeRealisasi() { $this->isOpenRealisasi = false; }
     
     public function simpanRealisasi() {
         $this->validate(['realisasiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
-        
         $cleanRealisasi = str_replace(',', '.', $this->realisasiInput);
-        
         $cleanCapaian = null;
         if ($this->showCapaianInput && $this->capaianInput !== '' && $this->capaianInput !== null) {
              $cleanCapaian = str_replace(',', '.', $this->capaianInput);
         }
-        
         RealisasiKinerja::updateOrCreate(
             ['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], 
-            [
-                'realisasi' => $cleanRealisasi, 
-                'capaian' => $cleanCapaian, 
-                'catatan' => $this->catatanInput
-            ]
+            ['realisasi' => $cleanRealisasi, 'capaian' => $cleanCapaian, 'catatan' => $this->catatanInput]
         );
-        
-        // REFRESH PAGE
+        $this->closeRealisasi();
+        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Data realisasi berhasil disimpan.');
-        return redirect(request()->header('Referer'));
     }
 
-    // --- MANAJEMEN REALISASI RENCANA AKSI ---
+    // --- REALISASI RENCANA AKSI ---
     public function openRealisasiAksi($id) {
         $this->aksiId = $id; $aksi = RencanaAksi::find($id);
         $this->aksiNama = $aksi->nama_aksi; $this->aksiTarget = $aksi->target; $this->aksiSatuan = $aksi->satuan;
@@ -354,43 +375,37 @@ class PengukuranKinerja extends Component
     public function simpanRealisasiAksi() {
         $this->validate(['realisasiAksiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
         $cleanRealisasi = str_replace(',', '.', $this->realisasiAksiInput);
-        
         RealisasiRencanaAksi::updateOrCreate(['rencana_aksi_id' => $this->aksiId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['realisasi' => $cleanRealisasi]);
         
-        // REFRESH PAGE
+        $this->closeRealisasiAksi();
+        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Realisasi aksi berhasil disimpan.');
-        return redirect(request()->header('Referer'));
     }
 
-    // --- MANAJEMEN TAMBAH RENCANA AKSI MANUAL ---
+    // --- RENCANA AKSI MANUAL ---
     public function openTambahAksi() { $this->reset(['formAksiNama', 'formAksiTarget', 'formAksiSatuan']); $this->isOpenTambahAksi = true; }
     public function closeTambahAksi() { $this->isOpenTambahAksi = false; }
     
     public function storeRencanaAksi() {
         $this->validate(['formAksiNama' => 'required', 'formAksiTarget' => 'required', 'formAksiSatuan' => 'required']);
         $cleanTarget = str_replace(',', '.', $this->formAksiTarget);
-        
         RencanaAksi::create(['jabatan_id' => $this->jabatan->id, 'tahun' => $this->tahun, 'nama_aksi' => $this->formAksiNama, 'target' => $cleanTarget, 'satuan' => $this->formAksiSatuan]);
         
-        // REFRESH PAGE
+        $this->closeTambahAksi();
+        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Rencana aksi berhasil ditambahkan.');
-        return redirect(request()->header('Referer'));
     }
-
-    public function deleteRencanaAksi($id)
-    {
+    public function deleteRencanaAksi($id) {
         $aksi = RencanaAksi::find($id);
         if ($aksi) {
             RealisasiRencanaAksi::where('rencana_aksi_id', $id)->delete();
             $aksi->delete();
-            
-            // REFRESH PAGE
+            $this->loadData(); // Refresh data tanpa reload page
             session()->flash('message', 'Rencana Aksi berhasil dihapus.');
-            return redirect(request()->header('Referer'));
         }
     }
 
-    // --- MANAJEMEN TANGGAPAN ---
+    // --- TANGGAPAN ---
     public function openTanggapan($id, $nama) {
         $this->indikatorId = $id; $this->indikatorNama = $nama;
         $data = RealisasiKinerja::where('indikator_id', $id)->where('bulan', $this->selectedMonth)->where('tahun', $this->tahun)->first();
@@ -402,9 +417,9 @@ class PengukuranKinerja extends Component
         if (Auth::user()->role !== 'pimpinan') return;
         RealisasiKinerja::updateOrCreate(['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun], ['tanggapan' => $this->tanggapanInput]);
         
-        // REFRESH PAGE
+        $this->closeTanggapan();
+        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Tanggapan berhasil disimpan.');
-        return redirect(request()->header('Referer'));
     }
 
     public function render()
@@ -421,7 +436,10 @@ class PengukuranKinerja extends Component
         $persenTerisi = $totalIndikator > 0 ? round(($filledIndikator / $totalIndikator) * 100) : 0;
         
         return view('livewire.pengukuran-kinerja', [
-            'totalRhk' => $totalRhk, 'totalIndikator' => $totalIndikator, 'filledIndikator' => $filledIndikator, 'persenTerisi' => $persenTerisi,
+            'totalRhk' => $totalRhk, 
+            'totalIndikator' => $totalIndikator, 
+            'filledIndikator' => $filledIndikator, 
+            'persenTerisi' => $persenTerisi,
             'months' => [1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember']
         ]);
     }
