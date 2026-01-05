@@ -78,16 +78,16 @@
                         {{-- 1. Animasi Gradient Berputar di Belakang Logo --}}
                         <div class="absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 opacity-75 blur-md animate-spin-slow group-hover/logo:opacity-100 transition duration-1000"></div>
                         
-                        {{-- 2. Wadah Putih Transparan (Capsule) Agar Logo Jelas --}}
-                        <div class="relative bg-slate-900/80 backdrop-blur-xl rounded-full p-2 border border-white/10 shadow-2xl flex items-center justify-center gap-4 px-6 py-3">
-                            {{-- Logo Pemprov --}}
-                            <img src="{{ asset('logo pemprov.png') }}" class="h-12 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Pemprov Kalsel">
+                        {{-- 2. Wadah Putih Transparan (Capsule) - UKURAN DIPERBESAR --}}
+                        <div class="relative bg-slate-900/80 backdrop-blur-xl rounded-full p-2 border border-white/10 shadow-2xl flex items-center justify-center gap-5 px-8 py-4">
+                            {{-- Logo Pemprov (DIPERBESAR: h-20) --}}
+                            <img src="{{ asset('logo pemprov.png') }}" class="h-20 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Pemprov Kalsel">
                             
-                            {{-- Separator --}}
-                            <div class="h-8 w-px bg-white/20 rounded-full"></div>
+                            {{-- Separator (DIPERBESAR: h-12) --}}
+                            <div class="h-12 w-px bg-white/20 rounded-full"></div>
                             
-                            {{-- Logo GERMAS --}}
-                            <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" class="h-10 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Germas">
+                            {{-- Logo GERMAS (DIPERBESAR: h-16) --}}
+                            <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" class="h-16 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Germas">
                         </div>
                     </div>
 
@@ -110,7 +110,7 @@
                     
                     {{-- Input Username --}}
                     <div class="group relative">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-indigo-400 transition-colors">Username / NIP</label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-indigo-400 transition-colors">Username </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
