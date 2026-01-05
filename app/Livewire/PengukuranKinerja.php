@@ -235,7 +235,7 @@ class PengukuranKinerja extends Component
         }
     }
 
-    // --- DOWNLOAD EXCEL ---
+    // --- DOWNLOAD EXCEL (UPDATED) ---
     public function downloadExcel()
     {
         $this->loadData();
@@ -243,8 +243,10 @@ class PengukuranKinerja extends Component
         $jabatan = $this->jabatan;
         $bulan = $this->selectedMonth;
         $tahun = $this->tahun;
-        $namaBulan = Carbon::create()->month($bulan)->translatedFormat('F');
-        $namaFile = "Laporan_Kinerja_{$jabatan->nama}_{$namaBulan}_{$tahun}.xls";
+        
+        // Menggunakan Carbon locale Indonesia untuk nama bulan
+        $namaBulan = Carbon::create()->month($bulan)->locale('id')->translatedFormat('F');
+        $namaFile = "Laporan_Kinerja_Bulanan_{$namaBulan}_{$tahun}.xls";
 
         $data = [
             'jabatan' => $jabatan,
@@ -257,7 +259,7 @@ class PengukuranKinerja extends Component
         ];
 
         return response()->streamDownload(function () use ($data) {
-            echo view('cetak.dokumen-renstra-excel', $data);
+            echo view('cetak.laporan-kinerja-bulanan-excel', $data);
         }, $namaFile);
     }
 
