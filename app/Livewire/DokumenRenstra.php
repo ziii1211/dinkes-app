@@ -52,12 +52,12 @@ class DokumenRenstra extends Component
     }
 
     // =================================================================================
-    // 1. CORE LOGIC (HOISTING FIX)
+    // 1. CORE LOGIC (STRICT CASCADING & UNLIMITED DEPTH)
     // =================================================================================
 
     public function getDataRenstra()
     {
-        // A. BUILD TREE IN MEMORY (Optimasi)
+        // A. BUILD TREE IN MEMORY
         $allPohons = PohonKinerja::with('indikators')->get();
         $this->flatPohons = $allPohons; 
 
@@ -72,24 +72,25 @@ class DokumenRenstra extends Component
             }
         }
 
-        // B. PROSES DATA DENGAN LOGIKA HOISTING (TARIK DATA KE ATAS)
+        // B. PROSES DATA
 
         // 1. TUJUAN
         $finalTujuans = collect([]);
-        foreach (Tujuan::with('indikators')->get() as $item) {
+        foreach (Tujuan::all() as $item) {
             $pohonNode = $this->flatPohons->where('tujuan_id', $item->id)->first();
+            if (!$pohonNode) {
+                $pohonNode = $this->findMatchingNode($item->tujuan ?? $item->sasaran_rpjmd);
+            }
             
-            // Ambil Indikator Utama & Virtual Rows (Anak)
-            $mainInds = $this->resolveIndikators($pohonNode, $item->indikators);
+            $item->indikators_from_pohon = $this->resolveIndikators($pohonNode);
+            
+            // Generate Virtual Rows (Anak, Cucu, dst)
             $virtualRows = $pohonNode ? $this->generateVirtualRows($pohonNode, 'tujuan') : collect([]);
 
-            // LOGIKA HOISTING:
-            // Jika Induk kosong indikatornya, tapi punya Anak, tarik Anak Pertama ke posisi Induk
-            if ($mainInds->isEmpty() && $virtualRows->isNotEmpty()) {
-                $firstChild = $virtualRows->shift(); // Ambil & hapus anak pertama dari antrian
+            // Hoisting: Jika induk kosong, pinjam dari anak pertama
+            if ($item->indikators_from_pohon->isEmpty() && $virtualRows->isNotEmpty()) {
+                $firstChild = $virtualRows->shift(); 
                 $item->indikators_from_pohon = $firstChild->indikators_from_pohon;
-            } else {
-                $item->indikators_from_pohon = $mainInds;
             }
 
             $finalTujuans->push($item);
@@ -98,17 +99,15 @@ class DokumenRenstra extends Component
 
         // 2. SASARAN
         $finalSasarans = collect([]);
-        foreach (Sasaran::with('indikators')->get() as $item) {
+        foreach (Sasaran::all() as $item) {
             $pohonNode = $this->findMatchingNode($item->sasaran);
             
-            $mainInds = $this->resolveIndikators($pohonNode, $item->indikators);
+            $item->indikators_from_pohon = $this->resolveIndikators($pohonNode);
             $virtualRows = $pohonNode ? $this->generateVirtualRows($pohonNode, 'sasaran') : collect([]);
 
-            if ($mainInds->isEmpty() && $virtualRows->isNotEmpty()) {
+            if ($item->indikators_from_pohon->isEmpty() && $virtualRows->isNotEmpty()) {
                 $firstChild = $virtualRows->shift(); 
                 $item->indikators_from_pohon = $firstChild->indikators_from_pohon;
-            } else {
-                $item->indikators_from_pohon = $mainInds;
             }
 
             $finalSasarans->push($item);
@@ -117,17 +116,15 @@ class DokumenRenstra extends Component
 
         // 3. OUTCOME
         $finalOutcomes = collect([]);
-        foreach (Outcome::with(['indikators', 'program'])->get() as $item) {
+        foreach (Outcome::with('program')->get() as $item) {
             $pohonNode = $this->findMatchingNode($item->outcome);
 
-            $mainInds = $this->resolveIndikators($pohonNode, $item->indikators);
+            $item->indikators_from_pohon = $this->resolveIndikators($pohonNode);
             $virtualRows = $pohonNode ? $this->generateVirtualRows($pohonNode, 'outcome') : collect([]);
 
-            if ($mainInds->isEmpty() && $virtualRows->isNotEmpty()) {
+            if ($item->indikators_from_pohon->isEmpty() && $virtualRows->isNotEmpty()) {
                 $firstChild = $virtualRows->shift();
                 $item->indikators_from_pohon = $firstChild->indikators_from_pohon;
-            } else {
-                $item->indikators_from_pohon = $mainInds;
             }
 
             $finalOutcomes->push($item);
@@ -136,17 +133,15 @@ class DokumenRenstra extends Component
 
         // 4. KEGIATAN
         $finalKegiatans = collect([]);
-        foreach (Kegiatan::with('indikators')->whereNotNull('output')->get() as $item) {
-            $pohonNode = $this->findMatchingNode($item->nama);
+        foreach (Kegiatan::whereNotNull('output')->get() as $item) {
+            $pohonNode = $this->findMatchingNode($item->nama); 
 
-            $mainInds = $this->resolveIndikators($pohonNode, $item->indikators);
+            $item->indikators_from_pohon = $this->resolveIndikators($pohonNode);
             $virtualRows = $pohonNode ? $this->generateVirtualRows($pohonNode, 'kegiatan') : collect([]);
 
-            if ($mainInds->isEmpty() && $virtualRows->isNotEmpty()) {
+            if ($item->indikators_from_pohon->isEmpty() && $virtualRows->isNotEmpty()) {
                 $firstChild = $virtualRows->shift();
                 $item->indikators_from_pohon = $firstChild->indikators_from_pohon;
-            } else {
-                $item->indikators_from_pohon = $mainInds;
             }
 
             $finalKegiatans->push($item);
@@ -155,17 +150,15 @@ class DokumenRenstra extends Component
 
         // 5. SUB KEGIATAN
         $finalSubKegiatans = collect([]);
-        foreach (SubKegiatan::with('indikators')->get() as $item) {
+        foreach (SubKegiatan::all() as $item) {
             $pohonNode = $this->findMatchingNode($item->nama);
 
-            $mainInds = $this->resolveIndikators($pohonNode, $item->indikators);
+            $item->indikators_from_pohon = $this->resolveIndikators($pohonNode);
             $virtualRows = $pohonNode ? $this->generateVirtualRows($pohonNode, 'sub_kegiatan') : collect([]);
 
-            if ($mainInds->isEmpty() && $virtualRows->isNotEmpty()) {
+            if ($item->indikators_from_pohon->isEmpty() && $virtualRows->isNotEmpty()) {
                 $firstChild = $virtualRows->shift();
                 $item->indikators_from_pohon = $firstChild->indikators_from_pohon;
-            } else {
-                $item->indikators_from_pohon = $mainInds;
             }
 
             $finalSubKegiatans->push($item);
@@ -186,9 +179,31 @@ class DokumenRenstra extends Component
     }
 
     // =================================================================================
-    // 2. HELPER FUNCTIONS
+    // 2. HELPER FUNCTIONS (RECURSIVE & FILTERING)
     // =================================================================================
 
+    private function resolveIndikators($pohonNode)
+    {
+        // STRICT MODE: Hanya ambil dari Pohon Kinerja
+        if ($pohonNode && $pohonNode->indikators && $pohonNode->indikators->isNotEmpty()) {
+            return $this->filterIndikators($pohonNode->indikators);
+        }
+        return collect([]);
+    }
+
+    private function filterIndikators($collection)
+    {
+        if (!$collection) return collect([]);
+        
+        // STRICT MODE: Hanya indikator yang punya 'nama_indikator'
+        return $collection->filter(function($ind) {
+            return !empty($ind->nama_indikator) && $ind->nama_indikator !== '-';
+        })->values();
+    }
+
+    /**
+     * PERBAIKAN UTAMA: generateVirtualRows sekarang Rekursif Tanpa Batas Level
+     */
     private function generateVirtualRows($parentNode, $type)
     {
         $rows = collect([]);
@@ -196,28 +211,59 @@ class DokumenRenstra extends Component
         if (!$parentNode || !$parentNode->children_nodes) return $rows;
 
         foreach ($parentNode->children_nodes as $child) {
-            // Cek apakah anak ini punya indikator valid
+            // Ambil indikator anak ini
             $inds = $this->filterIndikators($child->indikators);
             
-            // Jika ada indikator, buat baris baru (KOTAK BARU)
+            // Jika anak ini punya indikator, buat baris tampilannya
             if ($inds->isNotEmpty()) {
                 $virtualRow = new stdClass();
-                
-                // Set data indikator anak ini
                 $virtualRow->indikators_from_pohon = $inds;
-
-                // Kosongkan field teks utama agar tampilan bersih
                 $this->setEmptyFields($virtualRow, $type);
-
                 $rows->push($virtualRow);
             }
 
-            // REKURSIF: Cari cucu dan seterusnya
+            // REKURSIF: Cari ke Cucu, Cicit, dst. (Unlimited Depth)
+            // Hapus pembatasan if(type == ...) agar semua level tertelusuri
             $childRows = $this->generateVirtualRows($child, $type);
             $rows = $rows->concat($childRows);
         }
 
         return $rows;
+    }
+
+    private function findMatchingNode($text)
+    {
+        if (empty($text) || strlen($text) < 3) return null;
+        if (!$this->flatPohons) return null;
+
+        $target = $this->normalizeText($text);
+        
+        // 1. Exact Match
+        $exact = $this->flatPohons->first(function($pohon) use ($target) {
+            return $this->normalizeText($pohon->nama_pohon) === $target;
+        });
+        if ($exact) return $exact;
+
+        // 2. Substring Match
+        $substring = $this->flatPohons->first(function($pohon) use ($target) {
+            $pohonName = $this->normalizeText($pohon->nama_pohon);
+            return str_contains($pohonName, $target) || str_contains($target, $pohonName);
+        });
+        if ($substring) return $substring;
+
+        // 3. Fuzzy Match
+        $bestMatch = null;
+        $highestSim = 0;
+        foreach ($this->flatPohons as $pohon) {
+            $pohonName = $this->normalizeText($pohon->nama_pohon);
+            similar_text($target, $pohonName, $percent);
+            
+            if ($percent > 80 && $percent > $highestSim) {
+                $highestSim = $percent;
+                $bestMatch = $pohon;
+            }
+        }
+        return $bestMatch;
     }
 
     private function setEmptyFields($row, $type)
@@ -241,55 +287,9 @@ class DokumenRenstra extends Component
         }
     }
 
-    private function resolveIndikators($pohonNode, $masterIndikators)
-    {
-        // 1. Cek dari Pohon
-        if ($pohonNode && $pohonNode->indikators && $pohonNode->indikators->isNotEmpty()) {
-            return $this->filterIndikators($pohonNode->indikators);
-        }
-        // 2. Fallback Master
-        if ($masterIndikators && $masterIndikators->isNotEmpty()) {
-            return $this->filterIndikators($masterIndikators);
-        }
-        return collect([]);
-    }
-
-    private function filterIndikators($collection)
-    {
-        if (!$collection) return collect([]);
-        return $collection->filter(function($ind) {
-            return !empty($ind->nama_indikator) && $ind->nama_indikator !== '-';
-        })->values();
-    }
-
-    private function findMatchingNode($text)
-    {
-        if (empty($text) || strlen($text) < 3) return null;
-        if (!$this->flatPohons) return null;
-
-        $target = $this->normalizeText($text);
-        
-        $exact = $this->flatPohons->first(function($pohon) use ($target) {
-            return $this->normalizeText($pohon->nama_pohon) === $target;
-        });
-        if ($exact) return $exact;
-
-        $bestMatch = null;
-        $highestSim = 0;
-        foreach ($this->flatPohons as $pohon) {
-            $pohonName = $this->normalizeText($pohon->nama_pohon);
-            similar_text($target, $pohonName, $percent);
-            if ($percent > 90 && $percent > $highestSim) {
-                $highestSim = $percent;
-                $bestMatch = $pohon;
-            }
-        }
-        return $bestMatch;
-    }
-
     private function normalizeText($text)
     {
-        return trim(strtolower(preg_replace('/[^a-zA-Z0-9\s]/', '', $text)));
+        return trim(strtolower(preg_replace('/[^a-zA-Z0-9]/', '', $text)));
     }
 
     // =================================================================================
