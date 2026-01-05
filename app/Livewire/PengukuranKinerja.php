@@ -14,6 +14,10 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 
+// Tambahkan Import Ini untuk Fitur Export Excel
+use Maatwebsite\Excel\Facades\Excel;
+use App\Exports\LaporanKinerjaBulananExport;
+
 class PengukuranKinerja extends Component
 {
     public $jabatan;
@@ -235,32 +239,28 @@ class PengukuranKinerja extends Component
         }
     }
 
-    // --- DOWNLOAD EXCEL (UPDATED) ---
+    // --- DOWNLOAD EXCEL (PERBAIKAN MENGGUNAKAN EXPORT CLASS) ---
     public function downloadExcel()
     {
+        // 1. Pastikan data terbaru termuat
         $this->loadData();
 
-        $jabatan = $this->jabatan;
         $bulan = $this->selectedMonth;
         $tahun = $this->tahun;
         
-        // Menggunakan Carbon locale Indonesia untuk nama bulan
+        // 2. Format nama file agar aman untuk URL/Sistem File
+        $namaJabatanClean = str_replace(['/', '\\', ' '], '_', $this->jabatan->nama);
         $namaBulan = Carbon::create()->month($bulan)->locale('id')->translatedFormat('F');
-        $namaFile = "Laporan_Kinerja_Bulanan_{$namaBulan}_{$tahun}.xls";
+        
+        $namaFile = 'Laporan_Kinerja_' . $namaJabatanClean . '_' . $namaBulan . '_' . $tahun . '.xlsx';
 
-        $data = [
-            'jabatan' => $jabatan,
-            'pk' => $this->pk,
-            'rencanaAksis' => $this->rencanaAksis,
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            'nama_bulan' => $namaBulan,
-            'penjelasans' => $this->penjelasans,
-        ];
-
-        return response()->streamDownload(function () use ($data) {
-            echo view('cetak.laporan-kinerja-bulanan-excel', $data);
-        }, $namaFile);
+        // 3. Return Download menggunakan Class Export
+        // Pastikan Anda sudah membuat file app/Exports/LaporanKinerjaBulananExport.php
+        return Excel::download(new LaporanKinerjaBulananExport(
+            $this->jabatan->id, 
+            $bulan, 
+            $tahun
+        ), $namaFile);
     }
 
     // --- STATUS JADWAL ---
