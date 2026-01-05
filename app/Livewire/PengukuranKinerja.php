@@ -225,8 +225,10 @@ class PengukuranKinerja extends Component
         ]);
 
         $this->closeTambahPenjelasan();
-        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Penjelasan kinerja berhasil ditambahkan.');
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function hapusPenjelasan($id)
@@ -234,9 +236,11 @@ class PengukuranKinerja extends Component
         $item = PenjelasanKinerja::find($id);
         if ($item && $item->jabatan_id == $this->jabatan->id) {
             $item->delete();
-            $this->loadData(); // Refresh data tanpa reload page
             session()->flash('message', 'Penjelasan dihapus.');
         }
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- DOWNLOAD EXCEL (PERBAIKAN MENGGUNAKAN EXPORT CLASS) ---
@@ -255,7 +259,6 @@ class PengukuranKinerja extends Component
         $namaFile = 'Laporan_Kinerja_' . $namaJabatanClean . '_' . $namaBulan . '_' . $tahun . '.xlsx';
 
         // 3. Return Download menggunakan Class Export
-        // Pastikan Anda sudah membuat file app/Exports/LaporanKinerjaBulananExport.php
         return Excel::download(new LaporanKinerjaBulananExport(
             $this->jabatan->id, 
             $bulan, 
@@ -337,8 +340,10 @@ class PengukuranKinerja extends Component
             ['tanggal_mulai' => $this->formJadwalMulai, 'tanggal_selesai' => $this->formJadwalSelesai, 'is_active' => true]
         );
         $this->closeAturJadwal();
-        $this->loadData();
         session()->flash('message', 'Jadwal pengisian berhasil diperbarui.');
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- REALISASI INDIKATOR ---
@@ -375,8 +380,10 @@ class PengukuranKinerja extends Component
             ['realisasi' => $cleanRealisasi, 'capaian' => $cleanCapaian, 'catatan' => $this->catatanInput]
         );
         $this->closeRealisasi();
-        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Data realisasi berhasil disimpan.');
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- REALISASI RENCANA AKSI ---
@@ -407,8 +414,10 @@ class PengukuranKinerja extends Component
         );
 
         $this->closeRealisasiAksi();
-        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Realisasi aksi berhasil disimpan.');
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- RENCANA AKSI MANUAL ---
@@ -436,8 +445,10 @@ class PengukuranKinerja extends Component
         ]);
 
         $this->closeTambahAksi();
-        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Rencana aksi berhasil ditambahkan.');
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function deleteRencanaAksi($id)
@@ -446,9 +457,11 @@ class PengukuranKinerja extends Component
         if ($aksi) {
             RealisasiRencanaAksi::where('rencana_aksi_id', $id)->delete();
             $aksi->delete();
-            $this->loadData(); // Refresh data tanpa reload page
             session()->flash('message', 'Rencana Aksi berhasil dihapus.');
         }
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     // --- TANGGAPAN ---
@@ -475,8 +488,10 @@ class PengukuranKinerja extends Component
         );
 
         $this->closeTanggapan();
-        $this->loadData(); // Refresh data tanpa reload page
         session()->flash('message', 'Tanggapan berhasil disimpan.');
+
+        // --- REFRESH HALAMAN OTOMATIS ---
+        return redirect(request()->header('Referer'));
     }
 
     public function render()
