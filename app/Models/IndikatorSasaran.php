@@ -31,10 +31,4 @@ class IndikatorSasaran extends Model
         return $this->belongsTo(Sasaran::class);
     }
 
-    // --- TAMBAHKAN KODE INI ---
-    public function realisasis()
-    {
-        // Asumsi nama tabel realisasi adalah 'realisasi_kinerjas' dan foreign key 'indikator_id'
-        return $this->hasMany(RealisasiKinerja::class, 'indikator_id');
-    }
 }

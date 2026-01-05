@@ -36,9 +36,6 @@ use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\PohonKinerja;
 
-// --- 3. CONTROLLERS (BARU) ---
-use App\Http\Controllers\LaporanKinerjaController; // <--- TAMBAHAN UNTUK CETAK LAPORAN
-
 // --- 4. EXPORT & PDF ---
 use App\Exports\DokumenRenstraExport;
 use Maatwebsite\Excel\Facades\Excel;
@@ -202,9 +199,5 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengukuran/{jabatanId}', DetailPengukuranKinerja::class)->name('pengukuran.detail');
     });
 
-    // --- CETAK LAPORAN KINERJA BULANAN (MIRIP EXCEL) ---
-    // Route ini berada di luar prefix 'pengukuran-kinerja' agar URL-nya tetap pendek 
-    // (/laporan-kinerja/cetak), tapi tetap dalam middleware Auth.
-    Route::get('/laporan-kinerja/cetak', [LaporanKinerjaController::class, 'printBulanan'])
-        ->name('laporan.cetak');
+
 });
