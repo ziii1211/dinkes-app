@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dinas kesehatan{{ isset($title) && $title ? ' . '.$title : '' }}</title>
     
+    {{-- PERBAIKAN: Logo Browser (Favicon) menggunakan file baru --}}
     <link rel="icon" href="{{ asset('Coat_of_arms_of_South_Kalimantan.svg.png') }}" type="image/png">
     
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -73,7 +74,7 @@
             <div class="w-full px-4 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-24">
                     
-                    {{-- Logo Container --}}
+                    {{-- Logo Container (Tampilan Dashboard Tetap Aman) --}}
                     <div class="flex items-center flex-shrink-0 gap-4">
                         <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" alt="Logo GERMAS" class="h-24 w-auto object-contain drop-shadow-sm">
                         <img src="{{ asset('logo pemprov.png') }}" alt="Logo Pemprov" class="h-20 w-auto object-contain drop-shadow-sm">

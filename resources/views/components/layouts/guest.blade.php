@@ -4,7 +4,10 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ $title ?? 'Login Dinas Kesehatan ' }}</title>
-    <link rel="icon" href="{{ asset('logo pemprov.png') }}" type="image/png">
+    
+    {{-- PERBAIKAN: Mengganti logo favicon ke file baru, bukan logo pemprov --}}
+    <link rel="icon" href="{{ asset('Coat_of_arms_of_South_Kalimantan.svg.png') }}" type="image/png">
+    
     {{-- Google Fonts: Plus Jakarta Sans lebih modern untuk UI Dashboard --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
