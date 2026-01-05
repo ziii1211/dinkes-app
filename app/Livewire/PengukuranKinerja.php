@@ -122,7 +122,10 @@ class PengukuranKinerja extends Component
                     $indikator->tanggapan_bulan = $data ? $data->tanggapan : null; 
 
                     if ($data && $data->capaian !== null) {
-                        $indikator->capaian_bulan = number_format($data->capaian, 2, ',', '.') . '%';
+                        // Simpan nilai asli untuk perhitungan excel nanti
+                        $indikator->capaian_bulan = $data->capaian; 
+                        // Format tampilan di web
+                        $indikator->capaian_display = number_format($data->capaian, 2, ',', '.') . '%';
                     } 
                     elseif ($indikator->realisasi_bulan !== null) {
                         $target = $this->parseNumber($indikator->target_tahunan);
@@ -141,12 +144,15 @@ class PengukuranKinerja extends Component
                             if ($capaian > 100) $capaian = 100;
                             if ($capaian < 0) $capaian = 0;
 
-                            $indikator->capaian_bulan = number_format($capaian, 2, ',', '.') . '%';
+                            $indikator->capaian_bulan = $capaian;
+                            $indikator->capaian_display = number_format($capaian, 2, ',', '.') . '%';
                         } else {
-                            $indikator->capaian_bulan = '-';
+                            $indikator->capaian_bulan = 0;
+                            $indikator->capaian_display = '-';
                         }
                     } else {
-                        $indikator->capaian_bulan = '-';
+                        $indikator->capaian_bulan = null;
+                        $indikator->capaian_display = '-';
                     }
                 }
             }
@@ -174,7 +180,7 @@ class PengukuranKinerja extends Component
                 $capaian = ($realisasiAksi / $targetAksi) * 100;
                 if ($capaian > 100) $capaian = 100;
                 if ($capaian < 0) $capaian = 0;
-                $aksi->capaian_bulan = round($capaian);
+                $aksi->capaian_bulan = round($capaian, 2); // Dibulatkan 2 desimal agar rapi
             } else {
                 $aksi->capaian_bulan = null;
             }
@@ -233,10 +239,10 @@ class PengukuranKinerja extends Component
         }
     }
 
-    // --- DOWNLOAD EXCEL ---
+    // --- DOWNLOAD EXCEL (DIPERBAIKI) ---
     public function downloadExcel()
     {
-        $this->loadData();
+        $this->loadData(); // Pastikan data terbaru sudah dimuat
 
         $jabatan = $this->jabatan;
         $bulan = $this->selectedMonth;
@@ -244,18 +250,31 @@ class PengukuranKinerja extends Component
         $namaBulan = Carbon::create()->month($bulan)->translatedFormat('F');
         $namaFile = "Laporan_Kinerja_{$jabatan->nama}_{$namaBulan}_{$tahun}.xls";
 
+        // Logic Mencari Atasan (Pejabat Penilai)
+        $pejabatPenilai = null;
+        if ($jabatan->parent_id) {
+            $atasanJabatan = Jabatan::with('pegawai')->find($jabatan->parent_id);
+            if ($atasanJabatan) {
+                $pejabatPenilai = $atasanJabatan->pegawai;
+            }
+        }
+
+        // Siapkan Data untuk View Excel
         $data = [
-            'jabatan' => $jabatan,
-            'pk' => $this->pk,
-            'rencanaAksis' => $this->rencanaAksis,
-            'bulan' => $bulan,
-            'tahun' => $tahun,
-            'nama_bulan' => $namaBulan,
-            'penjelasans' => $this->penjelasans,
+            'dataKinerja'    => $this->pk ? $this->pk->sasarans : collect([]),
+            'rencanaAksis'   => $this->rencanaAksis, // <--- VAR BELUM ADA DI KODE LAMA, INI DITAMBAHKAN
+            'bulan'          => strtoupper($namaBulan),
+            'tahun'          => $tahun,
+            'nama_skpd'      => 'DINAS KESEHATAN PROVINSI KALIMANTAN SELATAN',
+            'nama_jabatan'   => $jabatan->nama,
+            'pejabatPenilai' => $pejabatPenilai,
+            'yangMelapor'    => $this->pegawai,
+            'penjelasans'    => $this->penjelasans,
         ];
 
+        // PENTING: Gunakan view 'cetak.laporan-kinerja-excel' bukan dokumen renstra
         return response()->streamDownload(function () use ($data) {
-            echo view('cetak.dokumen-renstra-excel', $data); 
+            echo view('cetak.laporan-kinerja-excel', $data); 
         }, $namaFile);
     }
 

@@ -4,22 +4,20 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use App\Traits\LogsActivity; // <--- 1. Import Trait Audit Log
+use App\Traits\LogsActivity;
 
 class IndikatorSasaran extends Model
 {
     use HasFactory;
-    use LogsActivity; // <--- 2. Aktifkan CCTV (Logging) di sini
+    use LogsActivity;
 
-    // Nama tabel (opsional, tapi baik untuk kejelasan)
     protected $table = 'indikator_sasarans';
 
-    // Mendefinisikan kolom yang boleh diisi (termasuk target per tahun)
     protected $fillable = [
-        'sasaran_id',   // ID Induk (Sasaran Renstra)
-        'keterangan',   // Nama Indikator
-        'satuan',       // Satuan (Persen, Dokumen, dll)
-        'arah',         // Arah (Meningkat, Menurun)
+        'sasaran_id',
+        'keterangan',
+        'satuan',
+        'arah',
         'target_2025',
         'target_2026',
         'target_2027',
@@ -28,9 +26,15 @@ class IndikatorSasaran extends Model
         'target_2030',
     ];
 
-    // Relasi ke Induk (Sasaran)
     public function sasaran()
     {
         return $this->belongsTo(Sasaran::class);
+    }
+
+    // --- TAMBAHKAN KODE INI ---
+    public function realisasis()
+    {
+        // Asumsi nama tabel realisasi adalah 'realisasi_kinerjas' dan foreign key 'indikator_id'
+        return $this->hasMany(RealisasiKinerja::class, 'indikator_id');
     }
 }
