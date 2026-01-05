@@ -303,14 +303,32 @@ class CascadingRenstra extends Component
         return redirect(request()->header('Referer'));
     }
     
+    // PERBAIKAN: Fungsi delete rekursif
     public function delete($id) { 
         $pohon = ModelPohon::find($id); 
         if($pohon) { 
-            $pohon->delete(); 
+            // Panggil fungsi rekursif untuk menghapus anak-anak dan indikatornya dulu
+            $this->recursiveDelete($pohon);
         }
         
         // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
+    }
+
+    // HELPER: Hapus node dan anak-anaknya
+    private function recursiveDelete($node) {
+        // Cari children
+        $children = ModelPohon::where('parent_id', $node->id)->get();
+        
+        foreach($children as $child) {
+            $this->recursiveDelete($child);
+        }
+
+        // Hapus Indikator yang menempel pada node ini
+        IndikatorPohonKinerja::where('pohon_kinerja_id', $node->id)->delete();
+        
+        // Terakhir, hapus node itu sendiri
+        $node->delete();
     }
 
     // --- MANAGE INDIKATOR LEGACY ---
