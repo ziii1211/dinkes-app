@@ -129,6 +129,7 @@
     </tbody>
 </table>
 
+{{-- SECTION PENJELASAN --}}
 <table>
     <tr></tr>
     <tr>
@@ -195,12 +196,65 @@
     </tr>
 </table>
 
+{{-- SECTION TANDA TANGAN DINAMIS --}}
+{{-- Format: Kiri = Atasan (Parent/Gubernur), Kanan = Pelapor --}}
 <table>
     <tr></tr>
-    <tr><td></td><td colspan="4"></td><td colspan="5" style="text-align: center;">Banjarmasin, {{ date('d') }} {{ ucfirst(strtolower($namaBulan)) }} {{ $tahun }}</td></tr>
-    <tr><td></td><td colspan="4" style="text-align: center;">Mengetahui Atasan Langsung</td><td colspan="5" style="text-align: center;">Yang Melaporkan,</td></tr>
-    <tr><td></td><td colspan="4" style="text-align: center; font-weight: bold;"></td><td colspan="5" style="text-align: center; font-weight: bold;">{{ $jabatan->nama ?? 'Nama Jabatan' }}</td></tr>
-    <tr><td colspan="10" style="height: 60px;"></td></tr>
-    <tr><td></td><td colspan="4" style="text-align: center; font-weight: bold; text-decoration: underline;"></td><td colspan="5" style="text-align: center; font-weight: bold; text-decoration: underline;">{{ $jabatan->pegawai->nama ?? 'Nama Pegawai' }}</td></tr>
-    <tr><td></td><td colspan="4" style="text-align: center;"></td><td colspan="5" style="text-align: center;">NIP. {{ $jabatan->pegawai->nip ?? '-' }}</td></tr>
+    {{-- Baris Tanggal di Kanan --}}
+    <tr>
+        <td colspan="5"></td>
+        {{-- UPDATE: Menggunakan variabel $hariIni untuk memastikan tanggal sesuai WITA --}}
+        <td colspan="5" style="text-align: center;">Banjarmasin, {{ $hariIni }} {{ ucfirst(strtolower($namaBulan)) }} {{ $tahun }}</td>
+    </tr>
+    
+    {{-- Baris "Mengetahui" dan "Yang Melaporkan" --}}
+    <tr>
+        <td colspan="5" style="text-align: center;">Mengetahui Atasan Langsung</td>
+        <td colspan="5" style="text-align: center;">Yang Melaporkan,</td>
+    </tr>
+
+    {{-- Baris Nama Jabatan --}}
+    <tr>
+        <td colspan="5" style="text-align: center; font-weight: bold;">
+            {{ $atasan->nama ?? '(Atasan Langsung)' }}
+        </td>
+        <td colspan="5" style="text-align: center; font-weight: bold;">
+            {{ $jabatan->nama ?? 'Nama Jabatan' }}
+        </td>
+    </tr>
+
+    {{-- Spasi Tanda Tangan --}}
+    <tr>
+        <td colspan="10" style="height: 60px;"></td>
+    </tr>
+
+    {{-- Baris Nama Pegawai --}}
+    <tr>
+        <td colspan="5" style="text-align: center; font-weight: bold; text-decoration: underline;">
+            {{ $atasan->pegawai->nama ?? '(Belum ada pejabat)' }}
+        </td>
+        <td colspan="5" style="text-align: center; font-weight: bold; text-decoration: underline;">
+            {{ $jabatan->pegawai->nama ?? '(Belum ada pejabat)' }}
+        </td>
+    </tr>
+
+    {{-- Baris Pangkat / Golongan --}}
+    <tr>
+        <td colspan="5" style="text-align: center;">
+            {{ $atasan->pegawai->pangkat ?? '' }} {{ $atasan->pegawai->golongan ?? '' }}
+        </td>
+        <td colspan="5" style="text-align: center;">
+            {{ $jabatan->pegawai->pangkat ?? '' }} {{ $jabatan->pegawai->golongan ?? '' }}
+        </td>
+    </tr>
+
+    {{-- Baris NIP --}}
+    <tr>
+        <td colspan="5" style="text-align: center;">
+            NIP. {{ $atasan->pegawai->nip ?? '-' }}
+        </td>
+        <td colspan="5" style="text-align: center;">
+            NIP. {{ $jabatan->pegawai->nip ?? '-' }}
+        </td>
+    </tr>
 </table>
