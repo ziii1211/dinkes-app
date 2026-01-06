@@ -92,7 +92,6 @@
                     <div class="relative group">
                         <select wire:model.live="perangkat_daerah" class="appearance-none pl-10 pr-8 py-2.5 bg-slate-50 border-none rounded-xl text-sm font-bold text-slate-600 focus:ring-2 focus:ring-indigo-500/20 cursor-pointer w-full sm:w-64 transition-all hover:bg-slate-100">
                             <option value="">Semua Unit Kerja</option>
-                            {{-- PERBAIKAN: Menggunakan jabatans yang sudah di-sort hierarki, tanpa indentasi visual --}}
                             @foreach($jabatans as $jab)
                                 <option value="{{ $jab->id }}">
                                     @if($jab->level == 0)
@@ -156,7 +155,7 @@
         {{-- BENTO GRID LAYOUT --}}
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-entry delay-100">
             
-            {{-- CHART SECTION (Modernized) --}}
+            {{-- CHART SECTION --}}
             <div class="lg:col-span-8 glass-card rounded-[2.5rem] p-8 relative overflow-hidden group">
                 <div class="flex items-center justify-between mb-8 relative z-10">
                     <div>
@@ -194,7 +193,6 @@
                                  class="w-full max-w-[50px] rounded-t-2xl relative transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)
                                  {{ $val >= 100 ? 'bg-gradient-to-t from-emerald-500 to-emerald-400' : 'bg-gradient-to-t from-indigo-600 to-indigo-400' }}
                                  opacity-90 hover:opacity-100 group-hover/bar:scale-y-[1.03] group-hover/bar:shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)]">
-                                 {{-- Glossy Reflection --}}
                                  <div class="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
                             </div>
                         </div>
@@ -220,7 +218,6 @@
                     <div wire:click="openHighlightModal('{{ $item['label'] == 'Top Performer' ? 'performer' : ($item['label'] == 'Perlu Perhatian' ? 'isu' : 'dokumen') }}')" 
                          class="group relative bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden">
                         
-                        {{-- Hover Gradient --}}
                         <div class="absolute inset-0 bg-gradient-to-r {{ $item['label'] == 'Perlu Perhatian' ? 'from-rose-50/50' : ($item['label'] == 'Top Performer' ? 'from-amber-50/50' : 'from-blue-50/50') }} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                         <div class="relative z-10 flex items-start gap-4">
@@ -243,7 +240,7 @@
             </div>
         </div>
 
-        {{-- BOTTOM SECTION --}}
+        {{-- BOTTOM SECTION (PERBAIKAN LAYOUT 2 KOLOM) --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-entry delay-200">
             
             {{-- ACTIVITY LOG --}}
@@ -255,33 +252,36 @@
                     <h3 class="text-lg font-bold text-slate-800">Aktivitas Terkini</h3>
                 </div>
 
-                <div class="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-px before:bg-gradient-to-b before:from-slate-200 before:via-slate-100 before:to-transparent">
-                    @foreach($activities as $act)
-                    <div class="relative flex gap-6 pb-6 group last:pb-0">
-                        <div class="absolute left-0 mt-1.5 ml-2.5 -translate-x-1/2 translate-y-0.5 w-5 h-5 rounded-full border-4 border-white bg-slate-200 group-hover:bg-indigo-500 group-hover:scale-110 transition-all z-10 shadow-sm"></div>
-                        
-                        <div class="flex-1 bg-slate-50/50 hover:bg-white p-4 rounded-2xl border border-transparent hover:border-indigo-100 hover:shadow-sm transition-all duration-300">
-                            <div class="flex justify-between items-start gap-4">
-                                <div>
-                                    <p class="text-sm font-semibold text-slate-700">{!! $act['aktivitas'] !!}</p>
-                                    <div class="flex items-center gap-2 mt-2">
-                                        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200/50 px-2 py-0.5 rounded">{{ $act['user'] }}</span>
-                                        <span class="text-xs text-slate-400 font-medium">{{ $act['waktu'] }}</span>
+                {{-- Wrapper Scroll untuk Activity --}}
+                <div class="max-h-[400px] overflow-y-auto custom-scroll pr-2">
+                    <div class="space-y-0 relative before:absolute before:inset-0 before:ml-5 before:w-0.5 before:-translate-x-px before:bg-gradient-to-b before:from-slate-200 before:via-slate-100 before:to-transparent">
+                        @foreach($activities as $act)
+                        <div class="relative flex gap-6 pb-6 group last:pb-0">
+                            <div class="absolute left-0 mt-1.5 ml-2.5 -translate-x-1/2 translate-y-0.5 w-5 h-5 rounded-full border-4 border-white bg-slate-200 group-hover:bg-indigo-500 group-hover:scale-110 transition-all z-10 shadow-sm"></div>
+                            
+                            <div class="flex-1 bg-slate-50/50 hover:bg-white p-4 rounded-2xl border border-transparent hover:border-indigo-100 hover:shadow-sm transition-all duration-300">
+                                <div class="flex justify-between items-start gap-4">
+                                    <div>
+                                        <p class="text-sm font-semibold text-slate-700">{!! $act['aktivitas'] !!}</p>
+                                        <div class="flex items-center gap-2 mt-2">
+                                            <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-200/50 px-2 py-0.5 rounded">{{ $act['user'] }}</span>
+                                            <span class="text-xs text-slate-400 font-medium">{{ $act['waktu'] }}</span>
+                                        </div>
                                     </div>
+                                    <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase {{ str_replace('bg-', 'bg-opacity-10 text-', $act['status_color']) }} {{ $act['status_color'] }}">
+                                        {{ $act['status'] }}
+                                    </span>
                                 </div>
-                                <span class="px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase {{ str_replace('bg-', 'bg-opacity-10 text-', $act['status_color']) }} {{ $act['status_color'] }}">
-                                    {{ $act['status'] }}
-                                </span>
                             </div>
                         </div>
+                        @endforeach
                     </div>
-                    @endforeach
                 </div>
             </div>
-
-            {{-- DARK CARD SHORTCUTS --}}
+            
+            {{-- DARK CARD SHORTCUTS (PERBAIKAN: KEMBALI KE KOLOM KANAN & VERTIKAL) --}}
             <div class="relative bg-[#1e1b4b] rounded-[2.5rem] p-8 text-white overflow-hidden flex flex-col justify-between group">
-                <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[60px] -mr-16 -mt-16 group-hover:bg-indigo-500/30 transition-all duration-1000"></div>
+                 <div class="absolute top-0 right-0 w-64 h-64 bg-indigo-500/20 rounded-full blur-[60px] -mr-16 -mt-16 group-hover:bg-indigo-500/30 transition-all duration-1000"></div>
                 <div class="absolute bottom-0 left-0 w-64 h-64 bg-fuchsia-500/20 rounded-full blur-[60px] -ml-16 -mb-16 group-hover:bg-fuchsia-500/30 transition-all duration-1000"></div>
 
                 <div class="relative z-10">
@@ -352,96 +352,108 @@
                 </div>
 
                 {{-- Modal Content --}}
-                <div class="p-8 max-h-[60vh] overflow-y-auto custom-scroll bg-slate-50/30">
+                {{-- PERBAIKAN: Menghilangkan overflow utama agar scroll terjadi per-tab --}}
+                <div class="p-8 bg-slate-50/30">
+                    
                     @if($activeTab === 'performer')
                          @if(count($detailPerformers) > 0)
                             <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                                <table class="min-w-full divide-y divide-slate-100">
-                                    <thead class="bg-slate-50">
-                                        <tr>
-                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Rank</th>
-                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Unit Kerja</th>
-                                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider">Indikator</th>
-                                            <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Skor</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-slate-100">
-                                        @foreach($detailPerformers as $idx => $item)
-                                        <tr class="hover:bg-slate-50 transition-colors">
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $idx==0 ? 'text-amber-500' : 'text-slate-500' }}">#{{ $idx+1 }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ $item['jabatan'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-center">{{ $item['jumlah_indikator'] }}</td>
-                                            <td class="px-6 py-4 whitespace-nowrap text-right">
-                                                <span class="px-2 py-1 text-xs font-bold rounded bg-indigo-50 text-indigo-600 border border-indigo-100">{{ $item['score'] }}%</span>
-                                            </td>
-                                        </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
+                                {{-- Wrapper Scroll & Sticky --}}
+                                <div class="max-h-[400px] overflow-y-auto custom-scroll">
+                                    <table class="min-w-full divide-y divide-slate-100">
+                                        <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                                            <tr>
+                                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">Rank</th>
+                                                <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">Unit Kerja</th>
+                                                <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">Indikator</th>
+                                                <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider bg-slate-50">Skor</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody class="bg-white divide-y divide-slate-100">
+                                            @foreach($detailPerformers as $idx => $item)
+                                            <tr class="hover:bg-slate-50 transition-colors">
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold {{ $idx==0 ? 'text-amber-500' : 'text-slate-500' }}">#{{ $idx+1 }}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-slate-900">{{ $item['jabatan'] }}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-slate-500 text-center">{{ $item['jumlah_indikator'] }}</td>
+                                                <td class="px-6 py-4 whitespace-nowrap text-right">
+                                                    <span class="px-2 py-1 text-xs font-bold rounded bg-indigo-50 text-indigo-600 border border-indigo-100">{{ $item['score'] }}%</span>
+                                                </td>
+                                            </tr>
+                                            @endforeach
+                                        </tbody>
+                                    </table>
+                                </div>
                             </div>
                         @else
                             <div class="text-center py-10 text-slate-400">Belum ada data performer.</div>
                         @endif
 
                     @elseif($activeTab === 'isu')
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                            @forelse($detailIsuKritis as $isu)
-                            <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
-                                <div>
-                                    <div class="flex items-center gap-2 mb-2">
-                                        <span class="text-[10px] font-bold bg-rose-50 text-rose-500 px-2 py-0.5 rounded uppercase">{{ $isu['jabatan'] }}</span>
+                        {{-- Wrapper Scroll --}}
+                        <div class="max-h-[400px] overflow-y-auto custom-scroll pr-2">
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                @forelse($detailIsuKritis as $isu)
+                                <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex items-center gap-2 mb-2">
+                                            <span class="text-[10px] font-bold bg-rose-50 text-rose-500 px-2 py-0.5 rounded uppercase">{{ $isu['jabatan'] }}</span>
+                                        </div>
+                                        <h4 class="font-bold text-sm text-slate-800 line-clamp-2">{{ $isu['indikator'] }}</h4>
                                     </div>
-                                    <h4 class="font-bold text-sm text-slate-800 line-clamp-2">{{ $isu['indikator'] }}</h4>
+                                    <div class="mt-4 flex items-end justify-between border-t border-slate-50 pt-3">
+                                        <div class="text-xs text-slate-500 space-y-1">
+                                            <div>Target: <span class="font-bold text-slate-700">{{ $isu['target'] }}</span></div>
+                                            <div>Realisasi: <span class="font-bold text-slate-700">{{ $isu['realisasi'] }}</span></div>
+                                        </div>
+                                        <div class="text-right">
+                                            <div class="text-2xl font-black text-rose-500 leading-none">{{ $isu['capaian'] }}%</div>
+                                            <div class="text-[10px] text-rose-300 font-bold uppercase mt-1">Capaian</div>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div class="mt-4 flex items-end justify-between border-t border-slate-50 pt-3">
-                                    <div class="text-xs text-slate-500 space-y-1">
-                                        <div>Target: <span class="font-bold text-slate-700">{{ $isu['target'] }}</span></div>
-                                        <div>Realisasi: <span class="font-bold text-slate-700">{{ $isu['realisasi'] }}</span></div>
-                                    </div>
-                                    <div class="text-right">
-                                        <div class="text-2xl font-black text-rose-500 leading-none">{{ $isu['capaian'] }}%</div>
-                                        <div class="text-[10px] text-rose-300 font-bold uppercase mt-1">Capaian</div>
-                                    </div>
+                                @empty
+                                <div class="col-span-2 flex flex-col items-center justify-center py-12 text-emerald-500 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-100">
+                                    <svg class="w-12 h-12 opacity-50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <span class="font-bold">Semua Aman!</span>
+                                    <span class="text-xs text-emerald-600/70">Tidak ada indikator kritis.</span>
                                 </div>
+                                @endforelse
                             </div>
-                            @empty
-                            <div class="col-span-2 flex flex-col items-center justify-center py-12 text-emerald-500 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-100">
-                                <svg class="w-12 h-12 opacity-50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                <span class="font-bold">Semua Aman!</span>
-                                <span class="text-xs text-emerald-600/70">Tidak ada indikator kritis.</span>
-                            </div>
-                            @endforelse
                         </div>
 
                     @else
                         {{-- Dokumen Content --}}
                         @if(count($detailDokumen) > 0)
                         <div class="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-                             <table class="min-w-full divide-y divide-slate-100">
-                                <thead class="bg-slate-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase">Unit / Pegawai</th>
-                                        <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase">Status</th>
-                                        <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase">Tanggal</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-slate-100">
-                                    @foreach($detailDokumen as $doc)
-                                    <tr class="hover:bg-slate-50 transition-colors">
-                                        <td class="px-6 py-4">
-                                            <div class="text-sm font-bold text-slate-800">{{ $doc['jabatan'] }}</div>
-                                            <div class="text-xs text-slate-500">{{ $doc['pegawai'] }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 text-center">
-                                            <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $doc['status'] == 'Final' ? 'bg-emerald-100 text-emerald-700' : 'bg-slate-100 text-slate-600' }}">
-                                                {{ $doc['status'] }}
-                                            </span>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500">{{ $doc['tanggal'] }}</td>
-                                    </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
+                             {{-- Wrapper Scroll & Sticky --}}
+                             <div class="max-h-[400px] overflow-y-auto custom-scroll">
+                                 <table class="min-w-full divide-y divide-slate-100">
+                                    <thead class="bg-slate-50 sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-slate-500 uppercase bg-slate-50">Unit / Pegawai</th>
+                                            <th class="px-6 py-3 text-center text-xs font-bold text-slate-500 uppercase bg-slate-50">Status</th>
+                                            <th class="px-6 py-3 text-right text-xs font-bold text-slate-500 uppercase bg-slate-50">Tanggal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-slate-100">
+                                        @foreach($detailDokumen as $doc)
+                                        <tr class="hover:bg-slate-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm font-bold text-slate-800">{{ $doc['jabatan'] }}</div>
+                                                <div class="text-xs text-slate-500">{{ $doc['pegawai'] }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                {{-- PERBAIKAN WARNA BADGE STATUS --}}
+                                                <span class="px-2.5 py-1 rounded-full text-xs font-bold {{ $doc['status'] == 'Final' ? 'bg-emerald-100 text-emerald-700' : 'bg-yellow-100 text-yellow-700' }}">
+                                                    {{ $doc['status'] }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm text-slate-500">{{ $doc['tanggal'] }}</td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
                         </div>
                         @else
                             <div class="text-center py-10 text-slate-400">Data dokumen kosong.</div>

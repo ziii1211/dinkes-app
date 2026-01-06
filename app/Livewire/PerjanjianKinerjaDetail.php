@@ -7,6 +7,7 @@ use Livewire\WithPagination;
 use App\Models\Jabatan;
 use App\Models\Pegawai;
 use App\Models\PerjanjianKinerja;
+use Carbon\Carbon; // TAMBAHKAN INI
 
 class PerjanjianKinerjaDetail extends Component
 {
@@ -106,6 +107,8 @@ class PerjanjianKinerjaDetail extends Component
             'keterangan' => 'required',
         ]);
 
+        // PERBAIKAN: Menggunakan Carbon::now('Asia/Makassar') untuk memaksa zona waktu WITA
+        // Ini memastikan tanggal yang tersimpan adalah tanggal hari ini di Banjarmasin/Kalsel
         PerjanjianKinerja::create([
             'jabatan_id' => $this->jabatan->id,
             'pegawai_id' => $this->pegawai ? $this->pegawai->id : null,
@@ -113,7 +116,7 @@ class PerjanjianKinerjaDetail extends Component
             'keterangan' => $this->keterangan,
             'status' => 'draft',
             'status_verifikasi' => 'draft', 
-            'tanggal_penetapan' => now()
+            'tanggal_penetapan' => Carbon::now('Asia/Makassar') 
         ]);
 
         $this->closeModal();

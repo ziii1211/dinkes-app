@@ -69,6 +69,8 @@ class Dashboard extends Component
 
     private function loadDetailData()
     {
+        Carbon::setLocale('id');
+
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -157,12 +159,19 @@ class Dashboard extends Component
                 $statusPejabat = $pk->jabatan->pegawai->status ?? '';
                 if(in_array($statusPejabat, ['Plt', 'Pj', 'Pjs'])) $namaPejabat .= " ({$statusPejabat})";
 
+                // PERBAIKAN LOGIKA STATUS & TANGGAL
+                $statusLabel = ($pk->status_verifikasi == 'disetujui') ? 'Final' : 'Draft';
+                
+                $tanggalInput = $pk->tanggal_penetapan 
+                    ? Carbon::parse($pk->tanggal_penetapan)->translatedFormat('d M Y') 
+                    : $pk->created_at->timezone('Asia/Makassar')->translatedFormat('d M Y');
+
                 return [
                     'jabatan' => $pk->jabatan->nama ?? '-',
                     'pegawai' => $namaPejabat,
                     'tahun' => $pk->tahun,
-                    'status' => ucfirst($pk->status),
-                    'tanggal' => $pk->updated_at->format('d M Y')
+                    'status' => $statusLabel,
+                    'tanggal' => $tanggalInput
                 ];
             })
             ->toArray();
@@ -172,7 +181,6 @@ class Dashboard extends Component
     {
         Carbon::setLocale('id'); 
         
-        // PERBAIKAN: Mengambil semua jabatan lalu di-sort hierarki
         $allJabatans = Jabatan::all();
         $jabatans = $this->sortJabatanTree($allJabatans);
 
@@ -278,8 +286,7 @@ class Dashboard extends Component
         $totalPaguRaw = PkAnggaran::sum('anggaran');
         $serapanRaw = $totalPaguRaw * ($avgCapaian / 100);
 
-        // 3. GRAFIK ANALISIS CAPAIAN (PERBAIKAN DINAMIS)
-        // -----------------------------------------------------
+        // 3. GRAFIK ANALISIS CAPAIAN
         $queryChart = RealisasiKinerja::query()
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -309,7 +316,6 @@ class Dashboard extends Component
         } else {
             $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
         }
-        // -----------------------------------------------------
 
         // 4. AKTIVITAS TERKINI (LOG)
         $activities = DB::table('realisasi_kinerjas')
@@ -332,7 +338,7 @@ class Dashboard extends Component
                 'jabatans.nama as nama_jabatan'
             )
             ->orderBy('realisasi_kinerjas.updated_at', 'desc')
-            ->take(5)
+            ->take(20) // PERBAIKAN: Limit naik jadi 20 untuk scroll
             ->get()
             ->map(function ($item) {
                 $isFeedback = !empty($item->tanggapan);

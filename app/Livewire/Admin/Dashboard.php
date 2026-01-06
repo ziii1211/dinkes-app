@@ -33,7 +33,6 @@ class Dashboard extends Component
     }
 
     // --- FUNGSI SORTING HIERARKI JABATAN ---
-    // Fungsi ini memastikan urutan jabatan: Kepala -> Sekretaris -> Bidang -> Seksi
     private function sortJabatanTree($elements, $parentId = null)
     {
         $branch = collect();
@@ -68,6 +67,8 @@ class Dashboard extends Component
 
     private function loadDetailData()
     {
+        Carbon::setLocale('id');
+
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -149,19 +150,25 @@ class Dashboard extends Component
             ->join('jabatans', 'perjanjian_kinerjas.jabatan_id', '=', 'jabatans.id')
             ->orderBy('jabatans.level', 'asc')
             ->orderBy('jabatans.id', 'asc')
-            ->select('perjanjian_kinerjas.*')
+            ->select('perjanjian_kinerjas.*') 
             ->get()
             ->map(function($pk) {
                 $namaPejabat = $pk->jabatan->pegawai->nama ?? '-';
                 $statusPejabat = $pk->jabatan->pegawai->status ?? '';
                 if(in_array($statusPejabat, ['Plt', 'Pj', 'Pjs'])) $namaPejabat .= " ({$statusPejabat})";
 
+                $statusLabel = ($pk->status_verifikasi == 'disetujui') ? 'Final' : 'Draft';
+
+                $tanggalInput = $pk->tanggal_penetapan 
+                    ? Carbon::parse($pk->tanggal_penetapan)->translatedFormat('d M Y') 
+                    : $pk->created_at->timezone('Asia/Makassar')->translatedFormat('d M Y');
+
                 return [
                     'jabatan' => $pk->jabatan->nama ?? '-',
                     'pegawai' => $namaPejabat,
                     'tahun' => $pk->tahun,
-                    'status' => ucfirst($pk->status),
-                    'tanggal' => $pk->updated_at->format('d M Y')
+                    'status' => $statusLabel,
+                    'tanggal' => $tanggalInput
                 ];
             })
             ->toArray();
@@ -171,7 +178,6 @@ class Dashboard extends Component
     {
         Carbon::setLocale('id'); 
         
-        // PERBAIKAN: Mengambil semua jabatan lalu di-sort hierarki menggunakan fungsi sortJabatanTree
         $allJabatans = Jabatan::all();
         $jabatans = $this->sortJabatanTree($allJabatans);
 
@@ -326,7 +332,7 @@ class Dashboard extends Component
                 'jabatans.nama as nama_jabatan'
             )
             ->orderBy('realisasi_kinerjas.updated_at', 'desc')
-            ->take(5)
+            ->take(20) // PERBAIKAN: Limit dinaikkan ke 20 agar bisa scroll
             ->get()
             ->map(function ($item) {
                 $isFeedback = !empty($item->tanggapan);
