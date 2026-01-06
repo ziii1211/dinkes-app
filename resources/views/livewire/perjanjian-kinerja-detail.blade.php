@@ -6,7 +6,8 @@
         <span class="mx-2">/</span>
         <span class="text-blue-200">Perencanaan Kinerja</span>
         <span class="mx-2">/</span>
-        <a href="{{ route('perjanjian.kinerja') }}" class="hover:text-white transition-colors" wire:navigate>Perjanjian Kinerja</a>
+        {{-- PERBAIKAN: Hapus wire:navigate agar refresh --}}
+        <a href="{{ route('perjanjian.kinerja') }}" class="hover:text-white transition-colors">Perjanjian Kinerja</a>
         <span class="mx-2">/</span>
         <span class="font-medium text-white">DINAS KESEHATAN - {{ $jabatan->nama }}</span>
     </x-slot>
@@ -19,7 +20,8 @@
                     <svg class="w-5 h-5 mr-2 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m100v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 30 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 019.288 0M15 7a3 30 11-6 0 3 3 0 016 0zm6 3a2 2011-40220014 0zM7 10a2 2011-40220014 0z"></path></svg>
                     Informasi Jabatan & Pengampu
                 </h3>
-                <a href="{{ route('perjanjian.kinerja') }}" wire:navigate class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center shadow-sm">
+                {{-- PERBAIKAN UTAMA: Hapus wire:navigate pada tombol Kembali --}}
+                <a href="{{ route('perjanjian.kinerja') }}" class="px-4 py-2 bg-red-500 hover:bg-red-600 text-white text-sm font-medium rounded-lg transition-colors flex items-center shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     Kembali
                 </a>
@@ -167,6 +169,7 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
+                                        {{-- MENGHAPUS wire:navigate UNTUK TOMBOL LIHAT JUGA --}}
                                         <a href="{{ route('perjanjian.kinerja.lihat', $pk->id) }}" class="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium transition-colors">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             Lihat
