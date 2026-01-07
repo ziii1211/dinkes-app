@@ -95,7 +95,7 @@
                     <h1 class="text-3xl font-black text-white tracking-tight">
                         E-SAKIP <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">DINKES</span>
                     </h1>
-                    <p class="text-slate-400 text-[11px] font-medium tracking-[0.2em] uppercase mt-2">Sistem Akuntabilitas Kooooooooo</p>
+                    <p class="text-slate-400 text-[11px] font-medium tracking-[0.2em] uppercase mt-2">Sistem Akuntabilitas Kinerja</p>
                 </div>
 
                 {{-- ALERT ERROR --}}
@@ -118,7 +118,7 @@
                             </div>
                             <input type="text" wire:model="username" 
                                 class="w-full pl-11 pr-4 py-3.5 bg-slate-900/60 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-slate-900/90 transition-all duration-300 text-sm font-medium" 
-                                placeholder="ID user" required>
+                                placeholder="Masukkan NIP" required>
                         </div>
                         @error('username') <span class="text-red-400 text-xs mt-1 ml-1 block">{{ $message }}</span> @enderror
                     </div>
