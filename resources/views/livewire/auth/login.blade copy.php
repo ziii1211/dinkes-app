@@ -1,4 +1,3 @@
-
 <div class="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#030712] font-sans selection:bg-indigo-500 selection:text-white">
     
     {{-- CUSTOM CSS & ANIMATIONS --}}
@@ -95,7 +94,7 @@
                     <h1 class="text-3xl font-black text-white tracking-tight">
                         E-SAKIP <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-400 to-cyan-400">DINKES</span>
                     </h1>
-                    <p class="text-slate-400 text-[11px] font-medium tracking-[0.2em] uppercase mt-2">Sistem Akuntabilitas Kooooooooo</p>
+                    <p class="text-slate-400 text-[11px] font-medium tracking-[0.2em] uppercase mt-2">Sistem Akuntabilitas Kinerja</p>
                 </div>
 
                 {{-- ALERT ERROR --}}

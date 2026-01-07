@@ -198,6 +198,4 @@ Route::middleware('auth')->group(function () {
         Route::get('/atur-kinerja/{jabatanId}', PengaturanKinerja::class)->name('pengukuran.atur');
         Route::get('/pengukuran/{jabatanId}', DetailPengukuranKinerja::class)->name('pengukuran.detail');
     });
-
-
 });
