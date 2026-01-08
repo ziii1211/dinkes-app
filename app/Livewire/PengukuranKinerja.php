@@ -76,7 +76,10 @@ class PengukuranKinerja extends Component
             ->latest('tahun')
             ->first();
 
-        $this->tahun = $lastPk ? $lastPk->tahun : date('Y');
+        // PERBAIKAN 1: Ambil tahun dari URL (request get) jika ada, untuk menghindari reset saat redirect
+        $defaultTahun = $lastPk ? $lastPk->tahun : date('Y');
+        $this->tahun = request()->query('tahun', $defaultTahun);
+        
         $this->selectedMonth = (int) date('n');
 
         $currentYear = date('Y');
@@ -131,7 +134,11 @@ class PengukuranKinerja extends Component
     public function setTahun($year)
     {
         $this->tahun = $year;
-        return redirect(request()->fullUrlWithQuery(['tahun' => $year]));
+        // PERBAIKAN 2: Gunakan redirect()->route() agar method tetap GET dan tidak error MethodNotAllowed
+        return redirect()->route('pengukuran.detail', [
+            'jabatanId' => $this->jabatan->id,
+            'tahun' => $year
+        ]);
     }
 
     public function selectMonth($month)
@@ -317,51 +324,66 @@ class PengukuranKinerja extends Component
     // --- STATUS JADWAL ---
     public function checkScheduleStatus()
     {
-        // Jika Admin, Bypass Jadwal (Selalu Buka)
-        if(Auth::user()->role === 'admin') {
-            $this->isScheduleOpen = true;
-            $this->scheduleMessage = "Mode Admin: Akses penuh (Bypass jadwal).";
-            // Admin canEdit tetap true
-            return;
-        }
+        $isAdmin = Auth::user()->role === 'admin';
 
+        // 1. Cek Model
         if (!class_exists(JadwalPengukuran::class)) {
-            $this->isScheduleOpen = true;
+            if ($isAdmin) {
+                $this->isScheduleOpen = true;
+                $this->scheduleMessage = "Mode Admin: Akses penuh (Bypass jadwal).";
+            }
             return;
         }
 
+        // 2. Ambil Jadwal dari DB
         $jadwal = JadwalPengukuran::where('tahun', $this->tahun)
             ->where('bulan', $this->selectedMonth)
             ->first();
 
         $now = Carbon::now();
 
+        // 3. Logika Penentuan Pesan & Status
         if ($jadwal && $jadwal->is_active) {
+            // PERBAIKAN 3: Jika jadwal ada, Admin juga melihat hitung mundur (real time info)
+            // Tapi Admin tetap bisa edit (isScheduleOpen = true) meskipun waktu habis.
+            
             $start = Carbon::parse($jadwal->tanggal_mulai)->startOfDay();
             $end = Carbon::parse($jadwal->tanggal_selesai)->endOfDay();
-            $this->deadlineDate = $end->translatedFormat('d F Y H:i');
+            $this->deadlineDate = $end->translatedFormat('d F Y H:i') . ' WITA';
 
             if ($now->between($start, $end)) {
+                // MASIH DALAM PERIODE
                 $this->isScheduleOpen = true;
                 $diff = $now->diff($end);
                 $this->scheduleMessage = ($diff->days > 0) 
                     ? "Sisa Waktu: {$diff->days} Hari {$diff->h} Jam lagi." 
                     : "Segera Berakhir: {$diff->h} Jam {$diff->i} Menit lagi.";
             } else if ($now->gt($end)) {
-                $this->isScheduleOpen = false;
+                // SUDAH LEWAT TENGGAT
+                // Admin tetap bisa akses (Open), User biasa terkunci (False)
+                $this->isScheduleOpen = $isAdmin ? true : false;
                 $this->scheduleMessage = "Batas waktu telah berakhir pada {$this->deadlineDate}.";
             } else {
-                $this->isScheduleOpen = false;
+                // BELUM MULAI
+                // Admin tetap bisa akses (Open), User biasa terkunci (False)
+                $this->isScheduleOpen = $isAdmin ? true : false;
                 $this->scheduleMessage = "Jadwal belum dimulai. Dibuka pada " . $start->translatedFormat('d F Y');
             }
         } else {
-            $this->isScheduleOpen = false;
-            $this->deadlineDate = '-';
-            $this->scheduleMessage = "Jadwal pengisian belum dibuka oleh Admin.";
+            // JIKA JADWAL BELUM DIATUR/TIDAK ADA DI DB
+            if ($isAdmin) {
+                $this->isScheduleOpen = true;
+                $this->scheduleMessage = "Mode Admin: Akses penuh (Bypass jadwal / Belum disetting).";
+            } else {
+                $this->isScheduleOpen = false;
+                $this->deadlineDate = '-';
+                $this->scheduleMessage = "Jadwal pengisian belum dibuka oleh Admin.";
+            }
         }
 
-        // Jika Jadwal Tutup, Matikan Akses Edit (Meskipun itu Pegawai pemilik data)
-        if (!$this->isScheduleOpen) {
+        // Finalisasi: Pastikan Admin selalu bisa edit, 
+        // User hanya bisa edit jika isScheduleOpen bernilai true.
+        if (!$this->isScheduleOpen && !$isAdmin) {
             $this->canEdit = false;
         }
     }
