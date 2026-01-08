@@ -10,6 +10,7 @@ use App\Models\RealisasiKinerja;
 use App\Models\RealisasiRencanaAksi;
 use App\Models\JadwalPengukuran;
 use App\Models\PenjelasanKinerja;
+use App\Models\Pegawai; // PENTING: Import Model Pegawai
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
@@ -44,6 +45,10 @@ class PengukuranKinerja extends Component
     public $deadlineDate = null;
     public $scheduleMessage = '';
 
+    // --- ACCESS CONTROL STATES ---
+    public $canEdit = false;     // Untuk Pegawai (Input Realisasi) & Admin
+    public $canComment = false;  // Untuk Pimpinan (Beri Tanggapan) & Admin
+
     // --- MODAL STATES ---
     public $isOpenRealisasi = false;
     public $isOpenRealisasiAksi = false;
@@ -77,13 +82,55 @@ class PengukuranKinerja extends Component
         $currentYear = date('Y');
         $this->availableYears = range($currentYear - 2, $currentYear + 5);
 
+        // 1. Jalankan Cek Akses Awal
+        $this->checkAccess();
+
+        // 2. Load Data
         $this->loadData();
+    }
+
+    /**
+     * LOGIKA UTAMA OTORISASI (Authorization)
+     */
+    private function checkAccess()
+    {
+        $user = Auth::user();
+
+        // Reset dulu ke false
+        $this->canEdit = false;
+        $this->canComment = false;
+
+        // 1. ADMIN: Dewa (Bisa Edit Data & Bisa Komentar di mana saja)
+        if ($user->role === 'admin') {
+            $this->canEdit = true;
+            $this->canComment = true;
+            return;
+        }
+
+        // Cari Data Pegawai dari User yang sedang login
+        // (Asumsi: User NIP sama dengan Pegawai NIP)
+        $currentUserPegawai = Pegawai::where('nip', $user->nip)->first();
+        $currentUserJabatanId = $currentUserPegawai ? $currentUserPegawai->jabatan_id : null;
+
+        // 2. PEGAWAI: Hanya bisa Edit data miliknya sendiri
+        // Logika: NIP User Login == NIP Pegawai pemilik Jabatan yang sedang dibuka
+        if ($this->pegawai && $user->nip === $this->pegawai->nip) {
+            $this->canEdit = true; 
+            // Pegawai tidak bisa komentar/menanggapi diri sendiri (opsional)
+        }
+
+        // 3. PIMPINAN: Hanya bisa Menanggapi Bawahan Langsung
+        // Logika: Jabatan yang dibuka ($this->jabatan) adalah ANAK dari Jabatan User Login
+        if ($user->role === 'pimpinan' && $currentUserJabatanId) {
+            if ($this->jabatan->parent_id == $currentUserJabatanId) {
+                $this->canComment = true; // Hanya boleh komentar, TIDAK boleh edit data bawahan
+            }
+        }
     }
 
     public function setTahun($year)
     {
         $this->tahun = $year;
-        // Khusus ganti tahun, kita refresh halaman agar URL query string terupdate rapi
         return redirect(request()->fullUrlWithQuery(['tahun' => $year]));
     }
 
@@ -101,6 +148,7 @@ class PengukuranKinerja extends Component
 
     public function loadData()
     {
+        // Cek Jadwal dulu, karena ini bisa menganulir $canEdit
         $this->checkScheduleStatus();
 
         // 1. Ambil PK Utama
@@ -183,7 +231,7 @@ class PengukuranKinerja extends Component
             }
         }
 
-        // 3. Ambil Penjelasan Kinerja (Format Baru)
+        // 3. Ambil Penjelasan Kinerja
         if (class_exists(PenjelasanKinerja::class)) {
             $this->penjelasans = PenjelasanKinerja::where('jabatan_id', $this->jabatan->id)
                 ->where('bulan', $this->selectedMonth)
@@ -195,9 +243,15 @@ class PengukuranKinerja extends Component
         }
     }
 
-    // --- MANAJEMEN PENJELASAN KINERJA (3 KOLOM) ---
+    // --- MANAJEMEN PENJELASAN KINERJA ---
     public function openTambahPenjelasan()
     {
+        // Proteksi Akses
+        if (!$this->canEdit) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Akses ditolak.']);
+            return;
+        }
+
         $this->reset(['formUpaya', 'formHambatan', 'formRtl']);
         $this->isOpenTambahPenjelasan = true;
     }
@@ -209,6 +263,8 @@ class PengukuranKinerja extends Component
 
     public function simpanPenjelasan()
     {
+        if (!$this->canEdit) return; // Proteksi Backend
+
         $this->validate([
             'formUpaya' => 'nullable|string',
             'formHambatan' => 'nullable|string',
@@ -226,39 +282,31 @@ class PengukuranKinerja extends Component
 
         $this->closeTambahPenjelasan();
         session()->flash('message', 'Penjelasan kinerja berhasil ditambahkan.');
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
     public function hapusPenjelasan($id)
     {
+        if (!$this->canEdit) return; // Proteksi Backend
+
         $item = PenjelasanKinerja::find($id);
         if ($item && $item->jabatan_id == $this->jabatan->id) {
             $item->delete();
             session()->flash('message', 'Penjelasan dihapus.');
         }
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
-    // --- DOWNLOAD EXCEL (PERBAIKAN MENGGUNAKAN EXPORT CLASS) ---
+    // --- DOWNLOAD EXCEL ---
     public function downloadExcel()
     {
-        // 1. Pastikan data terbaru termuat
         $this->loadData();
-
         $bulan = $this->selectedMonth;
         $tahun = $this->tahun;
-        
-        // 2. Format nama file agar aman untuk URL/Sistem File
         $namaJabatanClean = str_replace(['/', '\\', ' '], '_', $this->jabatan->nama);
         $namaBulan = Carbon::create()->month($bulan)->locale('id')->translatedFormat('F');
-        
         $namaFile = 'Laporan_Kinerja_' . $namaJabatanClean . '_' . $namaBulan . '_' . $tahun . '.xlsx';
 
-        // 3. Return Download menggunakan Class Export
         return Excel::download(new LaporanKinerjaBulananExport(
             $this->jabatan->id, 
             $bulan, 
@@ -269,6 +317,14 @@ class PengukuranKinerja extends Component
     // --- STATUS JADWAL ---
     public function checkScheduleStatus()
     {
+        // Jika Admin, Bypass Jadwal (Selalu Buka)
+        if(Auth::user()->role === 'admin') {
+            $this->isScheduleOpen = true;
+            $this->scheduleMessage = "Mode Admin: Akses penuh (Bypass jadwal).";
+            // Admin canEdit tetap true
+            return;
+        }
+
         if (!class_exists(JadwalPengukuran::class)) {
             $this->isScheduleOpen = true;
             return;
@@ -283,18 +339,14 @@ class PengukuranKinerja extends Component
         if ($jadwal && $jadwal->is_active) {
             $start = Carbon::parse($jadwal->tanggal_mulai)->startOfDay();
             $end = Carbon::parse($jadwal->tanggal_selesai)->endOfDay();
-
             $this->deadlineDate = $end->translatedFormat('d F Y H:i');
 
             if ($now->between($start, $end)) {
                 $this->isScheduleOpen = true;
                 $diff = $now->diff($end);
-
-                if ($diff->days > 0) {
-                    $this->scheduleMessage = "Sisa Waktu: {$diff->days} Hari {$diff->h} Jam lagi.";
-                } else {
-                    $this->scheduleMessage = "Segera Berakhir: {$diff->h} Jam {$diff->i} Menit lagi.";
-                }
+                $this->scheduleMessage = ($diff->days > 0) 
+                    ? "Sisa Waktu: {$diff->days} Hari {$diff->h} Jam lagi." 
+                    : "Segera Berakhir: {$diff->h} Jam {$diff->i} Menit lagi.";
             } else if ($now->gt($end)) {
                 $this->isScheduleOpen = false;
                 $this->scheduleMessage = "Batas waktu telah berakhir pada {$this->deadlineDate}.";
@@ -305,13 +357,21 @@ class PengukuranKinerja extends Component
         } else {
             $this->isScheduleOpen = false;
             $this->deadlineDate = '-';
-            $this->scheduleMessage = "Jadwal pengisian belum diatur oleh Admin.";
+            $this->scheduleMessage = "Jadwal pengisian belum dibuka oleh Admin.";
+        }
+
+        // Jika Jadwal Tutup, Matikan Akses Edit (Meskipun itu Pegawai pemilik data)
+        if (!$this->isScheduleOpen) {
+            $this->canEdit = false;
         }
     }
 
     // --- MODAL JADWAL ---
     public function openAturJadwal()
     {
+        // Hanya Admin
+        if (Auth::user()->role !== 'admin') return;
+
         $jadwal = JadwalPengukuran::where('tahun', $this->tahun)->where('bulan', $this->selectedMonth)->first();
         if ($jadwal) {
             $this->formJadwalMulai = $jadwal->tanggal_mulai->format('Y-m-d');
@@ -331,6 +391,7 @@ class PengukuranKinerja extends Component
     public function simpanJadwal()
     {
         if (Auth::user()->role !== 'admin') return;
+        
         $this->validate([
             'formJadwalMulai' => 'required|date',
             'formJadwalSelesai' => 'required|date|after_or_equal:formJadwalMulai',
@@ -341,14 +402,18 @@ class PengukuranKinerja extends Component
         );
         $this->closeAturJadwal();
         session()->flash('message', 'Jadwal pengisian berhasil diperbarui.');
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
     // --- REALISASI INDIKATOR ---
     public function openRealisasi($id, $nama, $target, $satuan, $arah = '')
     {
+        // Proteksi
+        if (!$this->canEdit) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Anda tidak memiliki akses edit (Jadwal tutup atau bukan data Anda).']);
+            return;
+        }
+
         $this->indikatorId = $id;
         $this->indikatorNama = $nama;
         $this->indikatorTarget = $target;
@@ -369,6 +434,8 @@ class PengukuranKinerja extends Component
 
     public function simpanRealisasi()
     {
+        if (!$this->canEdit) return; // Proteksi Backend
+
         $this->validate(['realisasiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
         $cleanRealisasi = str_replace(',', '.', $this->realisasiInput);
         $cleanCapaian = null;
@@ -381,14 +448,17 @@ class PengukuranKinerja extends Component
         );
         $this->closeRealisasi();
         session()->flash('message', 'Data realisasi berhasil disimpan.');
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
     // --- REALISASI RENCANA AKSI ---
     public function openRealisasiAksi($id)
     {
+        if (!$this->canEdit) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Akses ditolak.']);
+            return;
+        }
+
         $this->aksiId = $id;
         $aksi = RencanaAksi::find($id);
         $this->aksiNama = $aksi->nama_aksi;
@@ -406,6 +476,8 @@ class PengukuranKinerja extends Component
 
     public function simpanRealisasiAksi()
     {
+        if (!$this->canEdit) return; // Proteksi Backend
+
         $this->validate(['realisasiAksiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
         $cleanRealisasi = str_replace(',', '.', $this->realisasiAksiInput);
         RealisasiRencanaAksi::updateOrCreate(
@@ -415,14 +487,14 @@ class PengukuranKinerja extends Component
 
         $this->closeRealisasiAksi();
         session()->flash('message', 'Realisasi aksi berhasil disimpan.');
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
     // --- RENCANA AKSI MANUAL ---
     public function openTambahAksi()
     {
+        if (!$this->canEdit) return;
+
         $this->reset(['formAksiNama', 'formAksiTarget', 'formAksiSatuan']);
         $this->isOpenTambahAksi = true;
     }
@@ -434,6 +506,8 @@ class PengukuranKinerja extends Component
 
     public function storeRencanaAksi()
     {
+        if (!$this->canEdit) return; // Proteksi Backend
+
         $this->validate(['formAksiNama' => 'required', 'formAksiTarget' => 'required', 'formAksiSatuan' => 'required']);
         $cleanTarget = str_replace(',', '.', $this->formAksiTarget);
         RencanaAksi::create([
@@ -446,27 +520,31 @@ class PengukuranKinerja extends Component
 
         $this->closeTambahAksi();
         session()->flash('message', 'Rencana aksi berhasil ditambahkan.');
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
     public function deleteRencanaAksi($id)
     {
+        if (!$this->canEdit) return; // Proteksi Backend
+
         $aksi = RencanaAksi::find($id);
         if ($aksi) {
             RealisasiRencanaAksi::where('rencana_aksi_id', $id)->delete();
             $aksi->delete();
             session()->flash('message', 'Rencana Aksi berhasil dihapus.');
         }
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
-    // --- TANGGAPAN ---
+    // --- TANGGAPAN (Fitur Khusus Pimpinan & Admin) ---
     public function openTanggapan($id, $nama)
     {
+        // Gunakan checkAccess ($canComment)
+        if (!$this->canComment) {
+            $this->dispatch('alert', ['type' => 'error', 'message' => 'Anda tidak memiliki wewenang untuk menanggapi bawahan ini.']);
+            return;
+        }
+
         $this->indikatorId = $id;
         $this->indikatorNama = $nama;
         $data = RealisasiKinerja::where('indikator_id', $id)->where('bulan', $this->selectedMonth)->where('tahun', $this->tahun)->first();
@@ -481,7 +559,9 @@ class PengukuranKinerja extends Component
 
     public function simpanTanggapan()
     {
-        if (Auth::user()->role !== 'pimpinan') return;
+        // Proteksi Backend
+        if (!$this->canComment) return;
+
         RealisasiKinerja::updateOrCreate(
             ['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun],
             ['tanggapan' => $this->tanggapanInput]
@@ -489,8 +569,6 @@ class PengukuranKinerja extends Component
 
         $this->closeTanggapan();
         session()->flash('message', 'Tanggapan berhasil disimpan.');
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 

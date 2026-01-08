@@ -16,6 +16,41 @@
 
     <div class="space-y-8 pb-10">
         
+        {{-- FLASH MESSAGE SECTION --}}
+        @if (session()->has('message'))
+            <div class="animate-enter bg-emerald-50 dark:bg-emerald-900/30 border-l-4 border-emerald-500 p-4 rounded-r-xl shadow-sm flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-emerald-100 dark:bg-emerald-800 rounded-full text-emerald-600 dark:text-emerald-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-emerald-800 dark:text-emerald-100">Berhasil!</h4>
+                        <p class="text-xs text-emerald-700 dark:text-emerald-300">{{ session('message') }}</p>
+                    </div>
+                </div>
+                <button wire:click="$refresh" class="text-emerald-500 hover:text-emerald-700 dark:hover:text-emerald-200 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        @endif
+
+        @if (session()->has('error'))
+            <div class="animate-enter bg-red-50 dark:bg-red-900/30 border-l-4 border-red-500 p-4 rounded-r-xl shadow-sm flex justify-between items-center">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-red-100 dark:bg-red-800 rounded-full text-red-600 dark:text-red-200">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <div>
+                        <h4 class="text-sm font-bold text-red-800 dark:text-red-100">Gagal!</h4>
+                        <p class="text-xs text-red-700 dark:text-red-300">{{ session('error') }}</p>
+                    </div>
+                </div>
+                <button wire:click="$refresh" class="text-red-500 hover:text-red-700 dark:hover:text-red-200 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+        @endif
+
         {{-- 1. HEADER: ACTION & STATS CARDS --}}
         <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
             {{-- Tombol Tambah --}}
@@ -50,14 +85,25 @@
 
         {{-- 2. MAIN CONTENT TABLE --}}
         <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-slate-700 overflow-hidden animate-enter" style="animation-delay: 0.5s">
-            {{-- Toolbar --}}
+            {{-- Toolbar with SEARCH BUTTON --}}
             <div class="p-6 md:p-8 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col md:flex-row gap-5 justify-between items-center sticky top-0 z-20">
-                <div class="relative w-full md:w-[450px] group">
-                    <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-500 text-gray-400">
-                        <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                <div class="relative w-full md:w-[550px] group flex gap-2">
+                    {{-- Input Pencarian (Tanpa Live Debounce) --}}
+                    <div class="relative w-full">
+                        <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-500 text-gray-400">
+                            <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                        </div>
+                        {{-- Ganti wire:model.live.debounce menjadi wire:model --}}
+                        <input wire:model="search" wire:keydown.enter="$refresh" type="text" class="block w-full pl-12 pr-5 py-4 border-none bg-gray-50 dark:bg-slate-900/50 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 transition-all text-sm font-medium shadow-sm group-focus-within:shadow-md" placeholder="Cari Nama User, NIP, atau Jabatan...">
                     </div>
-                    <input wire:model.live.debounce.300ms="search" type="text" class="block w-full pl-12 pr-5 py-4 border-none bg-gray-50 dark:bg-slate-900/50 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 transition-all text-sm font-medium shadow-sm group-focus-within:shadow-md" placeholder="Cari Nama User, NIP, atau Jabatan...">
+                    
+                    {{-- Tombol Search Baru --}}
+                    <button wire:click="$refresh" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
+                        <span>Cari</span>
+                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                    </button>
                 </div>
+
                 <div class="w-full md:w-56 relative group">
                     <select wire:model.live="filterRole" class="block w-full py-4 pl-5 pr-10 border-none bg-gray-50 dark:bg-slate-900/50 rounded-2xl text-gray-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 transition-all text-sm font-bold cursor-pointer shadow-sm appearance-none">
                         <option value="">Semua Role</option>
@@ -134,8 +180,9 @@
                                     <button wire:click="edit({{ $user->id }})" class="p-2 text-blue-600 bg-blue-50/50 hover:bg-blue-100 rounded-lg transition-colors shadow-sm" title="Edit">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     </button>
+                                    
                                     @if($user->id !== auth()->id())
-                                        <button wire:click="delete({{ $user->id }})" class="p-2 text-red-600 bg-red-50/50 hover:bg-red-100 rounded-lg transition-colors shadow-sm" title="Hapus">
+                                        <button wire:click="delete({{ $user->id }})" wire:confirm="Apakah Anda yakin ingin menghapus user '{{ $user->name }}'? Tindakan ini tidak dapat dibatalkan." class="p-2 text-red-600 bg-red-50/50 hover:bg-red-100 rounded-lg transition-colors shadow-sm" title="Hapus">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     @endif
@@ -166,7 +213,7 @@
                     
                     <div class="px-8 py-6 space-y-5">
                         
-                        {{-- Pilih Role (ADMIN DIKEMBALIKAN) --}}
+                        {{-- Pilih Role --}}
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Role Akses</label>
                             <div class="grid grid-cols-3 gap-3"> 
@@ -184,13 +231,14 @@
 
                         <div class="bg-gray-50/50 dark:bg-slate-700/30 p-5 rounded-xl border border-dashed border-gray-200 dark:border-slate-600">
                             
-                            {{-- LOGIC FORM: Jika Admin = Input Manual, Jika Pegawai/Pimpinan = Select --}}
+                            {{-- LOGIC FORM --}}
                             @if($role === 'admin')
                                 {{-- Form Admin --}}
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Nama Admin</label>
                                         <input wire:model="name" type="text" class="w-full rounded-xl border-gray-200 dark:border-slate-600 dark:bg-slate-700 py-3 px-4 focus:ring-2 focus:ring-blue-500 dark:text-white" placeholder="Nama Lengkap Admin">
+                                        @error('name') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                     </div>
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Username</label>
@@ -202,7 +250,6 @@
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Cari Pegawai (Sesuai Struktur Organisasi)</label>
-                                        {{-- TAMPILAN DROPDOWN RAPI --}}
                                         <select wire:model.live="selectedPegawaiId" class="w-full rounded-xl border-gray-200 dark:border-slate-600 dark:bg-slate-700 py-3 px-4 focus:ring-2 focus:ring-blue-500 dark:text-white appearance-none cursor-pointer">
                                             <option value="">-- Pilih Nama Pegawai --</option>
                                             @foreach($daftarPegawai as $p)
@@ -218,7 +265,6 @@
                                         @error('nip') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                                     </div>
 
-                                    {{-- Preview Data Terpilih (Read Only) --}}
                                     @if($name)
                                         <div class="grid grid-cols-2 gap-4 bg-white dark:bg-slate-800 p-3 rounded-lg border border-gray-200 dark:border-slate-600">
                                             <div>
@@ -234,12 +280,27 @@
                                 </div>
                             @endif
 
-                            {{-- Password --}}
-                            <div class="mt-4">
-                                <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Password {{ $userId ? '(Opsional, isi jika ingin mengubah)' : '' }}</label>
-                                <input wire:model="password" type="password" class="w-full rounded-xl border-gray-200 dark:border-slate-600 dark:bg-slate-700/50 py-3 px-4 focus:ring-2 focus:ring-blue-500 dark:text-white" placeholder="••••••••">
+                            {{-- Password Input with Toggle --}}
+                            <div class="mt-4" x-data="{ show: false }">
+                                <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">
+                                    Password {{ $userId ? '(Opsional, isi jika ingin mengubah)' : '' }}
+                                </label>
+                                <div class="relative">
+                                    <input wire:model="password" :type="show ? 'text' : 'password'" 
+                                           class="w-full rounded-xl border-gray-200 dark:border-slate-600 dark:bg-slate-700/50 py-3 pl-4 pr-10 focus:ring-2 focus:ring-blue-500 dark:text-white" 
+                                           placeholder="••••••••">
+                                    <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none transition-colors">
+                                        <template x-if="!show">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.575-3.107m5.858.858a3 3 0 114.243 4.243m-9.965-9.966l16.1 16.1"></path></svg>
+                                        </template>
+                                        <template x-if="show">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        </template>
+                                    </button>
+                                </div>
                                 @error('password') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                             </div>
+
                         </div>
                     </div>
 
