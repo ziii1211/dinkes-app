@@ -81,16 +81,13 @@
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-slate-700/50">
                         @forelse($users as $index => $user)
-                        {{-- PENTING: wire:key dengan prefix 'user-' agar unik --}}
                         <tr wire:key="user-{{ $user->id }}" class="group hover:bg-blue-50/40 dark:hover:bg-slate-700/30 transition-all duration-300 animate-enter" style="animation-delay: {{ $index * 50 }}ms">
                             <td class="px-8 py-5">
                                 <div class="flex items-center gap-5">
                                     <div class="relative group-hover:scale-105 transition-transform duration-300">
                                         @if($user->pegawai && $user->pegawai->foto)
-                                            {{-- Foto dari Database Pegawai --}}
                                             <img src="{{ asset('storage/' . $user->pegawai->foto) }}" alt="{{ $user->name }}" class="h-12 w-12 rounded-2xl object-cover shadow-md ring-2 ring-white dark:ring-slate-800">
                                         @else
-                                            {{-- Avatar Inisial --}}
                                             @php
                                                 $avatarBg = match($user->role) {
                                                     'admin' => 'bg-gradient-to-br from-purple-500 to-purple-700',
@@ -133,12 +130,12 @@
                                 <span class="text-sm font-medium text-gray-700 dark:text-slate-200">{{ $user->jabatan ?? '-' }}</span>
                             </td>
                             <td class="px-6 py-5 text-center">
-                                <div class="flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100 transform translate-y-1 group-hover:translate-y-0 transition-all duration-300">
-                                    <button wire:click="edit({{ $user->id }})" class="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors" title="Edit">
+                                <div class="flex items-center justify-center gap-2">
+                                    <button wire:click="edit({{ $user->id }})" class="p-2 text-blue-600 bg-blue-50/50 hover:bg-blue-100 rounded-lg transition-colors shadow-sm" title="Edit">
                                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
                                     </button>
                                     @if($user->id !== auth()->id())
-                                        <button wire:click="delete({{ $user->id }})" class="p-2 text-red-600 hover:bg-red-50 rounded-lg transition-colors" title="Hapus">
+                                        <button wire:click="delete({{ $user->id }})" class="p-2 text-red-600 bg-red-50/50 hover:bg-red-100 rounded-lg transition-colors shadow-sm" title="Hapus">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     @endif
@@ -154,7 +151,7 @@
             <div class="px-8 py-6 border-t border-gray-100 dark:border-slate-700 bg-gray-50/50 dark:bg-slate-800/50">{{ $users->links() }}</div>
         </div>
 
-        {{-- 3. MODAL FORM SIMPEL --}}
+        {{-- 3. MODAL FORM --}}
         @if($isModalOpen)
         <div class="fixed inset-0 z-[60] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div class="fixed inset-0 bg-gray-900/60 backdrop-blur-md transition-opacity animate-enter" wire:click="closeModal"></div>
@@ -169,14 +166,14 @@
                     
                     <div class="px-8 py-6 space-y-5">
                         
-                        {{-- Pilih Role --}}
+                        {{-- Pilih Role (ADMIN DIKEMBALIKAN) --}}
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Role Akses</label>
-                            <div class="grid grid-cols-3 gap-3">
+                            <div class="grid grid-cols-3 gap-3"> 
                                 @foreach(['pegawai' => '👨‍💼', 'pimpinan' => '👔', 'admin' => '🛠️'] as $val => $icon)
                                 <label class="cursor-pointer relative">
                                     <input type="radio" wire:model.live="role" value="{{ $val }}" class="peer sr-only">
-                                    <div class="rounded-xl border border-gray-200 dark:border-slate-600 p-2 text-center hover:bg-gray-50 dark:hover:bg-slate-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 transition-all">
+                                    <div class="rounded-xl border border-gray-200 dark:border-slate-600 p-3 text-center hover:bg-gray-50 dark:hover:bg-slate-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 transition-all">
                                         <div class="text-xl mb-1">{{ $icon }}</div>
                                         <span class="text-xs font-bold text-gray-600 dark:text-slate-300 uppercase block">{{ $val }}</span>
                                     </div>
@@ -189,6 +186,7 @@
                             
                             {{-- LOGIC FORM: Jika Admin = Input Manual, Jika Pegawai/Pimpinan = Select --}}
                             @if($role === 'admin')
+                                {{-- Form Admin --}}
                                 <div class="grid grid-cols-1 gap-4">
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Nama Admin</label>
@@ -204,11 +202,12 @@
                                 <div class="space-y-4">
                                     <div>
                                         <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Cari Pegawai (Sesuai Struktur Organisasi)</label>
+                                        {{-- TAMPILAN DROPDOWN RAPI --}}
                                         <select wire:model.live="selectedPegawaiId" class="w-full rounded-xl border-gray-200 dark:border-slate-600 dark:bg-slate-700 py-3 px-4 focus:ring-2 focus:ring-blue-500 dark:text-white appearance-none cursor-pointer">
                                             <option value="">-- Pilih Nama Pegawai --</option>
                                             @foreach($daftarPegawai as $p)
-                                                <option value="{{ $p->id }}">
-                                                    {{ str_repeat('—', $p->level) }} {{ $p->nama }} ({{ $p->nip }}) - {{ $p->nama_jabatan }}
+                                                <option value="{{ $p->id }}" class="py-2">
+                                                    {{ $p->nama }} — {{ $p->nama_jabatan }} (NIP. {{ $p->nip }})
                                                 </option>
                                             @endforeach
                                         </select>
@@ -237,7 +236,7 @@
 
                             {{-- Password --}}
                             <div class="mt-4">
-                                <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Password {{ $userId ? '(Opsional)' : '' }}</label>
+                                <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-1">Password {{ $userId ? '(Opsional, isi jika ingin mengubah)' : '' }}</label>
                                 <input wire:model="password" type="password" class="w-full rounded-xl border-gray-200 dark:border-slate-600 dark:bg-slate-700/50 py-3 px-4 focus:ring-2 focus:ring-blue-500 dark:text-white" placeholder="••••••••">
                                 @error('password') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                             </div>
@@ -246,8 +245,8 @@
 
                     {{-- Footer --}}
                     <div class="bg-gray-50 dark:bg-slate-700/50 px-8 py-5 flex flex-row-reverse gap-3 border-t border-gray-100 dark:border-slate-700">
-                        <button wire:click="store" wire:loading.attr="disabled" type="button" class="w-auto inline-flex justify-center items-center gap-2 rounded-xl shadow-lg shadow-blue-500/30 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-bold text-white hover:from-blue-700 hover:to-indigo-700 focus:outline-none transition-all transform hover:-translate-y-0.5">
-                            <span wire:loading.remove>{{ $userId ? 'Simpan' : 'Buat User' }}</span>
+                        <button wire:click="{{ $userId ? 'update' : 'store' }}" wire:loading.attr="disabled" type="button" class="w-auto inline-flex justify-center items-center gap-2 rounded-xl shadow-lg shadow-blue-500/30 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-bold text-white hover:from-blue-700 hover:to-indigo-700 focus:outline-none transition-all transform hover:-translate-y-0.5">
+                            <span wire:loading.remove>{{ $userId ? 'Simpan Perubahan' : 'Buat User' }}</span>
                             <span wire:loading class="flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Proses...</span>
                         </button>
                         <button wire:click="closeModal" type="button" class="w-auto inline-flex justify-center rounded-xl border-2 border-transparent hover:bg-gray-200 dark:hover:bg-slate-600 px-5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 transition-all">Batal</button>
