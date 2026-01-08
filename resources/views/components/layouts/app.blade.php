@@ -119,7 +119,8 @@
                             </div>
 
                         @else 
-                        <div class="relative group">
+
+                            <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Matrik Renstra
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
@@ -163,6 +164,13 @@
                                     <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
                                 </div>
                             </div>
+                            
+                            {{-- MENU BARU: MANAJEMEN USER (KHUSUS ADMIN) --}}
+                            @if(auth()->user()->role == 'admin')
+                                <a href="{{ route('admin.manajemen-user') }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('admin.manajemen-user') ? 'text-blue-700 dark:text-blue-400' : '' }}">
+                                    Manajemen User
+                                </a>
+                            @endif
 
                         @endif
 
@@ -275,7 +283,7 @@
             // Listener Global untuk Event 'alert' dari Livewire
             Livewire.on('alert', (event) => {
                 // Livewire 3 mengirim parameter sebagai array, ambil elemen pertama
-                const data = event[0]; 
+                const data = Array.isArray(event) ? event[0] : event;
 
                 Toast.fire({
                     icon: data.type,   // 'success', 'error', 'warning', 'info'
@@ -285,22 +293,26 @@
             });
 
             // Listener Global untuk Konfirmasi Hapus (Opsional tapi Profesional)
-            Livewire.on('confirmDelete', (event) => {
-                const id = event[0];
+            Livewire.on('confirmDelete', (data) => {
+                
+                // --- PERBAIKAN UTAMA: AMBIL ID DARI OBJECT ATAU NILAI LANGSUNG ---
+                // Livewire 3 mengirim named parameters sebagai object {id: 123}
+                let id = (typeof data === 'object' && data !== null && 'id' in data) ? data.id : data;
+
                 Swal.fire({
                     title: 'Apakah Anda yakin?',
                     text: "Data yang dihapus tidak dapat dikembalikan!",
                     icon: 'warning',
                     showCancelButton: true,
-                    confirmButtonColor: '#3085d6',
-                    cancelButtonColor: '#d33',
+                    confirmButtonColor: '#d33',
+                    cancelButtonColor: '#3085d6',
                     confirmButtonText: 'Ya, Hapus!',
                     cancelButtonText: 'Batal',
                     background: document.documentElement.classList.contains('dark') ? '#1e293b' : '#fff',
                     color: document.documentElement.classList.contains('dark') ? '#e2e8f0' : '#1f2937'
                 }).then((result) => {
                     if (result.isConfirmed) {
-                        // Panggil method di komponen Livewire
+                        // Kirim balik ke PHP dengan format object { id: ... } agar kompatibel dengan Livewire 3
                         Livewire.dispatch('deleteConfirmed', { id: id }); 
                     }
                 })

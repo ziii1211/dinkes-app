@@ -20,10 +20,10 @@ class CheckRole
             return redirect('/login');
         }
 
-        // 2. Cek Role User
-        // Kita bandingkan role di database user dengan role yang diminta di route
-        if (Auth::user()->role !== $role) {
-            // Jika beda (misal: Pegawai mencoba masuk halaman Admin) -> TOLAK!
+        // 2. Cek Role User menggunakan helper hasRole()
+        // Menggunakan $request->user() lebih aman daripada Auth::user() dalam konteks middleware
+        if (! $request->user()->hasRole($role)) {
+            // Jika role tidak sesuai -> TOLAK dengan Error 403
             abort(403, 'AKSES DITOLAK: Anda tidak memiliki izin untuk mengakses halaman ini.');
         }
 

@@ -1,4 +1,3 @@
-
 <div class="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#030712] font-sans selection:bg-indigo-500 selection:text-white">
     
     {{-- CUSTOM CSS & ANIMATIONS --}}
@@ -79,15 +78,15 @@
                         {{-- 1. Animasi Gradient Berputar di Belakang Logo --}}
                         <div class="absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 opacity-75 blur-md animate-spin-slow group-hover/logo:opacity-100 transition duration-1000"></div>
                         
-                        {{-- 2. Wadah Putih Transparan (Capsule) - UKURAN DIPERBESAR --}}
+                        {{-- 2. Wadah Putih Transparan (Capsule) --}}
                         <div class="relative bg-slate-900/80 backdrop-blur-xl rounded-full p-2 border border-white/10 shadow-2xl flex items-center justify-center gap-5 px-8 py-4">
-                            {{-- Logo Pemprov (DIPERBESAR: h-20) --}}
+                            {{-- Logo Pemprov --}}
                             <img src="{{ asset('logo pemprov.png') }}" class="h-20 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Pemprov Kalsel">
                             
-                            {{-- Separator (DIPERBESAR: h-12) --}}
+                            {{-- Separator --}}
                             <div class="h-12 w-px bg-white/20 rounded-full"></div>
                             
-                            {{-- Logo GERMAS (DIPERBESAR: h-16) --}}
+                            {{-- Logo GERMAS --}}
                             <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" class="h-16 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Germas">
                         </div>
                     </div>
@@ -109,21 +108,24 @@
                 {{-- LOGIN FORM --}}
                 <form wire:submit="login" class="space-y-6 animate-enter" style="animation-delay: 0.2s">
                     
-                    {{-- Input Username --}}
+                    {{-- Input 1: Username / NIP --}}
                     <div class="group relative">
-                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-indigo-400 transition-colors">Username </label>
+                        <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-indigo-400 transition-colors">
+                            Username / NIP
+                        </label>
                         <div class="relative">
                             <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none text-slate-500 group-focus-within:text-indigo-400 transition-colors">
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
                             </div>
-                            <input type="text" wire:model="username" 
+                            {{-- Diubah ke wire:model="login_id" --}}
+                            <input type="text" wire:model="login_id" 
                                 class="w-full pl-11 pr-4 py-3.5 bg-slate-900/60 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-slate-900/90 transition-all duration-300 text-sm font-medium" 
-                                placeholder="Masukkan NIP" required>
+                                placeholder="Masukkan Username atau NIP" required autofocus>
                         </div>
-                        @error('username') <span class="text-red-400 text-xs mt-1 ml-1 block">{{ $message }}</span> @enderror
+                        @error('login_id') <span class="text-red-400 text-xs mt-1 ml-1 block">{{ $message }}</span> @enderror
                     </div>
 
-                    {{-- Input Password --}}
+                    {{-- Input 2: Password --}}
                     <div class="group relative" x-data="{ show: false }">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-indigo-400 transition-colors">Password</label>
                         <div class="relative">
@@ -134,10 +136,19 @@
                                 class="w-full pl-11 pr-11 py-3.5 bg-slate-900/60 border border-slate-700/50 rounded-2xl text-slate-200 placeholder-slate-600 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-slate-900/90 transition-all duration-300 text-sm font-medium" 
                                 placeholder="••••••••" required>
                             
-                            {{-- Toggle Show Password --}}
+                            {{-- Toggle Show Password (LOGIKA DITUKAR) --}}
                             <button type="button" @click="show = !show" class="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-slate-300 transition-colors focus:outline-none">
-                                <template x-if="!show"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg></template>
-                                <template x-if="show"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.575-3.107m5.858.858a3 3 0 114.243 4.243m-9.965-9.966l16.1 16.1"></path></svg></template>
+                                
+                                {{-- Jika Hidden (!show) -> Tampilkan Mata Dicoret (Slash) --}}
+                                <template x-if="!show">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.542-7a10.05 10.05 0 011.575-3.107m5.858.858a3 3 0 114.243 4.243m-9.965-9.966l16.1 16.1"></path></svg>
+                                </template>
+                                
+                                {{-- Jika Visible (show) -> Tampilkan Mata Biasa (Eye) --}}
+                                <template x-if="show">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                </template>
+
                             </button>
                         </div>
                         @error('password') <span class="text-red-400 text-xs mt-1 ml-1 block">{{ $message }}</span> @enderror

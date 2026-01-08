@@ -10,19 +10,20 @@ use Illuminate\Validation\ValidationException;
 
 class Login extends Component
 {
-    public $username = '';
+    // Kita gunakan variabel $login_id agar lebih umum (bisa username/NIP)
+    public $login_id = ''; 
     public $password = '';
     public $remember = false;
     public $periode = '2025-2029';
 
     protected $rules = [
-        'username' => 'required|string',
+        'login_id' => 'required|string',
         'password' => 'required',
         'periode'  => 'required',
     ];
 
     protected $messages = [
-        'username.required' => 'Username wajib diisi.',
+        'login_id.required' => 'Username atau NIP wajib diisi.',
         'password.required' => 'Password wajib diisi.',
     ];
 
@@ -30,23 +31,41 @@ class Login extends Component
     {
         $this->validate();
 
-        $throttleKey = Str::lower($this->username) . '|' . request()->ip();
+        $throttleKey = Str::lower($this->login_id) . '|' . request()->ip();
 
         if (RateLimiter::tooManyAttempts($throttleKey, 5)) {
             $seconds = RateLimiter::availableIn($throttleKey);
             throw ValidationException::withMessages([
-                'username' => "Terlalu banyak percobaan. Tunggu $seconds detik.",
+                'login_id' => "Terlalu banyak percobaan. Tunggu $seconds detik.",
             ]);
         }
 
-        // Login standar menggunakan 'username' dan 'password'
-        if (Auth::attempt(['username' => $this->username, 'password' => $this->password], $this->remember)) {
+        // --- LOGIKA BARU: DETEKSI NIP ATAU USERNAME ---
+        
+        // Cek apakah input hanya angka? Jika ya, asumsikan NIP.
+        // Jika ada huruf, asumsikan Username.
+        $loginType = is_numeric($this->login_id) ? 'nip' : 'username';
+
+        $credentials = [
+            $loginType => $this->login_id,
+            'password' => $this->password
+        ];
+
+        if (Auth::attempt($credentials, $this->remember)) {
             
             RateLimiter::clear($throttleKey);
             session()->regenerate();
             session(['periode_renstra' => $this->periode]);
 
             $user = Auth::user();
+
+            // Validasi tambahan: Admin harus login pakai Username, Pegawai/Pimpinan pakai NIP
+            // (Opsional: Hapus blok if ini jika ingin Admin juga boleh login pakai NIP jika punya)
+            if ($user->role === 'admin' && $loginType === 'nip') {
+                Auth::logout();
+                $this->addError('login_id', 'Admin harus login menggunakan Username.');
+                return;
+            }
 
             return match ($user->role) {
                 'admin'     => redirect()->route('admin.dashboard'),
@@ -57,7 +76,7 @@ class Login extends Component
 
         RateLimiter::hit($throttleKey, 60);
 
-        $this->addError('username', 'Username atau password salah.');
+        $this->addError('login_id', 'Kombinasi akun dan password salah.');
         $this->password = ''; 
     }
 
