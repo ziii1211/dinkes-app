@@ -25,6 +25,10 @@ class Dashboard extends Component
     public $detailPerformers = [];
     public $detailIsuKritis = [];
     public $detailDokumen = [];
+    
+    // BARU: Data untuk Pegawai Belum Lapor
+    public $detailUnreported = [];
+    public $countUnreported = 0;
 
     private function formatShortNumber($num)
     {
@@ -71,6 +75,7 @@ class Dashboard extends Component
     {
         Carbon::setLocale('id');
 
+        // 1. DATA PERFORMER & ISU KRITIS
         $rawPerformance = DB::table('realisasi_kinerjas')
             ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
             ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
@@ -144,6 +149,7 @@ class Dashboard extends Component
             return $b['score'] <=> $a['score'];
         });
 
+        // 2. DATA DOKUMEN
         $this->detailDokumen = PerjanjianKinerja::with(['jabatan.pegawai'])
             ->whereIn('status', ['draft', 'final'])
             ->when($this->perangkat_daerah, function($query) {
@@ -159,7 +165,6 @@ class Dashboard extends Component
                 $statusPejabat = $pk->jabatan->pegawai->status ?? '';
                 if(in_array($statusPejabat, ['Plt', 'Pj', 'Pjs'])) $namaPejabat .= " ({$statusPejabat})";
 
-                // PERBAIKAN LOGIKA STATUS & TANGGAL
                 $statusLabel = ($pk->status_verifikasi == 'disetujui') ? 'Final' : 'Draft';
                 
                 $tanggalInput = $pk->tanggal_penetapan 
@@ -175,6 +180,55 @@ class Dashboard extends Component
                 ];
             })
             ->toArray();
+
+        // 3. BARU: LOAD DATA PEGAWAI BELUM LAPOR
+        $this->detailUnreported = [];
+        $this->countUnreported = 0;
+
+        $activeSchedule = JadwalPengukuran::where('is_active', true)->first();
+
+        if ($activeSchedule) {
+            $now = Carbon::now();
+            $deadline = Carbon::parse($activeSchedule->tanggal_selesai)->endOfDay();
+            
+            // Tentukan status teks berdasarkan deadline
+            $statusText = $now->gt($deadline) ? 'Terlambat' : 'Belum Mengisi';
+
+            // Cari ID Jabatan yang SUDAH mengisi di bulan/tahun jadwal tersebut
+            $submittedJabatanIds = DB::table('realisasi_kinerjas')
+                ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
+                ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
+                ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
+                ->where('realisasi_kinerjas.bulan', $activeSchedule->bulan)
+                ->where('realisasi_kinerjas.tahun', $activeSchedule->tahun)
+                ->pluck('perjanjian_kinerjas.jabatan_id')
+                ->unique()
+                ->toArray();
+
+            // Query Jabatan yang TIDAK ADA di list submitted
+            $unreportedQuery = Jabatan::with('pegawai')
+                ->whereNotIn('id', $submittedJabatanIds);
+            
+            if ($this->perangkat_daerah) {
+                $unreportedQuery->where('id', $this->perangkat_daerah);
+            }
+
+            $this->detailUnreported = $unreportedQuery->get()
+                ->map(function($jab) use ($statusText) {
+                    $namaPejabat = $jab->pegawai->nama ?? 'Belum ada Pejabat';
+                    $statusPejabat = $jab->pegawai->status ?? '';
+                    if(in_array($statusPejabat, ['Plt', 'Pj', 'Pjs'])) $namaPejabat .= " ({$statusPejabat})";
+
+                    return [
+                        'jabatan' => $jab->nama,
+                        'pegawai' => $namaPejabat,
+                        'status' => $statusText
+                    ];
+                })
+                ->toArray();
+
+            $this->countUnreported = count($this->detailUnreported);
+        }
     }
 
     public function render()
@@ -338,7 +392,7 @@ class Dashboard extends Component
                 'jabatans.nama as nama_jabatan'
             )
             ->orderBy('realisasi_kinerjas.updated_at', 'desc')
-            ->take(20) // PERBAIKAN: Limit naik jadi 20 untuk scroll
+            ->take(20) 
             ->get()
             ->map(function ($item) {
                 $isFeedback = !empty($item->tanggapan);
@@ -368,7 +422,7 @@ class Dashboard extends Component
                 ];
             });
 
-        // 5. JADWAL / DEADLINE
+        // 5. JADWAL & HITUNG CEPAT UNREPORTED (Untuk Card Highlight)
         $now = Carbon::now();
         $activeSchedule = JadwalPengukuran::where('is_active', true)
             ->whereDate('tanggal_mulai', '<=', $now)
@@ -378,6 +432,11 @@ class Dashboard extends Component
         $deadlineData = null;
         $sisaHari = 0;
         $bulanNama = '';
+        
+        // Setup default tampilan card "Belum Lapor"
+        $unreportedCountDisplay = 0;
+        $unreportedStatusColor = 'text-emerald-500';
+        $unreportedDesc = 'Semua sudah lapor';
 
         if ($activeSchedule) {
             $end = Carbon::parse($activeSchedule->tanggal_selesai)->endOfDay();
@@ -392,6 +451,29 @@ class Dashboard extends Component
             $bulanNama = $bulanList[$activeSchedule->bulan] ?? 'Bulan Ini';
 
             $deadlineData = $activeSchedule;
+
+            // -- LOGIKA HITUNG CEPAT UNTUK DASHBOARD CARD --
+            $submittedJabatanIds = DB::table('realisasi_kinerjas')
+                ->join('pk_indikators', 'realisasi_kinerjas.indikator_id', '=', 'pk_indikators.id')
+                ->join('pk_sasarans', 'pk_indikators.pk_sasaran_id', '=', 'pk_sasarans.id')
+                ->join('perjanjian_kinerjas', 'pk_sasarans.perjanjian_kinerja_id', '=', 'perjanjian_kinerjas.id')
+                ->where('realisasi_kinerjas.bulan', $activeSchedule->bulan)
+                ->where('realisasi_kinerjas.tahun', $activeSchedule->tahun)
+                ->pluck('perjanjian_kinerjas.jabatan_id')
+                ->unique()
+                ->toArray();
+
+            // Query Jabatan yg belum lapor
+            $q = Jabatan::whereNotIn('id', $submittedJabatanIds);
+            if ($this->perangkat_daerah) {
+                $q->where('id', $this->perangkat_daerah);
+            }
+            $unreportedCountDisplay = $q->count();
+            
+            if ($unreportedCountDisplay > 0) {
+                $unreportedDesc = "{$unreportedCountDisplay} Pegawai belum lapor";
+                $unreportedStatusColor = 'text-rose-500'; // Merah jika ada yang belum lapor
+            }
         }
 
         $data = [
@@ -411,6 +493,12 @@ class Dashboard extends Component
                                 : "$topPerformerName ($topPerformerScore%)",
                     'icon' => 'star',
                     'color' => 'text-yellow-500'
+                ],
+                [
+                    'label' => 'Belum Lapor', // CARD BARU
+                    'desc' => $unreportedDesc,
+                    'icon' => 'warning',
+                    'color' => $unreportedStatusColor
                 ],
                 [
                     'label' => 'Perlu Perhatian',

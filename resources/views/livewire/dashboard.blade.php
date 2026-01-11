@@ -1,5 +1,5 @@
 <div class="min-h-screen bg-[#F8FAFC] font-sans text-slate-600 relative overflow-x-hidden selection:bg-indigo-500 selection:text-white pb-20">
-   
+    
     <x-slot:title>Dashboard</x-slot>
     {{-- CUSTOM STYLES & ANIMATIONS --}}
     <style>
@@ -215,15 +215,17 @@
                 {{-- Scrollable List --}}
                 <div class="flex-1 overflow-y-auto custom-scroll pr-2 space-y-4 max-h-[400px]">
                     @foreach($highlights as $item)
-                    <div wire:click="openHighlightModal('{{ $item['label'] == 'Top Performer' ? 'performer' : ($item['label'] == 'Perlu Perhatian' ? 'isu' : 'dokumen') }}')" 
+                    {{-- Updated Logic to handle 'unreported' tab opening --}}
+                    <div wire:click="openHighlightModal('{{ $item['label'] == 'Top Performer' ? 'performer' : ($item['label'] == 'Belum Lapor' ? 'unreported' : ($item['label'] == 'Perlu Perhatian' ? 'isu' : 'dokumen')) }}')" 
                          class="group relative bg-white p-5 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg hover:-translate-y-1 transition-all duration-300 cursor-pointer overflow-hidden">
                         
-                        <div class="absolute inset-0 bg-gradient-to-r {{ $item['label'] == 'Perlu Perhatian' ? 'from-rose-50/50' : ($item['label'] == 'Top Performer' ? 'from-amber-50/50' : 'from-blue-50/50') }} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
+                        <div class="absolute inset-0 bg-gradient-to-r {{ $item['label'] == 'Perlu Perhatian' ? 'from-rose-50/50' : ($item['label'] == 'Top Performer' ? 'from-amber-50/50' : ($item['label'] == 'Belum Lapor' ? 'from-red-50/50' : 'from-blue-50/50')) }} to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
 
                         <div class="relative z-10 flex items-start gap-4">
                             <div class="w-12 h-12 rounded-2xl flex items-center justify-center flex-shrink-0 transition-all duration-300 group-hover:scale-110 shadow-sm
                                 {{ $item['label'] == 'Perlu Perhatian' ? 'bg-rose-100 text-rose-600' : 
-                                  ($item['label'] == 'Top Performer' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600') }}">
+                                  ($item['label'] == 'Belum Lapor' ? 'bg-red-100 text-red-600' :
+                                  ($item['label'] == 'Top Performer' ? 'bg-amber-100 text-amber-600' : 'bg-blue-100 text-blue-600')) }}">
                                 @if($item['icon'] == 'star') <svg class="w-6 h-6" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
                                 @elseif($item['icon'] == 'warning') <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                 @else <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
@@ -341,7 +343,12 @@
                 {{-- Tabs --}}
                 <div class="bg-slate-50/50 px-8 border-b border-slate-200">
                     <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-                        @foreach(['performer' => ['🏆 Top Performer', 'indigo'], 'isu' => ['⚠️ Isu Kritis', 'rose'], 'dokumen' => ['📄 Dokumen PK', 'emerald']] as $key => $val)
+                        @foreach([
+                            'performer' => ['🏆 Top Performer', 'indigo'],
+                            'unreported' => ['⛔ Belum Lapor', 'rose'],
+                            'isu' => ['⚠️ Isu Kritis', 'amber'], 
+                            'dokumen' => ['📄 Dokumen PK', 'emerald']
+                        ] as $key => $val)
                         <button wire:click="switchTab('{{ $key }}')" 
                                 class="{{ $activeTab === $key ? 'border-'.$val[1].'-500 text-'.$val[1].'-600' : 'border-transparent text-slate-500 hover:text-slate-700 hover:border-slate-300' }} 
                                        whitespace-nowrap py-4 px-1 border-b-2 font-bold text-sm transition-all flex items-center gap-2">
@@ -388,15 +395,60 @@
                             <div class="text-center py-10 text-slate-400">Belum ada data performer.</div>
                         @endif
 
+                    @elseif($activeTab === 'unreported')
+                        {{-- Unreported Content --}}
+                        @if(count($detailUnreported) > 0)
+                        <div class="overflow-hidden rounded-xl border border-rose-200 bg-rose-50/30 shadow-sm">
+                             <div class="max-h-[500px] overflow-y-auto custom-scroll">
+                                 <table class="min-w-full divide-y divide-rose-100">
+                                    <thead class="bg-rose-100 sticky top-0 z-10 shadow-sm">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-rose-700 uppercase tracking-wider">Unit Kerja / Jabatan</th>
+                                            <th class="px-6 py-3 text-left text-xs font-bold text-rose-700 uppercase tracking-wider">Nama Pegawai</th>
+                                            <th class="px-6 py-3 text-center text-xs font-bold text-rose-700 uppercase tracking-wider">Status</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-rose-50">
+                                        @foreach($detailUnreported as $item)
+                                        <tr class="hover:bg-rose-50 transition-colors">
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm font-bold text-slate-800">{{ $item['jabatan'] }}</div>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="text-sm font-medium text-slate-600">{{ $item['pegawai'] }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-center">
+                                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-600 border border-rose-200">
+                                                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                                    {{ $item['status'] }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        <div class="mt-3 text-center">
+                            <p class="text-xs text-rose-500 font-medium italic">* Data diambil berdasarkan Jadwal Pengukuran yang sedang aktif.</p>
+                        </div>
+                        @else
+                            <div class="flex flex-col items-center justify-center py-12 text-emerald-500 bg-emerald-50/50 rounded-2xl border-2 border-dashed border-emerald-100">
+                                <svg class="w-12 h-12 opacity-50 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <span class="font-bold text-lg">Luar Biasa!</span>
+                                <span class="text-sm text-emerald-600/70">Semua pegawai telah melaporkan kinerja.</span>
+                            </div>
+                        @endif
+
                     @elseif($activeTab === 'isu')
                         {{-- Wrapper Scroll --}}
                         <div class="max-h-[400px] overflow-y-auto custom-scroll pr-2">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 @forelse($detailIsuKritis as $isu)
-                                <div class="bg-white p-4 rounded-xl border border-rose-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
+                                <div class="bg-white p-4 rounded-xl border border-amber-100 shadow-sm hover:shadow-md transition-all flex flex-col justify-between">
                                     <div>
                                         <div class="flex items-center gap-2 mb-2">
-                                            <span class="text-[10px] font-bold bg-rose-50 text-rose-500 px-2 py-0.5 rounded uppercase">{{ $isu['jabatan'] }}</span>
+                                            <span class="text-[10px] font-bold bg-amber-50 text-amber-500 px-2 py-0.5 rounded uppercase">{{ $isu['jabatan'] }}</span>
                                         </div>
                                         <h4 class="font-bold text-sm text-slate-800 line-clamp-2">{{ $isu['indikator'] }}</h4>
                                     </div>
