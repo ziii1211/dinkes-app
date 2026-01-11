@@ -1,0 +1,43 @@
+<?php
+
+namespace App\Models;
+
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Model;
+
+class Kegiatan extends Model
+{
+    use HasFactory;
+
+    // Kolom yang boleh diisi (Mass Assignment)
+    protected $fillable = [
+        'program_id', // Relasi ke Program
+        'kode',       // Kode Kegiatan
+        'nama',       // Nama Kegiatan
+        'output',     // Deskripsi Output
+        'jabatan_id'  // Tambahkan ini (Penanggung Jawab)
+    ];
+
+    // Relasi ke Induk (Program)
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    // Relasi ke Anak (Indikator Kegiatan)
+    public function indikators()
+    {
+        return $this->hasMany(IndikatorKegiatan::class);
+    }
+
+    // --- TAMBAHKAN INI (Penanggung Jawab) ---
+    public function jabatan()
+    {
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
+    }
+
+    public function pohonKinerja()
+    {
+        return $this->hasOne(PohonKinerja::class, 'kegiatan_id');
+    }
+}

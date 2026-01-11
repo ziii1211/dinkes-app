@@ -9,12 +9,15 @@
 
     <x-slot:title>Manajemen User</x-slot>
     <x-slot:breadcrumb>
-        <a href="/" class="hover:text-blue-200 transition-colors duration-200">Dashboard</a>
-        <span class="mx-2 text-blue-300">/</span>
-        <span class="font-medium text-white">Manajemen User</span>
+        {{-- BREADCRUMB RESPONSIF --}}
+        <div class="overflow-x-auto whitespace-nowrap pb-2">
+            <a href="/" class="hover:text-blue-200 transition-colors duration-200">Dashboard</a>
+            <span class="mx-2 text-blue-300">/</span>
+            <span class="font-medium text-white">Manajemen User</span>
+        </div>
     </x-slot>
 
-    <div class="space-y-8 pb-10">
+    <div class="space-y-8 pb-10 mt-6 md:mt-0">
         
         {{-- FLASH MESSAGE SECTION --}}
         @if (session()->has('message'))
@@ -87,18 +90,17 @@
         <div class="bg-white dark:bg-slate-800 rounded-[2rem] shadow-xl shadow-gray-200/40 dark:shadow-none border border-gray-100 dark:border-slate-700 overflow-hidden animate-enter" style="animation-delay: 0.5s">
             {{-- Toolbar with SEARCH BUTTON --}}
             <div class="p-6 md:p-8 border-b border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 flex flex-col md:flex-row gap-5 justify-between items-center sticky top-0 z-20">
-                <div class="relative w-full md:w-[550px] group flex gap-2">
-                    {{-- Input Pencarian (Tanpa Live Debounce) --}}
+                <div class="relative w-full md:w-[550px] group flex flex-col sm:flex-row gap-2">
+                    {{-- Input Pencarian --}}
                     <div class="relative w-full">
                         <div class="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none transition-colors group-focus-within:text-blue-500 text-gray-400">
                             <svg class="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        {{-- Ganti wire:model.live.debounce menjadi wire:model --}}
                         <input wire:model="search" wire:keydown.enter="$refresh" type="text" class="block w-full pl-12 pr-5 py-4 border-none bg-gray-50 dark:bg-slate-900/50 rounded-2xl text-gray-900 dark:text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 transition-all text-sm font-medium shadow-sm group-focus-within:shadow-md" placeholder="Cari Nama User, NIP, atau Jabatan...">
                     </div>
                     
-                    {{-- Tombol Search Baru --}}
-                    <button wire:click="$refresh" class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center gap-2">
+                    {{-- Tombol Search --}}
+                    <button wire:click="$refresh" class="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-2xl font-bold shadow-lg shadow-blue-500/30 hover:shadow-blue-500/50 transition-all transform hover:-translate-y-0.5 active:scale-95 flex items-center justify-center gap-2">
                         <span>Cari</span>
                         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
                     </button>
@@ -114,15 +116,15 @@
                 </div>
             </div>
 
-            {{-- Table --}}
+            {{-- Table Wrapper --}}
             <div class="overflow-x-auto min-h-[400px]">
-                <table class="w-full text-left border-collapse">
+                <table class="w-full text-left border-collapse whitespace-nowrap">
                     <thead>
                         <tr class="bg-gray-50/80 dark:bg-slate-900/30 text-[11px] uppercase tracking-widest text-gray-400 dark:text-slate-500 font-bold border-b border-gray-100 dark:border-slate-700">
-                            <th class="px-8 py-5">Profile Pegawai</th>
-                            <th class="px-6 py-5">Role & Akses</th>
-                            <th class="px-6 py-5">Jabatan Struktural</th>
-                            <th class="px-6 py-5 text-center">Kontrol</th>
+                            <th class="px-8 py-5 min-w-[300px]">Profile Pegawai</th>
+                            <th class="px-6 py-5 min-w-[200px]">Role & Akses</th>
+                            <th class="px-6 py-5 min-w-[250px]">Jabatan Struktural</th>
+                            <th class="px-6 py-5 text-center min-w-[150px]">Kontrol</th>
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-gray-100 dark:divide-slate-700/50">
@@ -130,7 +132,7 @@
                         <tr wire:key="user-{{ $user->id }}" class="group hover:bg-blue-50/40 dark:hover:bg-slate-700/30 transition-all duration-300 animate-enter" style="animation-delay: {{ $index * 50 }}ms">
                             <td class="px-8 py-5">
                                 <div class="flex items-center gap-5">
-                                    <div class="relative group-hover:scale-105 transition-transform duration-300">
+                                    <div class="relative group-hover:scale-105 transition-transform duration-300 flex-shrink-0">
                                         @if($user->pegawai && $user->pegawai->foto)
                                             <img src="{{ asset('storage/' . $user->pegawai->foto) }}" alt="{{ $user->name }}" class="h-12 w-12 rounded-2xl object-cover shadow-md ring-2 ring-white dark:ring-slate-800">
                                         @else
@@ -148,7 +150,7 @@
                                         @endif
                                     </div>
                                     <div>
-                                        <div class="font-bold text-gray-900 dark:text-white text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                                        <div class="font-bold text-gray-900 dark:text-white text-sm group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors whitespace-normal">
                                             {{ $user->name }}
                                         </div>
                                         <div class="text-xs text-gray-500 dark:text-slate-400 font-mono mt-1">
@@ -172,7 +174,7 @@
                                     </span>
                                 @endif
                             </td>
-                            <td class="px-6 py-5">
+                            <td class="px-6 py-5 whitespace-normal">
                                 <span class="text-sm font-medium text-gray-700 dark:text-slate-200">{{ $user->jabatan ?? '-' }}</span>
                             </td>
                             <td class="px-6 py-5 text-center">
@@ -206,12 +208,12 @@
             <div class="flex items-center justify-center min-h-screen p-4 text-center sm:p-0">
                 <div class="relative bg-white dark:bg-slate-800 rounded-3xl text-left overflow-hidden shadow-2xl transform transition-all sm:my-8 sm:max-w-2xl w-full border border-gray-100 dark:border-slate-700 animate-enter" style="animation-duration: 0.3s">
                     
-                    <div class="px-8 py-5 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white dark:from-slate-800 dark:to-slate-800">
-                        <div><h3 class="text-xl font-black text-gray-800 dark:text-white tracking-tight">{{ $userId ? 'Edit User' : 'Tambah User' }}</h3></div>
+                    <div class="px-4 py-4 sm:px-8 sm:py-5 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-gradient-to-r from-gray-50 to-white dark:from-slate-800 dark:to-slate-800">
+                        <div><h3 class="text-lg sm:text-xl font-black text-gray-800 dark:text-white tracking-tight">{{ $userId ? 'Edit User' : 'Tambah User' }}</h3></div>
                         <button wire:click="closeModal" class="text-gray-400 hover:text-red-500 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
                     </div>
                     
-                    <div class="px-8 py-6 space-y-5">
+                    <div class="px-4 py-6 sm:px-8 sm:py-6 space-y-5">
                         
                         {{-- Pilih Role --}}
                         <div>
@@ -305,12 +307,12 @@
                     </div>
 
                     {{-- Footer --}}
-                    <div class="bg-gray-50 dark:bg-slate-700/50 px-8 py-5 flex flex-row-reverse gap-3 border-t border-gray-100 dark:border-slate-700">
-                        <button wire:click="{{ $userId ? 'update' : 'store' }}" wire:loading.attr="disabled" type="button" class="w-auto inline-flex justify-center items-center gap-2 rounded-xl shadow-lg shadow-blue-500/30 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-bold text-white hover:from-blue-700 hover:to-indigo-700 focus:outline-none transition-all transform hover:-translate-y-0.5">
+                    <div class="bg-gray-50 dark:bg-slate-700/50 px-4 py-4 sm:px-8 sm:py-5 flex flex-row-reverse gap-3 border-t border-gray-100 dark:border-slate-700">
+                        <button wire:click="{{ $userId ? 'update' : 'store' }}" wire:loading.attr="disabled" type="button" class="w-full sm:w-auto inline-flex justify-center items-center gap-2 rounded-xl shadow-lg shadow-blue-500/30 px-6 py-2.5 bg-gradient-to-r from-blue-600 to-indigo-600 text-sm font-bold text-white hover:from-blue-700 hover:to-indigo-700 focus:outline-none transition-all transform hover:-translate-y-0.5">
                             <span wire:loading.remove>{{ $userId ? 'Simpan Perubahan' : 'Buat User' }}</span>
                             <span wire:loading class="flex items-center gap-2"><svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>Proses...</span>
                         </button>
-                        <button wire:click="closeModal" type="button" class="w-auto inline-flex justify-center rounded-xl border-2 border-transparent hover:bg-gray-200 dark:hover:bg-slate-600 px-5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 transition-all">Batal</button>
+                        <button wire:click="closeModal" type="button" class="w-full sm:w-auto inline-flex justify-center rounded-xl border-2 border-transparent hover:bg-gray-200 dark:hover:bg-slate-600 px-5 py-2.5 text-sm font-bold text-gray-600 dark:text-gray-300 transition-all">Batal</button>
                     </div>
 
                 </div>

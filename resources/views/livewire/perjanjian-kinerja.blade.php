@@ -2,15 +2,18 @@
     <x-slot:title>Perjanjian Kinerja</x-slot>
     
     <x-slot:breadcrumb>
-        <a href="/" class="hover:text-white transition-colors">Dashboard</a>
-        <span class="mx-2">/</span>
-        <span class="text-blue-200">Perencanaan Kinerja</span>
-        <span class="mx-2">/</span>
-        <span class="font-medium text-white">Perjanjian Kinerja</span>
+        {{-- BREADCRUMB RESPONSIF --}}
+        <div class="overflow-x-auto whitespace-nowrap pb-2">
+            <a href="/" class="hover:text-white transition-colors">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-blue-200">Perencanaan Kinerja</span>
+            <span class="mx-2">/</span>
+            <span class="font-medium text-white">Perjanjian Kinerja</span>
+        </div>
     </x-slot>
 
     <div class="bg-blue-50 border border-blue-200 rounded-xl p-6 shadow-sm mb-8">
-        <div class="flex gap-4 items-start">
+        <div class="flex flex-col sm:flex-row gap-4 items-start">
             <div class="text-blue-500 mt-1 flex-shrink-0">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
@@ -19,7 +22,7 @@
                 <p class="text-blue-700 text-sm leading-relaxed">
                     Perjanjian Kinerja adalah komitmen tertulis target kinerja yang disepakati, menjadi dasar penilaian kinerja & akuntabilitas.
                 </p>
-                <div class="flex gap-3 mt-3">
+                <div class="flex flex-wrap gap-2 mt-3">
                     <span class="inline-flex items-center px-2 py-1 rounded text-xs font-medium bg-blue-100 text-blue-700 border border-blue-200">
                         <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                         Akuntabilitas
@@ -39,8 +42,9 @@
 
     <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
         
+        {{-- BAGIAN KIRI: INFORMASI (Sticky di Desktop, Statis di Mobile) --}}
         <div class="lg:col-span-4">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden sticky top-24">
+            <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden lg:sticky lg:top-24">
                 <div class="px-6 py-4 border-b border-gray-100 bg-white">
                     <h3 class="font-bold text-gray-800 text-base flex items-center">
                         <svg class="w-5 h-5 mr-2 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
@@ -51,13 +55,13 @@
                 </div>
                 
                 <div class="p-6 space-y-6">
-                    <div class="flex justify-between items-center border-b border-gray-50 pb-3">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-gray-50 pb-3 gap-1">
                         <span class="text-sm text-gray-500 font-medium">Nama SKPD</span>
-                        <span class="text-sm text-gray-800 text-right">DINAS KESEHATAN</span>
+                        <span class="text-sm text-gray-800 sm:text-right font-semibold">DINAS KESEHATAN</span>
                     </div>
-                    <div class="flex justify-between items-center border-b border-gray-50 pb-3">
+                    <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-gray-50 pb-3 gap-1">
                         <span class="text-sm text-gray-500 font-medium">Kode SKPD</span>
-                        <span class="text-sm text-gray-800 font-mono text-right">1.02.0.00.0.00.01.0000</span>
+                        <span class="text-sm text-gray-800 font-mono sm:text-right">1.02.0.00.0.00.01.0000</span>
                     </div>
                     <div class="flex justify-between items-center">
                         <span class="text-sm text-gray-500 font-medium">Status</span>
@@ -69,6 +73,7 @@
             </div>
         </div>
 
+        {{-- BAGIAN KANAN: DAFTAR JABATAN --}}
         <div class="lg:col-span-8">
             <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
                 
@@ -83,7 +88,7 @@
 
                 <div class="p-6">
                     <div class="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
-                        <div class="flex items-center">
+                        <div class="flex items-center w-full sm:w-auto justify-between sm:justify-start">
                             <span class="text-sm text-gray-500 mr-2">Show</span>
                             <select wire:model.live="perPage" class="border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm text-sm py-1">
                                 <option value="5">5</option>
@@ -92,18 +97,20 @@
                             </select>
                         </div>
                         <div class="flex items-center w-full sm:w-auto">
-                            <span class="text-sm text-gray-500 mr-2">Search:</span>
+                            <span class="text-sm text-gray-500 mr-2 hidden sm:inline">Search:</span>
                             <input type="text" wire:model.live="search" class="w-full sm:w-64 border-gray-300 focus:border-blue-500 focus:ring-blue-500 rounded-md shadow-sm text-sm py-1 bg-gray-50" placeholder="Cari jabatan...">
                         </div>
                     </div>
 
+                    {{-- TABEL DATA RESPONSIF --}}
                     <div class="overflow-x-auto rounded-lg border border-gray-100">
-                        <table class="w-full text-left text-sm">
+                        <table class="w-full text-left text-sm whitespace-nowrap">
                             <thead class="bg-gray-50 text-gray-600 font-semibold border-b border-gray-200 text-xs uppercase tracking-wider">
                                 <tr>
-                                    <th class="p-4 text-center w-16">No</th>
-                                    <th class="p-4">Jabatan</th>
-                                    <th class="p-4 text-center w-32">Aksi</th>
+                                    {{-- Tambahkan min-w agar tidak gepeng di HP --}}
+                                    <th class="p-4 text-center w-16 min-w-[50px]">No</th>
+                                    <th class="p-4 min-w-[200px]">Jabatan</th>
+                                    <th class="p-4 text-center w-32 min-w-[100px]">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-gray-100 bg-white">
@@ -111,12 +118,12 @@
                                 <tr class="hover:bg-blue-50/50 transition-colors">
                                     <td class="p-4 text-center text-gray-500 font-medium">{{ $jabatans->firstItem() + $index }}</td>
                                     
-                                    <td class="p-4">
+                                    <td class="p-4 whitespace-normal">
                                         <div class="font-semibold text-gray-800">{{ $jabatan->nama }}</div>
                                     </td>
 
                                     <td class="p-4 text-center">
-                                        <a href="{{ route('perjanjian.kinerja.detail', $jabatan->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-200 text-xs font-bold transition-all shadow-sm">
+                                        <a href="{{ route('perjanjian.kinerja.detail', $jabatan->id) }}" class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 border border-blue-200 text-xs font-bold transition-all shadow-sm whitespace-nowrap">
                                             <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                                             Detail
                                         </a>
@@ -143,6 +150,5 @@
                 </div>
             </div>
         </div>
-
     </div>
 </div>

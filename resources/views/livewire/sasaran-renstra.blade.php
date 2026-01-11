@@ -3,11 +3,14 @@
     <x-slot:title>Sasaran Renstra</x-slot>
 
     <x-slot:breadcrumb>
-        <a href="/" class="hover:text-white transition-colors">Dashboard</a>
-        <span class="mx-2">/</span>
-        <span class="text-blue-200">Matrik Renstra</span>
-        <span class="mx-2">/</span>
-        <span class="font-medium text-white">Sasaran</span>
+        {{-- Wrapper agar breadcrumb bisa discroll jika terlalu panjang di mobile --}}
+        <div class="overflow-x-auto whitespace-nowrap pb-2">
+            <a href="/" class="hover:text-white transition-colors">Dashboard</a>
+            <span class="mx-2">/</span>
+            <span class="text-blue-200">Matrik Renstra</span>
+            <span class="mx-2">/</span>
+            <span class="font-medium text-white">Sasaran</span>
+        </div>
     </x-slot>
 
     {{-- Konten Utama --}}
@@ -16,12 +19,12 @@
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
 
             {{-- Header --}}
-            <div class="px-6 py-5 border-b border-gray-100 flex justify-between items-center bg-white">
+            <div class="px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
                 <h3 class="font-bold text-gray-800 text-lg">Sasaran Renstra</h3>
 
                 {{-- TOMBOL TAMBAH HANYA UNTUK ADMIN --}}
                 @if(auth()->user()->hasRole('admin'))
-                <button wire:click="create" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors shadow-sm">
+                <button wire:click="create" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex justify-center items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                     </svg>
@@ -31,14 +34,15 @@
             </div>
 
             {{-- Table Wrapper --}}
-            <div class="p-6">
+            <div class="p-4 sm:p-6">
+                {{-- overflow-x-auto memastikan tabel bisa discroll ke kanan pada mobile --}}
                 <div class="overflow-x-auto rounded-lg border border-gray-200 min-h-[400px]">
-                    <table class="w-full text-left border-collapse">
+                    <table class="w-full text-left border-collapse whitespace-nowrap sm:whitespace-normal">
                         <thead>
                             <tr class="bg-gray-50 text-gray-700 text-sm font-bold uppercase tracking-wider border-b border-gray-200">
-                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-64">Tujuan Renstra</th>
-                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-64">Sasaran Renstra</th>
-                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle w-48">Indikator</th>
+                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle min-w-[200px] sm:w-64">Tujuan Renstra</th>
+                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle min-w-[200px] sm:w-64">Sasaran Renstra</th>
+                                <th rowspan="2" class="p-4 border-r border-gray-200 text-center align-middle min-w-[150px] sm:w-48">Indikator</th>
                                 <th colspan="6" class="p-2 border-b border-r border-gray-200 text-center align-middle">Target</th>
                                 {{-- KOLOM AKSI HANYA UNTUK ADMIN --}}
                                 @if(auth()->user()->hasRole('admin'))
@@ -46,12 +50,12 @@
                                 @endif
                             </tr>
                             <tr class="bg-gray-50 text-gray-700 text-xs font-bold uppercase tracking-wider border-b border-gray-200">
-                                <th class="p-2 border-r border-gray-200 text-center w-16">2025</th>
-                                <th class="p-2 border-r border-gray-200 text-center w-16">2026</th>
-                                <th class="p-2 border-r border-gray-200 text-center w-16">2027</th>
-                                <th class="p-2 border-r border-gray-200 text-center w-16">2028</th>
-                                <th class="p-2 border-r border-gray-200 text-center w-16">2029</th>
-                                <th class="p-2 border-r border-gray-200 text-center w-16">2030</th>
+                                <th class="p-2 border-r border-gray-200 text-center min-w-[60px]">2025</th>
+                                <th class="p-2 border-r border-gray-200 text-center min-w-[60px]">2026</th>
+                                <th class="p-2 border-r border-gray-200 text-center min-w-[60px]">2027</th>
+                                <th class="p-2 border-r border-gray-200 text-center min-w-[60px]">2028</th>
+                                <th class="p-2 border-r border-gray-200 text-center min-w-[60px]">2029</th>
+                                <th class="p-2 border-r border-gray-200 text-center min-w-[60px]">2030</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-100 bg-white text-sm text-gray-600">
@@ -62,7 +66,7 @@
 
                             @forelse($groupedSasarans as $tujuanText => $items)
                             <tr class="bg-gray-50">
-                                <td class="p-4 border-r border-gray-100 font-bold text-gray-800 align-top">
+                                <td class="p-4 border-r border-gray-100 font-bold text-gray-800 align-top whitespace-normal">
                                     {{ $tujuanText }}
                                 </td>
                                 {{-- SPANNER 8 KOLOM: Sasaran(1) + Indikator(1) + Target(6) --}}
@@ -77,7 +81,7 @@
                             @foreach($items as $sasaran)
                             <tr class="hover:bg-blue-50 transition-colors group">
                                 <td class="p-4 border-r border-gray-100"></td>
-                                <td class="p-4 border-r border-gray-100 align-top">
+                                <td class="p-4 border-r border-gray-100 align-top whitespace-normal">
                                     <div class="text-gray-700 font-medium">{{ $sasaran->sasaran }}</div>
                                     @if($sasaran->jabatan)
                                     <div class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-blue-50 text-blue-700 border border-blue-100 shadow-sm">
@@ -129,7 +133,7 @@
                                 <td class="p-4 border-r border-gray-100"></td>
                                 <td class="p-4 border-r border-gray-100"></td>
 
-                                <td class="p-4 border-r border-gray-100 text-sm text-gray-700 align-top">
+                                <td class="p-4 border-r border-gray-100 text-sm text-gray-700 align-top whitespace-normal">
                                     <div class="font-medium">{{ $indikator->keterangan }}</div>
                                 </td>
 
@@ -172,10 +176,15 @@
                             <tr>
                                 {{-- COLSPAN 10 (Admin) atau 9 (Non-Admin) --}}
                                 <td colspan="{{ auth()->user()->hasRole('admin') ? 10 : 9 }}" class="p-10 text-center text-gray-400 italic bg-gray-50">
-                                    Data Sasaran Renstra belum tersedia.
-                                    @if(auth()->user()->hasRole('admin'))
-                                    Silakan klik tombol <strong>+ Tambah Sasaran</strong>.
-                                    @endif
+                                    <div class="flex flex-col items-center justify-center">
+                                        <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+                                        </svg>
+                                        <p>Data Sasaran Renstra belum tersedia.</p>
+                                        @if(auth()->user()->hasRole('admin'))
+                                        <p class="text-xs mt-1">Silakan klik tombol <strong>+ Tambah Sasaran</strong> di atas.</p>
+                                        @endif
+                                    </div>
                                 </td>
                             </tr>
                             @endforelse
@@ -188,60 +197,66 @@
 
     {{-- MODAL HANYA UNTUK ADMIN --}}
     @if(auth()->user()->hasRole('admin'))
+
+    {{-- MODAL TAMBAH/EDIT SASARAN --}}
     @if($isOpen)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 p-6">
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 sm:p-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl sm:mx-4 p-6 overflow-y-auto max-h-[90vh]">
             <h3 class="text-xl font-bold mb-4">{{ $isEditMode ? 'Edit Sasaran' : 'Tambah Sasaran' }}</h3>
             <div class="space-y-4">
                 <div>
-                    <label class="block text-sm mb-1">Pilih Tujuan Renstra (Induk)</label>
-                    <select wire:model="tujuan_id" class="w-full border rounded px-3 py-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Pilih Tujuan Renstra (Induk)</label>
+                    <select wire:model="tujuan_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
                         <option value="">Pilih Tujuan</option>
                         @foreach($list_tujuan as $t) <option value="{{ $t->id }}">{{ $t->tujuan }}</option> @endforeach
                     </select>
-                    @error('tujuan_id') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    @error('tujuan_id') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm mb-1">Sasaran Renstra</label>
-                    <textarea wire:model="sasaran" class="w-full border rounded px-3 py-2" rows="3"></textarea>
-                    @error('sasaran') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Sasaran Renstra</label>
+                    <textarea wire:model="sasaran" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow" rows="4" placeholder="Masukkan sasaran renstra..."></textarea>
+                    @error('sasaran') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
             </div>
-            <div class="mt-6 flex justify-end gap-2">
-                <button wire:click="closeModal" class="px-4 py-2 bg-gray-200 rounded">Batal</button>
-                <button wire:click="store" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+            <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
+                <button wire:click="closeModal" class="w-full sm:w-auto px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors">Batal</button>
+                <button wire:click="store" class="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
             </div>
         </div>
     </div>
     @endif
 
+    {{-- MODAL PENANGGUNG JAWAB --}}
     @if($isOpenPJ)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 p-6">
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 sm:p-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg sm:mx-4 p-6 overflow-y-auto max-h-[90vh]">
             <h3 class="text-xl font-bold mb-4">Penanggung Jawab</h3>
             <div class="space-y-4">
-                <div class="bg-gray-50 p-3 rounded text-sm italic">"{{ $pj_sasaran_text }}"</div>
+                <div class="bg-blue-50 p-4 rounded-lg text-sm text-blue-800 italic border border-blue-100">
+                    "{{ $pj_sasaran_text }}"
+                </div>
                 <div>
-                    <label class="block text-sm mb-1">Jabatan</label>
-                    <select wire:model="pj_jabatan_id" class="w-full border rounded px-3 py-2">
+                    <label class="block text-sm font-medium text-gray-700 mb-1">Jabatan</label>
+                    <select wire:model="pj_jabatan_id" class="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition-shadow">
                         <option value="">Pilih Jabatan</option>
                         @foreach($jabatans as $j) <option value="{{ $j->id }}">{{ $j->nama }}</option> @endforeach
                     </select>
                 </div>
             </div>
-            <div class="mt-6 flex justify-end gap-2">
-                <button wire:click="closeModal" class="px-4 py-2 bg-gray-200 rounded">Batal</button>
-                <button wire:click="simpanPenanggungJawab" class="px-4 py-2 bg-blue-600 text-white rounded">Simpan</button>
+            <div class="mt-6 flex flex-col-reverse sm:flex-row justify-end gap-3">
+                <button wire:click="closeModal" class="w-full sm:w-auto px-4 py-2.5 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors">Batal</button>
+                <button wire:click="simpanPenanggungJawab" class="w-full sm:w-auto px-4 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
             </div>
         </div>
     </div>
     @endif
 
+    {{-- MODAL INDIKATOR --}}
     @if($isOpenIndikator)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg mx-4 transform transition-all scale-100">
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity p-4 sm:p-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg sm:mx-4 transform transition-all scale-100 overflow-y-auto max-h-[90vh]">
             <div class="flex justify-between items-center px-6 py-5 border-b border-gray-100">
-                <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Indikator' : 'Form Indikator Sasaran' }}</h3>
+                <h3 class="text-xl font-bold text-gray-800">{{ $isEditMode ? 'Edit Indikator' : 'Tambah Indikator' }}</h3>
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors"><svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
                     </svg></button>
@@ -251,9 +266,9 @@
                     <label class="block text-sm font-medium text-gray-700 mb-2">Keterangan</label>
                     <textarea wire:model="ind_keterangan" rows="3" class="w-full border rounded px-3 py-2"></textarea>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Satuan</label>
-                    {{-- UPDATE DROPDOWN DISINI --}}
                     <select wire:model="ind_satuan" class="w-full border rounded px-3 py-2">
                         <option value="">Pilih Satuan</option>
                         <option value="Angka">Angka</option>
@@ -280,6 +295,7 @@
                         <option value="Unit">Unit</option>
                     </select>
                 </div>
+
                 <div>
                     <label class="block text-sm font-medium text-gray-700 mb-2">Arah</label>
                     <select wire:model="ind_arah" class="w-full border rounded px-3 py-2">
@@ -290,15 +306,19 @@
                     </select>
                 </div>
             </div>
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl"><button wire:click="closeModal" class="px-6 py-2 bg-gray-100 rounded">Batal</button><button wire:click="storeIndikator" class="px-6 py-2 bg-blue-600 text-white rounded">Simpan</button></div>
+            <div class="px-6 py-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-end gap-3 bg-gray-50 rounded-b-xl">
+                <button wire:click="closeModal" class="w-full sm:w-auto px-6 py-2 bg-gray-100 rounded">Batal</button>
+                <button wire:click="storeIndikator" class="w-full sm:w-auto px-6 py-2 bg-blue-600 text-white rounded">Simpan</button>
+            </div>
         </div>
     </div>
     @endif
 
+    {{-- MODAL TARGET --}}
     @if($isOpenTarget)
-    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity">
-        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 transform transition-all scale-100">
-            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-100">
+    <div class="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity p-4 sm:p-0">
+        <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl sm:mx-4 transform transition-all scale-100 flex flex-col max-h-[90vh]">
+            <div class="flex justify-between items-center px-6 py-5 border-b border-gray-100 flex-shrink-0">
                 <h3 class="text-xl font-bold text-gray-800">Form Target Indikator</h3>
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -306,20 +326,27 @@
                     </svg>
                 </button>
             </div>
-            <div class="p-8 space-y-4">
+            
+            {{-- Bagian konten scrollable untuk mobile --}}
+            <div class="p-8 space-y-4 overflow-y-auto">
                 @foreach([2025, 2026, 2027, 2028, 2029, 2030] as $year)
-                <div class="grid grid-cols-12 gap-4 items-center">
-                    <div class="col-span-3"><label class="text-sm font-medium text-gray-700">Target {{ $year }}</label></div>
-                    <div class="col-span-9 relative">
+                <div class="grid grid-cols-1 sm:grid-cols-12 gap-2 sm:gap-4 items-start sm:items-center">
+                    <div class="col-span-1 sm:col-span-3">
+                        <label class="text-sm font-medium text-gray-700 block mb-1 sm:mb-0">Target {{ $year }}</label>
+                    </div>
+                    <div class="col-span-1 sm:col-span-9 relative">
                         <input type="text" wire:model="target_{{ $year }}" class="w-full border border-gray-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none">
-                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none bg-gray-50 border-l border-gray-300 rounded-r-lg text-sm text-gray-500">{{ $target_satuan ?? 'Angka' }}</div>
+                        <div class="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none bg-gray-50 border-l border-gray-300 rounded-r-lg text-sm text-gray-500">
+                            {{ $target_satuan ?? 'Angka' }}
+                        </div>
                     </div>
                 </div>
                 @endforeach
             </div>
-            <div class="px-6 py-4 border-t border-gray-100 flex justify-end gap-3 bg-gray-50 rounded-b-xl">
-                <button wire:click="closeModal" class="px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Batal</button>
-                <button wire:click="simpanTarget" class="px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
+            
+            <div class="px-6 py-4 border-t border-gray-100 flex flex-col-reverse sm:flex-row justify-end gap-3 bg-gray-50 rounded-b-xl flex-shrink-0">
+                <button wire:click="closeModal" class="w-full sm:w-auto px-6 py-2.5 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors">Batal</button>
+                <button wire:click="simpanTarget" class="w-full sm:w-auto px-6 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors shadow-sm">Simpan</button>
             </div>
         </div>
     </div>

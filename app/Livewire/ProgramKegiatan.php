@@ -24,8 +24,9 @@ class ProgramKegiatan extends Component
     {
         return view('livewire.program-kegiatan', [
             // 1. Ambil Program beserta Outcome dan Indikatornya untuk Tabel
+            // UBAH SORTING: Menggunakan 'id' 'asc' agar data lama tetap di atas, data baru di bawah
             'programs' => Program::with(['outcomes.indikators', 'outcomes.sasaran'])
-                        ->orderBy('kode', 'asc')
+                        ->orderBy('id', 'asc') 
                         ->get(),
             
             // 2. Ambil Data Outcome untuk Dropdown
