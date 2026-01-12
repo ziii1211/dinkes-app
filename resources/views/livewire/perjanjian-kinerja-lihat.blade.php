@@ -289,10 +289,11 @@
             <div class="p-6 space-y-4 overflow-y-auto">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Kinerja Utamamu</label>
+                    {{-- PERBAIKAN: Gunakan key array ['id'] dan ['label'] dari Controller --}}
                     <select wire:model.live="sumber_kinerja_id" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="">-- Pilih Kinerja --</option>
                         @foreach($list_sumber as $item)
-                            <option value="{{ $item['value'] }}">
+                            <option value="{{ $item['id'] }}">
                                 {{ $item['label'] }}
                             </option>
                         @endforeach

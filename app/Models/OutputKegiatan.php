@@ -9,7 +9,7 @@ class OutputKegiatan extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['kegiatan_id', 'deskripsi'];
+    protected $fillable = ['kegiatan_id', 'deskripsi', 'jabatan_id'];
 
     public function kegiatan()
     {
@@ -19,5 +19,10 @@ class OutputKegiatan extends Model
     public function indikators()
     {
         return $this->hasMany(IndikatorKegiatan::class, 'output_kegiatan_id');
+    }
+
+    public function jabatan()
+    {
+        return $this->belongsTo(Jabatan::class, 'jabatan_id');
     }
 }

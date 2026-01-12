@@ -30,11 +30,7 @@ class Kegiatan extends Model
         return $this->hasMany(IndikatorKegiatan::class);
     }
 
-    // --- TAMBAHKAN INI (Penanggung Jawab) ---
-    public function jabatan()
-    {
-        return $this->belongsTo(Jabatan::class, 'jabatan_id');
-    }
+    
 
     public function pohonKinerja()
     {

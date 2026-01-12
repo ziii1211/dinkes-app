@@ -15,11 +15,12 @@ use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\Program; 
 use Illuminate\Support\Facades\Auth;
+use App\Models\OutputKegiatan; // <--- TAMBAHKAN BARIS INI
 
 class PerjanjianKinerjaLihat extends Component
 {
     public $pkId;
-    public $pk;
+    public $pk; // Variabel utama untuk data PerjanjianKinerja
     
     // Data Pendukung Tampilan
     public $jabatan;
@@ -139,10 +140,24 @@ class PerjanjianKinerjaLihat extends Component
             $indikators = $sumber->indikators;
 
         } elseif ($tipeSumber == 'kegiatan') {
-            $sumber = Kegiatan::with('indikators')->find($idSumber);
+            $sumber = Kegiatan::find($idSumber);
             if (!$sumber) return;
-            $textSasaran = $sumber->output; 
-            $indikators = $sumber->indikators; 
+            
+            // PERBAIKAN LOGIC:
+            // Cari Output spesifik milik Jabatan ini di dalam Kegiatan yang dipilih
+            $outputMilikSaya = OutputKegiatan::where('kegiatan_id', $idSumber)
+                                ->where('jabatan_id', $this->pk->jabatan_id)
+                                ->with('indikators')
+                                ->first();
+
+            if ($outputMilikSaya) {
+                $textSasaran = $outputMilikSaya->deskripsi;
+                $indikators = $outputMilikSaya->indikators;
+            } else {
+                // Fallback jika anehnya tidak ketemu (harusnya ketemu karena dropdown sudah difilter)
+                $textSasaran = $sumber->nama;
+                $indikators = [];
+            }
         }
 
         $pkSasaran = PkSasaran::create([
@@ -293,48 +308,66 @@ class PerjanjianKinerjaLihat extends Component
 
     public function render()
     {
+        // Ambil ID Jabatan dari PK yang sedang dilihat
+        $jabatanId = $this->pk->jabatan_id;
+
+        // 1. DATA TABEL UTAMA (Kegiatan & Output milik PJ ini)
+        $kegiatans = Kegiatan::with(['outputs.indikators', 'outputs.jabatan'])
+            ->whereHas('outputs', function ($query) use ($jabatanId) {
+                $query->where('jabatan_id', $jabatanId);
+            })
+            ->orderBy('kode', 'asc')
+            ->get();
+
+        // 2. DATA DROPDOWN SUMBER KINERJA (FILTERED BY PENANGGUNG JAWAB)
         $list_sumber = collect();
-
+        
+        // A. SASARAN STRATEGIS (Biasanya hanya untuk Kepala Dinas)
         if ($this->is_kepala_dinas) {
-            $data = Sasaran::with('indikators')->orderBy('created_at', 'desc')->get();
-            foreach($data as $item) {
-                $list_sumber->push([
-                    'value' => 'sasaran:' . $item->id, 
-                    'label' => '[Sasaran Strategis] ' . $item->sasaran
-                ]);
-            }
-        } else {
-            $outcomes = Outcome::with('indikators')
-                        ->where('jabatan_id', $this->pk->jabatan_id)
-                        ->orderBy('created_at', 'desc')->get();
-            foreach($outcomes as $o) {
-                $list_sumber->push([
-                    'value' => 'outcome:' . $o->id,
-                    'label' => '[Outcome Program] ' . $o->outcome
-                ]);
-            }
+            Sasaran::all()->each(function($s) use ($list_sumber) {
+                $list_sumber->push(['id' => 'sasaran:'.$s->id, 'label' => '[SASARAN] '.$s->sasaran]);
+            });
+        }
 
-            $kegiatans = Kegiatan::with('indikators')
-                        ->where('jabatan_id', $this->pk->jabatan_id)
-                        ->whereNotNull('output') 
-                        ->orderBy('kode', 'asc')->get();
-            foreach($kegiatans as $k) {
+        // B. OUTCOME PROGRAM (Hanya yang PJ-nya sesuai)
+        Outcome::with('program')
+            ->where('jabatan_id', $jabatanId) // <--- FILTER INI PENTING
+            ->get()
+            ->each(function($o) use ($list_sumber) {
+                $prog = $o->program ? $o->program->nama : 'Non-Program';
+                $list_sumber->push(['id' => 'outcome:'.$o->id, 'label' => '[OUTCOME] '.$prog.' - '.$o->outcome]);
+            });
+
+        // C. KEGIATAN / OUTPUT (Hanya Output yang PJ-nya sesuai)
+        // Kita cari OutputKegiatan milik jabatan ini, lalu ambil induk kegiatannya
+        $outputs = OutputKegiatan::with('kegiatan')
+            ->where('jabatan_id', $jabatanId) // <--- FILTER INI PENTING
+            ->get();
+
+        foreach($outputs as $out) {
+            if($out->kegiatan) {
+                // Kita gunakan deskripsi Output agar lebih spesifik
+                $label = '[KEGIATAN] ' . $out->kegiatan->nama . ' - (Output: ' . \Illuminate\Support\Str::limit($out->deskripsi, 40) . ')';
+                
+                // Value tetap kirim ID Kegiatan untuk kompatibilitas, tapi nanti di store kita filter lagi
                 $list_sumber->push([
-                    'value' => 'kegiatan:' . $k->id,
-                    'label' => '[Output Kegiatan] ' . $k->output . ' (' . $k->kode . ')'
+                    'id' => 'kegiatan:' . $out->kegiatan->id, 
+                    'label' => $label
                 ]);
             }
         }
 
-        $programs = Program::orderBy('kode', 'asc')->get();
-        $kegiatans_dropdown = Kegiatan::orderBy('kode', 'asc')->get();
-        $sub_kegiatans_dropdown = SubKegiatan::orderBy('kode', 'asc')->get();
-        
+        // 3. DATA DROPDOWN ANGGARAN
+        $programs_dropdown = Program::all();
+        $kegiatans_dropdown = Kegiatan::all();
+        $sub_kegiatans_dropdown = SubKegiatan::all();
+
         return view('livewire.perjanjian-kinerja-lihat', [
-            'list_sumber' => $list_sumber, 
-            'programs_dropdown' => $programs,
+            'kegiatans' => $kegiatans,
+            'list_sumber' => $list_sumber,
+            'programs_dropdown' => $programs_dropdown,
             'kegiatans_dropdown' => $kegiatans_dropdown,
-            'sub_kegiatans_dropdown' => $sub_kegiatans_dropdown
+            'sub_kegiatans_dropdown' => $sub_kegiatans_dropdown,
         ]);
     }
 }
