@@ -50,7 +50,19 @@ class KegiatanRenstra extends Component
 
     public function mount($id)
     {
-        $this->program = Program::findOrFail($id);
+        // 1. Load Program beserta relasi outcomes
+        $this->program = Program::with('outcomes')->findOrFail($id);
+
+        // 2. LOGIKA BARU: Filter Outcome berdasarkan parameter URL
+        $filterOutcomeId = request()->query('outcome_id');
+
+        if ($filterOutcomeId) {
+            // Filter collection outcomes agar hanya menyisakan yang ID-nya cocok
+            $filteredOutcomes = $this->program->outcomes->where('id', $filterOutcomeId);
+            
+            // Timpa relasi outcomes dengan hasil filter
+            $this->program->setRelation('outcomes', $filteredOutcomes);
+        }
     }
 
     public function render()

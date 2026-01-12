@@ -45,9 +45,20 @@
                 <h4 class="text-sm font-bold text-gray-800 mb-2">Kegiatan</h4>
                 <p class="text-gray-600 text-sm uppercase font-medium">{{ $kegiatan->kode }} {{ $kegiatan->nama }}</p>
             </div>
+            
+            {{-- BAGIAN YANG DIPERBAIKI: Menampilkan Output dengan Looping --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <h4 class="text-sm font-bold text-gray-800 mb-2">Output</h4>
-                <p class="text-gray-600 text-sm">{{ $kegiatan->output ?? '-' }}</p>
+                <div class="text-gray-600 text-sm">
+                    @forelse($kegiatan->outputs as $output)
+                        <div class="mb-1 flex items-start">
+                            <span class="mr-2">•</span>
+                            <span>{{ $output->deskripsi }}</span>
+                        </div>
+                    @empty
+                        -
+                    @endforelse
+                </div>
             </div>
         </div>
 
@@ -215,15 +226,12 @@
                                         <div x-show="open" @click="open = false" class="fixed inset-0 bg-black/30 z-[60] md:hidden backdrop-blur-[1px]" style="display: none;"></div>
 
                                         {{-- MENU CONTENT --}}
-                                        {{-- Mobile: Fixed di tengah layar (Popup) --}}
-                                        {{-- Desktop: Absolute dropdown di kanan bawah tombol --}}
                                         <div x-show="open" 
                                              style="display: none;" 
                                              @click.outside="open = false"
                                              class="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 z-[70] rounded-xl shadow-2xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none divide-y divide-gray-100 text-left 
                                                     md:absolute md:top-auto md:left-auto md:right-0 md:translate-x-0 md:translate-y-0 md:mt-2 md:w-56 md:origin-top-right md:shadow-xl md:rounded-md">
                                             
-                                            {{-- Header Menu (Hanya tampil di Mobile) --}}
                                             <div class="px-4 py-3 bg-gray-50 border-b border-gray-100 md:hidden rounded-t-xl">
                                                 <p class="text-sm font-bold text-gray-700">Aksi Sub Kegiatan</p>
                                             </div>

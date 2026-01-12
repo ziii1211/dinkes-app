@@ -17,24 +17,33 @@
     {{-- Konten Utama --}}
     <div class="space-y-6 md:space-y-8 relative z-10 mt-6 md:mt-8 px-4 md:px-0">
 
-        {{-- INFORMASI ATAS --}}
+        {{-- INFORMASI ATAS (KEMBALI KE LAYOUT 2 KOLOM) --}}
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            
+            {{-- KOTAK 1: Perangkat Daerah --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <h4 class="text-sm font-bold text-gray-800 mb-1">Perangkat Daerah</h4>
                 <p class="text-gray-600 text-sm">1.02.0.00.0.00.01.0000 DINAS KESEHATAN</p>
             </div>
+
+            {{-- KOTAK 2: Program & Outcome (Digabung seperti semula) --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <h4 class="text-sm font-bold text-gray-800 mb-1">Program</h4>
                 <p class="text-gray-600 text-sm font-medium uppercase leading-relaxed">
                     <span class="font-bold">{{ $program->kode }}</span> {{ $program->nama }}
                 </p>
+                
+                {{-- LIST OUTCOME (Akan tampil 1 saja jika difilter dari halaman sebelumnya) --}}
                 <div class="mt-3 pt-3 border-t border-gray-100">
                     <h5 class="text-xs font-bold text-gray-500 mb-1">OUTCOME</h5>
                     <div class="text-gray-600 text-xs leading-relaxed">
                         @forelse($program->outcomes as $outcome)
-                        <div class="mb-1 flex items-start"><span class="mr-2">•</span><span>{{ $outcome->outcome }}</span></div>
+                        <div class="mb-1 flex items-start">
+                            <span class="mr-2">•</span>
+                            <span>{{ $outcome->outcome }}</span>
+                        </div>
                         @empty
-                        <span class="italic text-gray-400">Belum ada outcome.</span>
+                        <span class="italic text-gray-400">Belum ada outcome terpilih.</span>
                         @endforelse
                     </div>
                 </div>
@@ -94,7 +103,6 @@
                                                 {{ $kegiatan->kode }} {{ $kegiatan->nama }}
                                             </span>
                                         </div>
-                                        {{-- PJ di sini sudah dihapus karena pindah ke Output --}}
                                     </div>
                                 </td>
                                 <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
@@ -174,13 +182,12 @@
                                         <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 text-left">
                                             <div class="py-1">
                                                 {{-- 1. Penanggung Jawab --}}
-                                                {{-- PERBAIKAN: Menggunakan $output->id --}}
                                                 <button wire:click="pilihPenanggungJawab({{ $output->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-50 transition-colors">
                                                     <svg class="mr-3 h-4 w-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>Penanggung Jawab
                                                 </button>
 
-                                                {{-- 2. Sub Kegiatan --}}
-                                                <a href="{{ route('renstra.sub_kegiatan', ['id' => $kegiatan->id]) }}" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                                                {{-- 2. Sub Kegiatan (DENGAN FILTER OUTPUT_ID AGAR HALAMAN SELANJUTNYA TAMPIL 1 SAJA) --}}
+                                                <a href="{{ route('renstra.sub_kegiatan', ['id' => $kegiatan->id, 'output_id' => $output->id]) }}" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
                                                     <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Sub Kegiatan
                                                 </a>
 

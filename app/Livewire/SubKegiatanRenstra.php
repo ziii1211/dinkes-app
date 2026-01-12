@@ -42,8 +42,21 @@ class SubKegiatanRenstra extends Component
 
     public function mount($id)
     {
-        $this->kegiatan = Kegiatan::findOrFail($id);
-        // Pastikan relasi program_id ada di model Kegiatan atau table kegiatans
+        // 1. Ambil ID kegiatan & Eager Load relasi outputs
+        $this->kegiatan = Kegiatan::with('outputs')->findOrFail($id);
+
+        // 2. LOGIKA BARU: Cek apakah ada 'output_id' dikirim dari link?
+        $filterOutputId = request()->query('output_id');
+
+        if ($filterOutputId) {
+            // Jika ada, kita filter collection outputs agar HANYA menyisakan yang ID-nya cocok
+            $filteredOutputs = $this->kegiatan->outputs->where('id', $filterOutputId);
+            
+            // Kita timpa relasi 'outputs' dengan hasil filter tadi
+            $this->kegiatan->setRelation('outputs', $filteredOutputs);
+        }
+
+        // 3. Ambil data program (seperti sebelumnya)
         $this->program = Program::findOrFail($this->kegiatan->program_id);
     }
 
