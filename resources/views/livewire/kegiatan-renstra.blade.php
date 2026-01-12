@@ -109,7 +109,7 @@
                                             <div class="py-1">
                                                 {{-- 1. Tambah Output --}}
                                                 <button wire:click="tambahOutput({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors">
-                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>+ Tambah Output
+                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Output
                                                 </button>
 
                                                 {{-- 2. Hapus Kegiatan --}}
@@ -186,7 +186,7 @@
 
                                                 {{-- 3. + Tambah Indikator --}}
                                                 <button wire:click="tambahIndikator({{ $output->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
-                                                    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>+ Tambah Indikator
+                                                    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Indikator
                                                 </button>
 
                                                 {{-- 4. Edit Output --}}
@@ -262,7 +262,7 @@
                                 <td colspan="{{ auth()->user()->hasRole('admin') ? 8 : 7 }}" class="p-10 text-center text-gray-400 italic bg-gray-50">
                                     Belum ada kegiatan untuk program ini.
                                     @if(auth()->user()->hasRole('admin'))
-                                    Silakan klik tombol <strong>+ Tambah Kegiatan</strong>.
+                                    Silakan klik tombol <strong>Tambah Kegiatan</strong>.
                                     @endif
                                 </td>
                             </tr>
