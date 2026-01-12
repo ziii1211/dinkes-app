@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\IndikatorKegiatan;
 use App\Models\Jabatan;
 use App\Models\Kegiatan;
+use App\Models\OutputKegiatan; // Pastikan Model ini sudah dibuat
 use App\Models\Program;
 use Livewire\Component;
 
@@ -24,7 +25,10 @@ class KegiatanRenstra extends Component
     public $kegiatan_id;
     public $kode;
     public $nama;
-    public $output;
+    
+    // Variable untuk Output
+    public $output; // Digunakan sebagai deskripsi output di form
+    public $output_id; // ID untuk OutputKegiatan (saat edit)
 
     public $pj_kegiatan_text;
     public $pj_jabatan_id;
@@ -41,6 +45,7 @@ class KegiatanRenstra extends Component
     public $target_2029;
     public $target_2030;
     public $target_satuan;
+    public $selected_output_id;
 
     public function mount($id)
     {
@@ -48,27 +53,26 @@ class KegiatanRenstra extends Component
     }
 
     public function render()
-    {
-        return view('livewire.kegiatan-renstra', [
-            // --- PERBAIKAN UTAMA DI SINI ---
-            // Kita kirim variabel 'program' secara eksplisit agar dikenali di Blade
-            'program' => $this->program,
-
-            // Mengubah sorting dari 'kode' menjadi 'id' 'asc' agar data baru di bawah
-            'kegiatans' => Kegiatan::with(['indikators', 'jabatan.pegawai'])
-                ->where('program_id', $this->program->id)
-                ->orderBy('id', 'asc')
-                ->get(),
-                
-            'jabatans' => Jabatan::all(),
-        ]);
-    }
+{
+    return view('livewire.kegiatan-renstra', [
+        'program' => $this->program,
+        
+        // UPDATE DI SINI:
+        // Gunakan 'outputs.indikators' agar indikator terambil bersarang di dalam output
+        'kegiatans' => Kegiatan::with(['outputs.indikators', 'jabatan.pegawai'])
+            ->where('program_id', $this->program->id)
+            ->orderBy('id', 'asc')
+            ->get(),
+            
+        'jabatans' => Jabatan::all(),
+    ]);
+}
 
     // --- FUNGSI NAVIGASI KE SUB KEGIATAN ---
     public function openSubKegiatan($kegiatanId)
     {
-        return redirect()->route('renstra.sub_kegiatan', [ // Pastikan nama route sesuai (matrik.subkegiatan atau renstra.sub_kegiatan)
-            'id' => $kegiatanId, // Sesuaikan parameter route di web.php
+        return redirect()->route('renstra.sub_kegiatan', [
+            'id' => $kegiatanId,
         ]);
     }
 
@@ -83,7 +87,8 @@ class KegiatanRenstra extends Component
         $this->isOpenPJ = false;
         $this->resetValidation();
         $this->reset([
-            'kegiatan_id', 'kode', 'nama', 'output', 'isEditMode', 
+            'kegiatan_id', 'kode', 'nama', 'isEditMode', 
+            'output', 'output_id', // Reset variabel output
             'ind_keterangan', 'ind_satuan', 'indikator_id', 'selected_kegiatan_id', 
             'target_2025', 'target_2026', 'target_2027', 'target_2028', 'target_2029', 'target_2030', 
             'target_satuan', 'pj_kegiatan_text', 'pj_jabatan_id'
@@ -97,10 +102,11 @@ class KegiatanRenstra extends Component
 
     public function create()
     {
-        $this->reset(['kode', 'nama', 'output', 'isEditMode']);
+        $this->reset(['kode', 'nama', 'isEditMode']);
         $this->openModal();
     }
 
+    // Simpan Kegiatan Utama (Tanpa Output, karena Output tabel terpisah)
     public function store()
     {
         $this->validate(['kode' => 'required', 'nama' => 'required']);
@@ -108,20 +114,18 @@ class KegiatanRenstra extends Component
         if ($this->isEditMode) {
             Kegiatan::find($this->kegiatan_id)->update([
                 'kode' => $this->kode, 
-                'nama' => $this->nama, 
-                'output' => $this->output
+                'nama' => $this->nama
+                // Output tidak disimpan di sini lagi
             ]);
         } else {
             Kegiatan::create([
                 'program_id' => $this->program->id, 
                 'kode' => $this->kode, 
-                'nama' => $this->nama, 
-                'output' => $this->output
+                'nama' => $this->nama
             ]);
         } 
         $this->closeModal();
 
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -132,7 +136,7 @@ class KegiatanRenstra extends Component
             $this->kegiatan_id = $id;
             $this->kode = $data->kode;
             $this->nama = $data->nama;
-            $this->output = $data->output;
+            // $this->output = $data->output; // Hapus baris ini karena output sudah di tabel lain
             $this->isEditMode = true;
             $this->openModal();
         }
@@ -145,55 +149,74 @@ class KegiatanRenstra extends Component
             $data->delete();
         }
         
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
-    public function tambahOutput($id)
+    // --- LOGIKA BARU UNTUK OUTPUT (TABEL TERPISAH) ---
+
+    public function tambahOutput($kegiatanId)
     {
-        $data = Kegiatan::find($id);
-        if ($data) {
-            $this->kegiatan_id = $id;
-            $this->output = $data->output;
-            $this->isOpenOutput = true;
-        }
+        // Reset form output
+        $this->reset(['output', 'output_id']);
+        $this->kegiatan_id = $kegiatanId; // Set Parent ID
+        $this->isOpenOutput = true;
     }
 
     public function editOutput($id)
     {
-        $this->tambahOutput($id);
+        // $id di sini adalah ID dari OutputKegiatan, bukan Kegiatan
+        $data = OutputKegiatan::find($id);
+        if ($data) {
+            $this->output_id = $id;
+            $this->kegiatan_id = $data->kegiatan_id;
+            $this->output = $data->deskripsi; // Asumsi nama kolom di tabel baru adalah 'deskripsi'
+            $this->isOpenOutput = true;
+        }
     }
 
     public function storeOutput()
     {
         $this->validate(['output' => 'required']);
-        $kegiatan = Kegiatan::find($this->kegiatan_id);
-        if ($kegiatan) {
-            $kegiatan->update(['output' => $this->output]);
-        } 
-        $this->closeModal();
 
-        // --- REFRESH HALAMAN OTOMATIS ---
+        if ($this->output_id) {
+            // Update Existing Output
+            $data = OutputKegiatan::find($this->output_id);
+            if ($data) {
+                $data->update(['deskripsi' => $this->output]);
+            }
+        } else {
+            // Create New Output
+            OutputKegiatan::create([
+                'kegiatan_id' => $this->kegiatan_id,
+                'deskripsi' => $this->output
+            ]);
+        }
+        
+        $this->closeModal();
         return redirect(request()->header('Referer'));
     }
 
     public function hapusOutput($id)
     {
-        $kegiatan = Kegiatan::find($id);
-        if ($kegiatan) {
-            $kegiatan->update(['output' => null]);
+        // Delete OutputKegiatan
+        $data = OutputKegiatan::find($id);
+        if ($data) {
+            $data->delete();
         }
 
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
+
+    // --- FUNGSI PJ, INDIKATOR, DLL TETAP SAMA ---
 
     public function pilihPenanggungJawab($id)
     {
         $data = Kegiatan::find($id);
         if ($data) {
             $this->kegiatan_id = $id;
-            $this->pj_kegiatan_text = $data->output ?? $data->nama;
+            // Mengambil deskripsi output pertama jika ada, atau nama kegiatan
+            $outputDesc = $data->outputs->first()->deskripsi ?? '-';
+            $this->pj_kegiatan_text = $data->nama . ' (Output: ' . $outputDesc . ')';
             $this->pj_jabatan_id = $data->jabatan_id;
             $this->isOpenPJ = true;
         }
@@ -207,14 +230,13 @@ class KegiatanRenstra extends Component
         } 
         $this->closeModal();
 
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
-    public function tambahIndikator($kegiatanId)
+    public function tambahIndikator($outputId) // Parameter sekarang Output ID
     {
         $this->reset(['ind_keterangan', 'ind_satuan', 'isEditMode']);
-        $this->selected_kegiatan_id = $kegiatanId;
+        $this->selected_output_id = $outputId; // Simpan ID Output
         $this->isOpenIndikator = true;
     }
 
@@ -223,7 +245,7 @@ class KegiatanRenstra extends Component
         $ind = IndikatorKegiatan::find($id);
         if ($ind) {
             $this->indikator_id = $id;
-            $this->selected_kegiatan_id = $ind->kegiatan_id;
+            $this->selected_output_id = $ind->output_kegiatan_id; // Ambil output_id
             $this->ind_keterangan = $ind->keterangan;
             $this->ind_satuan = $ind->satuan;
             $this->isEditMode = true;
@@ -234,8 +256,9 @@ class KegiatanRenstra extends Component
     public function storeIndikator()
     {
         $this->validate(['ind_keterangan' => 'required', 'ind_satuan' => 'required']);
+        
         $data = [
-            'kegiatan_id' => $this->selected_kegiatan_id, 
+            'output_kegiatan_id' => $this->selected_output_id, // Gunakan ID Output
             'keterangan' => $this->ind_keterangan, 
             'satuan' => $this->ind_satuan
         ];
@@ -245,11 +268,10 @@ class KegiatanRenstra extends Component
         } else {
             IndikatorKegiatan::create($data);
         } 
+        
         $this->closeModal();
-
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
-    }
+    }   
 
     public function deleteIndikator($id)
     {
@@ -258,7 +280,6 @@ class KegiatanRenstra extends Component
             $ind->delete();
         }
 
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 
@@ -293,7 +314,6 @@ class KegiatanRenstra extends Component
         } 
         $this->closeModal();
 
-        // --- REFRESH HALAMAN OTOMATIS ---
         return redirect(request()->header('Referer'));
     }
 }

@@ -9,11 +9,11 @@ class IndikatorKegiatan extends Model
 {
     use HasFactory;
 
-    // Mendaftarkan kolom yang boleh diisi (termasuk target tahunan)
     protected $fillable = [
-        'kegiatan_id', // Relasi ke Kegiatan
-        'keterangan',  // Nama Indikator
-        'satuan',      // Satuan
+        // PERBAIKAN 1: Pastikan tulisannya 'output', bukan 'ouput'
+        'output_kegiatan_id', 
+        'keterangan',  
+        'satuan',      
         
         // Target Tahunan
         'target_2025',
@@ -24,9 +24,10 @@ class IndikatorKegiatan extends Model
         'target_2030',
     ];
 
-    // Relasi ke Induk (Kegiatan)
-    public function kegiatan()
+    // PERBAIKAN 2: Ubah nama fungsi & model tujuan menjadi OutputKegiatan
+    public function output()
     {
-        return $this->belongsTo(Kegiatan::class);
+        // Pastikan model OutputKegiatan sudah di-import atau dipanggil dengan benar
+        return $this->belongsTo(OutputKegiatan::class, 'output_kegiatan_id');
     }
 }

@@ -14,7 +14,7 @@ class Kegiatan extends Model
         'program_id', // Relasi ke Program
         'kode',       // Kode Kegiatan
         'nama',       // Nama Kegiatan
-        'output',     // Deskripsi Output
+        // 'output',     // Deskripsi Output
         'jabatan_id'  // Tambahkan ini (Penanggung Jawab)
     ];
 
@@ -39,5 +39,9 @@ class Kegiatan extends Model
     public function pohonKinerja()
     {
         return $this->hasOne(PohonKinerja::class, 'kegiatan_id');
+    }
+    public function outputs()
+    {
+        return $this->hasMany(OutputKegiatan::class);
     }
 }

@@ -94,60 +94,11 @@
                                                 {{ $kegiatan->kode }} {{ $kegiatan->nama }}
                                             </span>
                                         </div>
-                                    </div>
-                                </td>
-                                <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
 
-                                @if(auth()->user()->hasRole('admin'))
-                                <td class="p-4 text-center align-middle relative">
-                                    <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-                                        <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm">
-                                            Menu <svg class="-mr-1 ml-1.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                        </button>
-                                        <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 text-left">
-                                            <div class="py-1">
-                                                {{-- Edit Kegiatan --}}
-                                                <button wire:click="edit({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-gray-600 hover:bg-gray-100 transition-colors">
-                                                    <svg class="mr-3 h-4 w-4 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>Edit Kegiatan
-                                                </button>
-
-                                                {{-- Tambah Output (Hanya jika Output belum ada) --}}
-                                                @if(!$kegiatan->output)
-                                                <button wire:click="tambahOutput({{ $kegiatan->id }})" class="group flex w-full items-center px-4 py-2.5 text-sm text-green-600 hover:bg-green-50 transition-colors">
-                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>Tambah Output
-                                                </button>
-                                                @endif
-
-                                                {{-- Hapus Kegiatan --}}
-                                                <button wire:click="delete({{ $kegiatan->id }})" wire:confirm="Hapus Kegiatan ini?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
-                                                    <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Hapus Kegiatan
-                                                </button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </td>
-                                @endif
-                            </tr>
-
-                            {{-- BARIS 2: OUTPUT (Jika Ada) --}}
-                            @if($kegiatan->output)
-                            <tr class="bg-gray-50 border-b border-gray-100 hover:bg-gray-100 transition-colors">
-                                <td class="p-6 border-r border-gray-100 align-top pl-6 sm:pl-12 whitespace-normal">
-                                    <div class="flex flex-col gap-1">
-                                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start sm:items-center">
-                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 border border-green-200 h-6 whitespace-nowrap">
-                                                Output
-                                            </span>
-                                            <span class="text-gray-800 font-bold leading-relaxed text-sm">
-                                                {{ $kegiatan->output }}
-                                            </span>
-                                        </div>
-
-                                        {{-- Tampilkan PJ di sini --}}
-                                        @php
-                                            $pjClass = 'bg-gray-100 text-gray-600 border-gray-200';
-                                            $pjText = 'Belum ada PJ';
-                                            if ($kegiatan->jabatan) {
+                                        {{-- LOGIKA PJ (Tampil di bawah nama Kegiatan) --}}
+                                        @if($kegiatan->jabatan)
+                                            @php
+                                                $pjClass = 'bg-gray-100 text-gray-600 border-gray-200';
                                                 $pjText = 'PJ: ' . $kegiatan->jabatan->nama;
                                                 $pegawai = $kegiatan->jabatan->pegawai;
                                                 if ($pegawai) {
@@ -162,14 +113,11 @@
                                                 } else {
                                                     $pjClass = 'bg-red-50 text-red-600 border-red-100';
                                                 }
-                                            }
-                                        @endphp
-
-                                        @if($kegiatan->jabatan)
-                                        <div class="mt-1 sm:ml-14 inline-flex items-center px-2 py-0.5 rounded text-xs border w-fit {{ $pjClass }}">
-                                            <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                            <span class="font-bold mr-1">{{ Str::limit($pjText, 60) }}</span>
-                                        </div>
+                                            @endphp
+                                            <div class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-xs border w-fit {{ $pjClass }}">
+                                                <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                                <span class="font-bold mr-1">{{ Str::limit($pjText, 60) }}</span>
+                                            </div>
                                         @endif
                                     </div>
                                 </td>
@@ -183,28 +131,70 @@
                                         </button>
                                         <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 text-left">
                                             <div class="py-1">
-                                                {{-- Penanggung Jawab --}}
-                                                <button wire:click="pilihPenanggungJawab({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-yellow-600 hover:bg-yellow-50 transition-colors">
+                                                {{-- 1. Tambah Output --}}
+                                                <button wire:click="tambahOutput({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-green-600 hover:bg-green-50 transition-colors">
+                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Output
+                                                </button>
+
+                                                {{-- 2. Hapus Kegiatan --}}
+                                                <button wire:click="delete({{ $kegiatan->id }})" wire:confirm="Hapus Kegiatan ini? Data sub-kegiatan dan indikator akan ikut terhapus." @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                    <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Hapus Kegiatan
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                                @endif
+                            </tr>
+
+                            {{-- BARIS 2: LIST OUTPUT (LOOPING) --}}
+                            @foreach($kegiatan->outputs as $output)
+                            <tr class="bg-gray-50 border-b border-gray-100 hover:bg-gray-100 transition-colors">
+                                <td class="p-6 border-r border-gray-100 align-top pl-6 sm:pl-12 whitespace-normal">
+                                    <div class="flex flex-col gap-1">
+                                        <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start sm:items-center">
+                                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-medium bg-green-100 text-green-800 border border-green-200 h-6 whitespace-nowrap">
+                                                Output
+                                            </span>
+                                            <span class="text-gray-800 font-bold leading-relaxed text-sm">
+                                                {{ $output->deskripsi }}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td colspan="6" class="p-4 border-r text-center text-gray-300 align-middle">&mdash;</td>
+
+                                @if(auth()->user()->hasRole('admin'))
+                                <td class="p-4 text-center align-middle relative">
+                                    <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
+                                        <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm">
+                                            Menu <svg class="-mr-1 ml-1.5 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        </button>
+                                        <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 text-left">
+                                            <div class="py-1">
+                                                {{-- 1. Penanggung Jawab --}}
+                                                <button wire:click="pilihPenanggungJawab({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-yellow-600 hover:bg-yellow-50 transition-colors">
                                                     <svg class="mr-3 h-4 w-4 text-yellow-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>Penanggung Jawab
                                                 </button>
 
-                                                {{-- Sub Kegiatan --}}
-                                                <a href="{{ route('renstra.sub_kegiatan', ['id' => $kegiatan->id]) }}" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                                                {{-- 2. Sub Kegiatan --}}
+                                                <a href="{{ route('renstra.sub_kegiatan', ['id' => $kegiatan->id]) }}" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
                                                     <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Sub Kegiatan
                                                 </a>
 
-                                                {{-- Tambah Indikator --}}
-                                                <button wire:click="tambahIndikator({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
-                                                    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>Tambah Indikator
+                                                {{-- 3. + Tambah Indikator --}}
+                                                {{-- PERBAIKAN: Gunakan ID Output ($output->id) --}}
+                                                <button wire:click="tambahIndikator({{ $output->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+                                                    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah Indikator
                                                 </button>
 
-                                                {{-- Edit Output --}}
-                                                <button wire:click="editOutput({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-purple-600 hover:bg-purple-50 transition-colors">
+                                                {{-- 4. Edit Output --}}
+                                                <button wire:click="editOutput({{ $output->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-purple-600 hover:bg-purple-50 transition-colors">
                                                     <svg class="mr-3 h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>Edit Output
                                                 </button>
 
-                                                {{-- Hapus Output --}}
-                                                <button wire:click="hapusOutput({{ $kegiatan->id }})" wire:confirm="Hapus output kegiatan ini?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
+                                                {{-- 5. Hapus Output --}}
+                                                <button wire:click="hapusOutput({{ $output->id }})" wire:confirm="Hapus output ini?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors">
                                                     <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Hapus Output
                                                 </button>
                                             </div>
@@ -213,10 +203,9 @@
                                 </td>
                                 @endif
                             </tr>
-                            @endif
-
-                            {{-- BARIS 3: INDIKATOR --}}
-                            @foreach($kegiatan->indikators as $indikator)
+                            
+                            {{-- BARIS 3: INDIKATOR (SEKARANG LOOPING DARI OUTPUT) --}}
+                            @foreach($output->indikators as $indikator)
                             <tr class="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
                                 <td class="p-6 border-r border-gray-100 align-top pl-6 sm:pl-12 whitespace-normal">
                                     <div class="flex flex-col sm:flex-row gap-2 sm:gap-3 items-start ml-0 sm:ml-8 border-l-2 border-yellow-200 pl-3">
@@ -243,17 +232,17 @@
                                         </button>
                                         <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 text-left">
                                             <div class="py-1">
-                                                {{-- Edit Indikator --}}
+                                                {{-- 1. Edit Indikator --}}
                                                 <button wire:click="editIndikator({{ $indikator->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50">
                                                     <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>Edit Indikator
                                                 </button>
 
-                                                {{-- Atur Target --}}
+                                                {{-- 2. Atur Target --}}
                                                 <button wire:click="aturTarget({{ $indikator->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-purple-600 hover:bg-purple-50">
                                                     <svg class="mr-3 h-4 w-4 text-purple-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>Atur Target
                                                 </button>
 
-                                                {{-- Hapus Indikator --}}
+                                                {{-- 3. Hapus Indikator --}}
                                                 <button wire:click="deleteIndikator({{ $indikator->id }})" wire:confirm="Hapus indikator ini?" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
                                                     <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>Hapus Indikator
                                                 </button>
@@ -263,14 +252,16 @@
                                 </td>
                                 @endif
                             </tr>
-                            @endforeach
+                            @endforeach {{-- END LOOP INDIKATOR --}}
+
+                            @endforeach {{-- END LOOP OUTPUT --}}
 
                             @empty
                             <tr>
                                 <td colspan="{{ auth()->user()->hasRole('admin') ? 8 : 7 }}" class="p-10 text-center text-gray-400 italic bg-gray-50">
                                     Belum ada kegiatan untuk program ini.
                                     @if(auth()->user()->hasRole('admin'))
-                                    Silakan klik tombol <strong>+ Tambah Kegiatan</strong>.
+                                    Silakan klik tombol <strong> Tambah Kegiatan</strong>.
                                     @endif
                                 </td>
                             </tr>
