@@ -187,9 +187,9 @@
                                                 </button>
 
                                                 {{-- 2. Sub Kegiatan (DENGAN FILTER OUTPUT_ID AGAR HALAMAN SELANJUTNYA TAMPIL 1 SAJA) --}}
-                                                <a href="{{ route('renstra.sub_kegiatan', ['id' => $kegiatan->id, 'output_id' => $output->id]) }}" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
-                                                    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Sub Kegiatan
-                                                </a>
+                                                <a href="{{ route('renstra.sub_kegiatan', ['id' => $kegiatan->id, 'output_id' => $output->id, 'outcome_id' => request()->query('outcome_id')]) }}" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">
+    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>Sub Kegiatan
+</a>
 
                                                 {{-- 3. + Tambah Indikator --}}
                                                 <button wire:click="tambahIndikator({{ $output->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 transition-colors">

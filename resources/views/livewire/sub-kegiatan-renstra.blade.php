@@ -10,7 +10,8 @@
             <span class="mx-2">/</span>
             <a href="{{ route('matrik.program') }}" class="hover:text-white transition-colors">Program</a>
             <span class="mx-2">/</span>
-            <a href="{{ route('matrik.kegiatan', ['id' => $program->id]) }}" class="hover:text-white transition-colors">Kegiatan</a>
+            {{-- UPDATE LINK KEGIATAN: Sertakan outcome_id dari URL agar filter tetap jalan --}}
+            <a href="{{ route('matrik.kegiatan', ['id' => $program->id, 'outcome_id' => request()->query('outcome_id')]) }}" class="hover:text-white transition-colors">Kegiatan</a>
             <span class="mx-2">/</span>
             <span class="font-medium text-white">Sub Kegiatan</span>
         </div>
@@ -36,9 +37,12 @@
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <h4 class="text-sm font-bold text-gray-800 mb-2">Outcome</h4>
                 <div class="text-gray-600 text-sm">
-                    @foreach($program->outcomes as $out)
+                    {{-- LOOP OUTCOME (Otomatis hanya 1 karena sudah difilter di PHP) --}}
+                    @forelse($program->outcomes as $out)
                     <div class="mb-1 flex items-start"><span class="mr-2">•</span><span>{{ $out->outcome }}</span></div>
-                    @endforeach
+                    @empty
+                    <span class="italic text-gray-400">Data outcome tidak spesifik.</span>
+                    @endforelse
                 </div>
             </div>
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
@@ -46,17 +50,17 @@
                 <p class="text-gray-600 text-sm uppercase font-medium">{{ $kegiatan->kode }} {{ $kegiatan->nama }}</p>
             </div>
             
-            {{-- BAGIAN YANG DIPERBAIKI: Menampilkan Output dengan Looping --}}
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <h4 class="text-sm font-bold text-gray-800 mb-2">Output</h4>
                 <div class="text-gray-600 text-sm">
+                    {{-- LOOP OUTPUT (Otomatis hanya 1 karena sudah difilter di PHP) --}}
                     @forelse($kegiatan->outputs as $output)
                         <div class="mb-1 flex items-start">
                             <span class="mr-2">•</span>
                             <span>{{ $output->deskripsi }}</span>
                         </div>
                     @empty
-                        -
+                        <span class="italic text-gray-400">-</span>
                     @endforelse
                 </div>
             </div>
@@ -69,7 +73,8 @@
                 <h3 class="font-bold text-gray-800 text-lg">Daftar Sub Kegiatan</h3>
 
                 <div class="flex flex-wrap gap-2 w-full md:w-auto">
-                    <a href="{{ route('matrik.kegiatan', ['id' => $program->id]) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors">
+                    {{-- UPDATE TOMBOL KEMBALI: Sertakan outcome_id --}}
+                    <a href="{{ route('matrik.kegiatan', ['id' => $program->id, 'outcome_id' => request()->query('outcome_id')]) }}" class="bg-gray-100 hover:bg-gray-200 text-gray-600 px-4 py-2 rounded-lg text-sm font-medium flex items-center transition-colors">
                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path>
                         </svg>
@@ -212,7 +217,6 @@
 
                                 @if(auth()->user()->hasRole('admin'))
                                 <td class="p-4 text-center align-middle">
-                                    {{-- PERBAIKAN: Menu Dropdown Responsif --}}
                                     <div x-data="{ open: false }" class="relative inline-block text-left">
                                         
                                         <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none shadow-sm transition-colors">
@@ -222,10 +226,8 @@
                                             </svg>
                                         </button>
 
-                                        {{-- BACKDROP untuk Mobile (hitam transparan di belakang menu) --}}
                                         <div x-show="open" @click="open = false" class="fixed inset-0 bg-black/30 z-[60] md:hidden backdrop-blur-[1px]" style="display: none;"></div>
 
-                                        {{-- MENU CONTENT --}}
                                         <div x-show="open" 
                                              style="display: none;" 
                                              @click.outside="open = false"
@@ -253,7 +255,7 @@
 
                                                 <div class="border-t border-gray-100 my-1"></div>
 
-                                                <button wire:click="delete({{ $sub->id }})" wire:confirm="Hapus Sub Kegiatan Beserta Seluruh Indikatornya?" @click="open = false" class="group flex w-full items-center px-4 py-3 md:py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors rounded-b-xl md:rounded-b-md">
+                                                <button wire:click="delete({{ $sub->id }})" wire:confirm="Hapus?" @click="open = false" class="group flex w-full items-center px-4 py-3 md:py-2.5 text-sm text-red-600 hover:bg-red-50 transition-colors rounded-b-xl md:rounded-b-md">
                                                     <svg class="mr-3 h-5 w-5 md:h-4 md:w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                                     </svg>
@@ -323,7 +325,6 @@
 
                                 @if(auth()->user()->hasRole('admin'))
                                 <td class="p-4 text-center align-middle">
-                                    {{-- PERBAIKAN: Menu Dropdown Responsif (Sama dengan atas) --}}
                                     <div x-data="{ open: false }" class="relative inline-block text-left">
                                         
                                         <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-700 hover:bg-gray-50 focus:outline-none shadow-sm transition-colors">
@@ -333,10 +334,8 @@
                                             </svg>
                                         </button>
 
-                                        {{-- BACKDROP Mobile --}}
                                         <div x-show="open" @click="open = false" class="fixed inset-0 bg-black/30 z-[60] md:hidden backdrop-blur-[1px]" style="display: none;"></div>
 
-                                        {{-- MENU CONTENT --}}
                                         <div x-show="open" 
                                              style="display: none;" 
                                              @click.outside="open = false"
@@ -382,9 +381,9 @@
         </div>
     </div>
 
-    {{-- MODAL HANYA RENDER JIKA ADMIN --}}
+    {{-- MODAL HANYA UNTUK ADMIN --}}
     @if(auth()->user()->hasRole('admin'))
-
+    
     {{-- MODAL UTAMA: TAMBAH / EDIT SUB KEGIATAN --}}
     @if($isOpen)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity p-4">
@@ -461,6 +460,7 @@
                                     <option value="Rupiah">Rupiah</option>
                                     <option value="Unit">Unit</option>
                                 </select>
+                                @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
                         </div>
                     </div>

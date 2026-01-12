@@ -12,6 +12,10 @@ use Livewire\Component;
 class KegiatanRenstra extends Component
 {
     public $program;
+    
+    // --- STATE FILTER ---
+    // Tambahkan ini agar Livewire mengingat ID outcome yang dipilih
+    public $filter_outcome_id; 
 
     // --- STATES MODAL ---
     public $isOpen = false;
@@ -50,28 +54,27 @@ class KegiatanRenstra extends Component
 
     public function mount($id)
     {
-        // 1. Load Program beserta relasi outcomes
-        $this->program = Program::with('outcomes')->findOrFail($id);
+        // 1. Load Program saja (Relasi diload nanti di render agar filter konsisten)
+        $this->program = Program::findOrFail($id);
 
-        // 2. LOGIKA BARU: Filter Outcome berdasarkan parameter URL
-        $filterOutcomeId = request()->query('outcome_id');
-
-        if ($filterOutcomeId) {
-            // Filter collection outcomes agar hanya menyisakan yang ID-nya cocok
-            $filteredOutcomes = $this->program->outcomes->where('id', $filterOutcomeId);
-            
-            // Timpa relasi outcomes dengan hasil filter
-            $this->program->setRelation('outcomes', $filteredOutcomes);
-        }
+        // 2. Tangkap parameter dari URL dan simpan ke public property
+        $this->filter_outcome_id = request()->query('outcome_id');
     }
 
     public function render()
     {
+        // LOGIKA FILTER OUTCOME DI SINI (AGAR TIDAK HILANG SAAT RE-RENDER)
+        // Kita load ulang relasi outcomes dengan kondisi filter
+        $this->program->load(['outcomes' => function($query) {
+            if ($this->filter_outcome_id) {
+                $query->where('id', $this->filter_outcome_id);
+            }
+        }]);
+
         return view('livewire.kegiatan-renstra', [
             'program' => $this->program,
 
-            // PERBAIKAN EAGER LOADING:
-            // Memanggil outputs beserta indikatornya, dan jabatan (PJ) milik output
+            // EAGER LOADING KEGIATAN
             'kegiatans' => Kegiatan::with([
                     'outputs.indikators', 
                     'outputs.jabatan.pegawai'
@@ -103,7 +106,7 @@ class KegiatanRenstra extends Component
         // Reset semua variabel form
         $this->reset([
             'kegiatan_id', 'kode', 'nama', 'isEditMode', 
-            'output', 'output_id', 'selected_output_id', // Penting direset
+            'output', 'output_id', 'selected_output_id', 
             'ind_keterangan', 'ind_satuan', 'indikator_id', 
             'target_2025', 'target_2026', 'target_2027', 'target_2028', 'target_2029', 'target_2030', 
             'target_satuan', 'pj_kegiatan_text', 'pj_jabatan_id'
@@ -118,6 +121,8 @@ class KegiatanRenstra extends Component
     // --- CRUD KEGIATAN ---
     public function create()
     {
+        // Panggil closeModal dulu untuk memastikan state bersih sebelum tambah baru
+        $this->closeModal(); 
         $this->reset(['kode', 'nama', 'isEditMode']);
         $this->openModal();
     }
@@ -164,6 +169,7 @@ class KegiatanRenstra extends Component
     // --- CRUD OUTPUT (Tabel output_kegiatans) ---
     public function tambahOutput($kegiatanId)
     {
+        $this->closeModal(); // Reset dulu
         $this->reset(['output', 'output_id']);
         $this->kegiatan_id = $kegiatanId; // Induknya adalah Kegiatan
         $this->isOpenOutput = true;
@@ -207,6 +213,7 @@ class KegiatanRenstra extends Component
     // --- CRUD INDIKATOR (Anak dari Output) ---
     public function tambahIndikator($outputId)
     {
+        $this->closeModal(); // Reset dulu
         $this->reset(['ind_keterangan', 'ind_satuan', 'isEditMode']);
         $this->selected_output_id = $outputId; // Induknya adalah Output
         $this->isOpenIndikator = true;

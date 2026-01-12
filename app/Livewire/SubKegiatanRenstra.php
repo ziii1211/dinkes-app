@@ -14,6 +14,11 @@ class SubKegiatanRenstra extends Component
     public $program;
     public $kegiatan;
 
+    // --- FILTER STATES ---
+    // Variable ini penting agar filter tidak hilang saat refresh komponen (klik modal, simpan, dll)
+    public $filter_outcome_id; 
+    public $filter_output_id;
+
     // --- STATES MODAL ---
     public $isOpen = false;          // Modal Sub Kegiatan
     public $isOpenIndikator = false; // Modal Indikator
@@ -42,29 +47,34 @@ class SubKegiatanRenstra extends Component
 
     public function mount($id)
     {
-        // 1. Ambil ID kegiatan & Eager Load relasi outputs
-        $this->kegiatan = Kegiatan::with('outputs')->findOrFail($id);
-
-        // 2. LOGIKA BARU: Cek apakah ada 'output_id' dikirim dari link?
-        $filterOutputId = request()->query('output_id');
-
-        if ($filterOutputId) {
-            // Jika ada, kita filter collection outputs agar HANYA menyisakan yang ID-nya cocok
-            $filteredOutputs = $this->kegiatan->outputs->where('id', $filterOutputId);
-            
-            // Kita timpa relasi 'outputs' dengan hasil filter tadi
-            $this->kegiatan->setRelation('outputs', $filteredOutputs);
-        }
-
-        // 3. Ambil data program (seperti sebelumnya)
+        // 1. Ambil Data Dasar (Tanpa filter dulu)
+        $this->kegiatan = Kegiatan::findOrFail($id);
         $this->program = Program::findOrFail($this->kegiatan->program_id);
+
+        // 2. Tangkap Parameter dari URL dan simpan ke properti public
+        $this->filter_outcome_id = request()->query('outcome_id');
+        $this->filter_output_id = request()->query('output_id');
     }
 
     public function render()
     {
+        // 3. TERAPKAN FILTER DI RENDER (Agar permanen saat re-render)
+        
+        // Filter Outcome (Untuk tampilan info di atas)
+        $this->program->load(['outcomes' => function($q) {
+            if($this->filter_outcome_id) {
+                $q->where('id', $this->filter_outcome_id);
+            }
+        }]);
+
+        // Filter Output (Untuk tampilan info di tengah)
+        $this->kegiatan->load(['outputs' => function($q) {
+            if($this->filter_output_id) {
+                $q->where('id', $this->filter_output_id);
+            }
+        }]);
+
         return view('livewire.sub-kegiatan-renstra', [
-            // PENTING: Kirim variable program & kegiatan secara eksplisit
-            // untuk mencegah error "Undefined variable" di View
             'program' => $this->program,
             'kegiatan' => $this->kegiatan,
 
