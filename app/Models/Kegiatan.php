@@ -11,7 +11,8 @@ class Kegiatan extends Model
 
     // Kolom yang boleh diisi (Mass Assignment)
     protected $fillable = [
-        'program_id', // Relasi ke Program
+        'program_id', 
+        'outcome_id', // <--- INI BARU// Relasi ke Program
         'kode',       // Kode Kegiatan
         'nama',       // Nama Kegiatan
         // 'output',     // Deskripsi Output

@@ -63,26 +63,29 @@ class KegiatanRenstra extends Component
 
     public function render()
     {
-        // LOGIKA FILTER OUTCOME DI SINI (AGAR TIDAK HILANG SAAT RE-RENDER)
-        // Kita load ulang relasi outcomes dengan kondisi filter
+        // Logic filter outcome (tetap sama)
         $this->program->load(['outcomes' => function($query) {
             if ($this->filter_outcome_id) {
                 $query->where('id', $this->filter_outcome_id);
             }
         }]);
 
+        // --- UPDATE QUERY KEGIATAN DI SINI ---
+        // Kita mulai query
+        $queryKegiatan = Kegiatan::with([
+                'outputs.indikators', 
+                'outputs.jabatan.pegawai'
+            ])
+            ->where('program_id', $this->program->id);
+
+        // Filter Tambahan: Jika ada filter_outcome_id, ambil kegiatan yg outcome_id nya cocok
+        if ($this->filter_outcome_id) {
+            $queryKegiatan->where('outcome_id', $this->filter_outcome_id);
+        }
+
         return view('livewire.kegiatan-renstra', [
             'program' => $this->program,
-
-            // EAGER LOADING KEGIATAN
-            'kegiatans' => Kegiatan::with([
-                    'outputs.indikators', 
-                    'outputs.jabatan.pegawai'
-                ])
-                ->where('program_id', $this->program->id)
-                ->orderBy('id', 'asc')
-                ->get(),
-                
+            'kegiatans' => $queryKegiatan->orderBy('id', 'asc')->get(), // Eksekusi query di sini
             'jabatans' => Jabatan::all(),
         ]);
     }
@@ -132,17 +135,26 @@ class KegiatanRenstra extends Component
         $this->validate(['kode' => 'required', 'nama' => 'required']);
         
         if ($this->isEditMode) {
+            // Update Data
             Kegiatan::find($this->kegiatan_id)->update([
                 'kode' => $this->kode, 
                 'nama' => $this->nama
+                // Saat edit, outcome_id biasanya tidak diubah, jadi biarkan saja
             ]);
         } else {
+            // Buat Data Baru
             Kegiatan::create([
                 'program_id' => $this->program->id, 
+                
+                // --- UPDATE DI SINI ---
+                // Masukkan ID outcome yang sedang dipilih (dari URL) ke database
+                'outcome_id' => $this->filter_outcome_id, 
+                
                 'kode' => $this->kode, 
                 'nama' => $this->nama
             ]);
         } 
+        
         $this->closeModal();
         return redirect(request()->header('Referer'));
     }
