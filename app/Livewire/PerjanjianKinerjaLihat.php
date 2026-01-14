@@ -16,7 +16,7 @@ use App\Models\SubKegiatan;
 use App\Models\Program; 
 use Illuminate\Support\Facades\Auth;
 use App\Models\OutputKegiatan; 
-use Barryvdh\DomPDF\Facade\Pdf; // <--- 1. IMPORT PDF FACADE
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class PerjanjianKinerjaLihat extends Component
 {
@@ -27,7 +27,7 @@ class PerjanjianKinerjaLihat extends Component
     public $jabatan;
     public $pegawai;
     public $atasan_pegawai;
-    public $atasan_jabatan; // <--- INI PENTING UNTUK CETAK
+    public $atasan_jabatan;
     public $is_kepala_dinas = false;
     
     public $gubernur_nama = 'H. MUHIDIN'; 
@@ -82,32 +82,25 @@ class PerjanjianKinerjaLihat extends Component
     // --- FUNGSI CETAK PDF ---
     public function cetak()
     {
-        // Siapkan data untuk dikirim ke View PDF
         $data = [
             'pk' => $this->pk,
             'jabatan' => $this->jabatan,
             'pegawai' => $this->pegawai,
-            'atasan_jabatan' => $this->atasan_jabatan, // <--- Variabel Kunci
+            'atasan_jabatan' => $this->atasan_jabatan,
             'atasan_pegawai' => $this->atasan_pegawai,
             'is_kepala_dinas' => $this->is_kepala_dinas
         ];
 
-        // Load View PDF
         $pdf = Pdf::loadView('cetak.perjanjian-kinerja', $data);
-        
-        // Atur ukuran kertas jika perlu (di view sudah ada @page, tapi bisa dioverride disini)
         $pdf->setPaper('a4', 'portrait');
 
-        // Stream Download (Langsung unduh)
         return response()->streamDownload(function () use ($pdf) {
             echo $pdf->output();
         }, 'Perjanjian_Kinerja_' . $this->jabatan->nama . '_' . $this->pk->tahun . '.pdf');
     }
 
-    // --- PERBAIKAN UTAMA: HANYA ADMIN YANG BISA EDIT ---
     public function canEdit()
     {
-        // Hanya ROLE ADMIN yang boleh melakukan perubahan
         return Auth::user()->hasRole('admin');
     }
 
@@ -166,25 +159,16 @@ class PerjanjianKinerjaLihat extends Component
             $textSasaran = $sumber->outcome;
             $indikators = $sumber->indikators;
 
-        } elseif ($tipeSumber == 'kegiatan') {
-            $sumber = Kegiatan::find($idSumber);
+        } elseif ($tipeSumber == 'output') { 
+            // --- PERBAIKAN LOGIC: LANGSUNG CARI OUTPUT BERDASARKAN ID UNIKNYA ---
+            $sumber = OutputKegiatan::with('indikators')->find($idSumber);
+            
             if (!$sumber) return;
             
-            // PERBAIKAN LOGIC:
-            // Cari Output spesifik milik Jabatan ini di dalam Kegiatan yang dipilih
-            $outputMilikSaya = OutputKegiatan::where('kegiatan_id', $idSumber)
-                                ->where('jabatan_id', $this->pk->jabatan_id)
-                                ->with('indikators')
-                                ->first();
-
-            if ($outputMilikSaya) {
-                $textSasaran = $outputMilikSaya->deskripsi;
-                $indikators = $outputMilikSaya->indikators;
-            } else {
-                // Fallback jika anehnya tidak ketemu (harusnya ketemu karena dropdown sudah difilter)
-                $textSasaran = $sumber->nama;
-                $indikators = [];
-            }
+            // Ambil deskripsi output sebagai sasaran
+            $textSasaran = $sumber->deskripsi;
+            // Ambil indikator yang melekat pada output tersebut
+            $indikators = $sumber->indikators;
         }
 
         $pkSasaran = PkSasaran::create([
@@ -335,10 +319,8 @@ class PerjanjianKinerjaLihat extends Component
 
     public function render()
     {
-        // Ambil ID Jabatan dari PK yang sedang dilihat
         $jabatanId = $this->pk->jabatan_id;
 
-        // 1. DATA TABEL UTAMA (Kegiatan & Output milik PJ ini)
         $kegiatans = Kegiatan::with(['outputs.indikators', 'outputs.jabatan'])
             ->whereHas('outputs', function ($query) use ($jabatanId) {
                 $query->where('jabatan_id', $jabatanId);
@@ -346,45 +328,43 @@ class PerjanjianKinerjaLihat extends Component
             ->orderBy('kode', 'asc')
             ->get();
 
-        // 2. DATA DROPDOWN SUMBER KINERJA (FILTERED BY PENANGGUNG JAWAB)
         $list_sumber = collect();
         
-        // A. SASARAN STRATEGIS (Biasanya hanya untuk Kepala Dinas)
+        // A. SASARAN STRATEGIS
         if ($this->is_kepala_dinas) {
             Sasaran::all()->each(function($s) use ($list_sumber) {
                 $list_sumber->push(['id' => 'sasaran:'.$s->id, 'label' => '[SASARAN] '.$s->sasaran]);
             });
         }
 
-        // B. OUTCOME PROGRAM (Hanya yang PJ-nya sesuai)
+        // B. OUTCOME PROGRAM
         Outcome::with('program')
-            ->where('jabatan_id', $jabatanId) // <--- FILTER INI PENTING
+            ->where('jabatan_id', $jabatanId) 
             ->get()
             ->each(function($o) use ($list_sumber) {
                 $prog = $o->program ? $o->program->nama : 'Non-Program';
                 $list_sumber->push(['id' => 'outcome:'.$o->id, 'label' => '[OUTCOME] '.$prog.' - '.$o->outcome]);
             });
 
-        // C. KEGIATAN / OUTPUT (Hanya Output yang PJ-nya sesuai)
-        // Kita cari OutputKegiatan milik jabatan ini, lalu ambil induk kegiatannya
+        // C. KEGIATAN / OUTPUT (PERBAIKAN DI SINI)
+        // Ambil semua output milik jabatan ini
         $outputs = OutputKegiatan::with('kegiatan')
-            ->where('jabatan_id', $jabatanId) // <--- FILTER INI PENTING
+            ->where('jabatan_id', $jabatanId)
             ->get();
 
         foreach($outputs as $out) {
             if($out->kegiatan) {
-                // Kita gunakan deskripsi Output agar lebih spesifik
+                // Label tetap informatif ada nama kegiatannya
                 $label = '[KEGIATAN] ' . $out->kegiatan->nama . ' - (Output: ' . \Illuminate\Support\Str::limit($out->deskripsi, 40) . ')';
                 
-                // Value tetap kirim ID Kegiatan untuk kompatibilitas, tapi nanti di store kita filter lagi
+                // PERBAIKAN: Gunakan ID Output langsung (DNA Unik)
                 $list_sumber->push([
-                    'id' => 'kegiatan:' . $out->kegiatan->id, 
+                    'id' => 'output:' . $out->id, // <--- INI KUNCINYA
                     'label' => $label
                 ]);
             }
         }
 
-        // 3. DATA DROPDOWN ANGGARAN
         $programs_dropdown = Program::all();
         $kegiatans_dropdown = Kegiatan::all();
         $sub_kegiatans_dropdown = SubKegiatan::all();
