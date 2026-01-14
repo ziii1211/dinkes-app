@@ -75,22 +75,23 @@
         .table-signature {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 30px;
+            margin-top: 10px; /* Jarak dari tabel anggaran */
             page-break-inside: avoid; 
         }
         .table-signature td {
             border: none;
             text-align: center;
-            vertical-align: top;
+            vertical-align: top; /* Pastikan konten nempel atas */
             padding: 0;
         }
-        .sign-space {
-            height: 80px; 
+        /* Row khusus untuk spasi tanda tangan */
+        .row-space td {
+            height: 80px;
+            vertical-align: middle;
         }
         .name-underline {
             font-weight: bold;
             text-decoration: underline;
-            /* Perbaikan: Hapus text-transform uppercase di sini agar ikut DB */
         }
     </style>
 </head>
@@ -189,34 +190,21 @@
         </tbody>
     </table>
 
-    {{-- TABEL 3: TANDA TANGAN --}}
+    {{-- TABEL 3: TANDA TANGAN (PERBAIKAN STRUKTUR) --}}
     <table class="table-signature">
+        {{-- BARIS 1: JUDUL PIHAK & JABATAN (Akan expand sesuai teks terpanjang) --}}
         <tr>
-            {{-- KIRI: PIHAK PERTAMA (YANG MEMBUAT PERJANJIAN) --}}
-            <td style="width: 50%;">
+            {{-- KIRI: PIHAK PERTAMA --}}
+            <td style="width: 50%; padding-bottom: 0;">
                 <p class="font-bold" style="margin-bottom: 5px;">PIHAK PERTAMA,</p>
-                
-                {{-- Jabatan Tetap Uppercase --}}
                 <p class="font-bold uppercase" style="margin-top: 0;">
                     {{ $jabatan->nama }}
                 </p>
-
-                <div class="sign-space"></div> 
-
-                @if($pegawai)
-                    {{-- PERBAIKAN: Hapus class 'uppercase' agar Gelar sesuai input Database --}}
-                    <p class="name-underline">{{ $pegawai->nama }}</p>
-                    <p>NIP. {{ $pegawai->nip }}</p>
-                @else
-                    <p class="name-underline">(Belum Ada Pejabat)</p>
-                    <p>NIP. -</p>
-                @endif
             </td>
 
-            {{-- KANAN: PIHAK KEDUA (ATASAN LANGSUNG) --}}
-            <td style="width: 50%;">
+            {{-- KANAN: PIHAK KEDUA --}}
+            <td style="width: 50%; padding-bottom: 0;">
                 <p class="font-bold" style="margin-bottom: 5px;">PIHAK KEDUA,</p>
-                
                 @if($is_kepala_dinas)
                     <p class="font-bold uppercase" style="margin-top: 0;">
                         GUBERNUR KALIMANTAN SELATAN
@@ -230,19 +218,39 @@
                         (JABATAN ATASAN)
                     </p>
                 @endif
+            </td>
+        </tr>
 
-                <div class="sign-space"></div> 
-                
-                @if($is_kepala_dinas)
-                    {{-- Nama Gubernur Hardcoded, tapi kita sesuaikan style-nya --}}
-                    <p class="name-underline">H. MUHIDIN</p>
-                @elseif($atasan_pegawai)
-                    {{-- PERBAIKAN: Hapus class 'uppercase' agar Gelar sesuai input Database --}}
-                    <p class="name-underline">{{ $atasan_pegawai->nama }}</p>
-                    <p>NIP. {{ $atasan_pegawai->nip }}</p>
+        {{-- BARIS 2: SPASI TANDA TANGAN (Tinggi Fix, sejajar kiri kanan) --}}
+        <tr class="row-space">
+            <td>&nbsp;</td>
+            <td>&nbsp;</td>
+        </tr>
+
+        {{-- BARIS 3: NAMA & NIP (Akan mulai di posisi vertikal yang sama) --}}
+        <tr>
+            {{-- KIRI: NAMA PIHAK PERTAMA --}}
+            <td>
+                @if($pegawai)
+                    <p class="name-underline" style="margin: 0;">{{ $pegawai->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $pegawai->nip }}</p>
                 @else
-                    <p class="name-underline">(Atasan Belum Diset)</p>
-                    <p>NIP. -</p>
+                    <p class="name-underline" style="margin: 0;">(Belum Ada Pejabat)</p>
+                    <p style="margin: 0;">NIP. -</p>
+                @endif
+            </td>
+
+            {{-- KANAN: NAMA PIHAK KEDUA --}}
+            <td>
+                @if($is_kepala_dinas)
+                    <p class="name-underline" style="margin: 0;">H. MUHIDIN</p>
+                    {{-- <p style="margin: 0;">NIP. ...</p> --}}
+                @elseif($atasan_pegawai)
+                    <p class="name-underline" style="margin: 0;">{{ $atasan_pegawai->nama }}</p>
+                    <p style="margin: 0;">NIP. {{ $atasan_pegawai->nip }}</p>
+                @else
+                    <p class="name-underline" style="margin: 0;">(Atasan Belum Diset)</p>
+                    <p style="margin: 0;">NIP. -</p>
                 @endif
             </td>
         </tr>
