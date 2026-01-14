@@ -15,7 +15,8 @@ use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\Program; 
 use Illuminate\Support\Facades\Auth;
-use App\Models\OutputKegiatan; // <--- TAMBAHKAN BARIS INI
+use App\Models\OutputKegiatan; 
+use Barryvdh\DomPDF\Facade\Pdf; // <--- 1. IMPORT PDF FACADE
 
 class PerjanjianKinerjaLihat extends Component
 {
@@ -26,7 +27,7 @@ class PerjanjianKinerjaLihat extends Component
     public $jabatan;
     public $pegawai;
     public $atasan_pegawai;
-    public $atasan_jabatan;
+    public $atasan_jabatan; // <--- INI PENTING UNTUK CETAK
     public $is_kepala_dinas = false;
     
     public $gubernur_nama = 'H. MUHIDIN'; 
@@ -68,6 +69,7 @@ class PerjanjianKinerjaLihat extends Component
         
         $this->is_kepala_dinas = is_null($this->jabatan->parent_id);
 
+        // LOGIKA CARI ATASAN (Untuk Pihak Pertama di PDF)
         if ($this->jabatan->parent_id) {
             $parentJabatan = Jabatan::find($this->jabatan->parent_id);
             if ($parentJabatan) {
@@ -75,6 +77,31 @@ class PerjanjianKinerjaLihat extends Component
                 $this->atasan_pegawai = Pegawai::where('jabatan_id', $parentJabatan->id)->latest()->first();
             }
         }
+    }
+
+    // --- FUNGSI CETAK PDF ---
+    public function cetak()
+    {
+        // Siapkan data untuk dikirim ke View PDF
+        $data = [
+            'pk' => $this->pk,
+            'jabatan' => $this->jabatan,
+            'pegawai' => $this->pegawai,
+            'atasan_jabatan' => $this->atasan_jabatan, // <--- Variabel Kunci
+            'atasan_pegawai' => $this->atasan_pegawai,
+            'is_kepala_dinas' => $this->is_kepala_dinas
+        ];
+
+        // Load View PDF
+        $pdf = Pdf::loadView('cetak.perjanjian-kinerja', $data);
+        
+        // Atur ukuran kertas jika perlu (di view sudah ada @page, tapi bisa dioverride disini)
+        $pdf->setPaper('a4', 'portrait');
+
+        // Stream Download (Langsung unduh)
+        return response()->streamDownload(function () use ($pdf) {
+            echo $pdf->output();
+        }, 'Perjanjian_Kinerja_' . $this->jabatan->nama . '_' . $this->pk->tahun . '.pdf');
     }
 
     // --- PERBAIKAN UTAMA: HANYA ADMIN YANG BISA EDIT ---

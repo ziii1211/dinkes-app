@@ -7,7 +7,7 @@
         /* 1. SETUP HALAMAN PDF */
         @page { 
             size: A4 portrait; 
-            margin: 2.5cm 2.5cm; /* Atas-Bawah-Kiri-Kanan seimbang */
+            margin: 2.5cm 2.5cm; 
         }
         
         body { 
@@ -50,7 +50,7 @@
             vertical-align: top;
         }
         .table-main th {
-            background-color: #E8E8E8; /* Abu-abu terang untuk Header */
+            background-color: #E8E8E8; 
             text-align: center;
             font-weight: bold;
         }
@@ -65,7 +65,7 @@
         .table-budget td {
             padding: 4px 5px;
             vertical-align: top;
-            border: none; /* Tidak ada garis */
+            border: none; 
         }
         .border-top-black {
             border-top: 1px solid #000 !important;
@@ -76,7 +76,7 @@
             width: 100%;
             border-collapse: collapse;
             margin-top: 30px;
-            page-break-inside: avoid; /* Jangan terpotong halaman */
+            page-break-inside: avoid; 
         }
         .table-signature td {
             border: none;
@@ -85,11 +85,12 @@
             padding: 0;
         }
         .sign-space {
-            height: 80px; /* Ruang untuk tanda tangan */
+            height: 80px; 
         }
         .name-underline {
             font-weight: bold;
             text-decoration: underline;
+            /* Perbaikan: Hapus text-transform uppercase di sini agar ikut DB */
         }
     </style>
 </head>
@@ -124,19 +125,16 @@
                 @if($countIndikator > 0)
                     @foreach($sasaran->indikators as $index => $ind)
                         <tr>
-                            {{-- Kolom No & Sasaran hanya muncul di baris pertama (Rowspan) --}}
                             @if($index === 0)
                                 <td rowspan="{{ $rowspan }}" class="text-center">{{ $no++ }}.</td>
                                 <td rowspan="{{ $rowspan }}">{{ $sasaran->sasaran }}</td>
                             @endif
 
-                            {{-- Indikator & Target --}}
                             <td style="padding-left: 10px;">{{ $ind->nama_indikator }}</td>
                             <td class="text-center">
                                 @php 
                                     $colTarget = 'target_' . $pk->tahun;
                                     $val = $ind->$colTarget ?? $ind->target; 
-                                    // Bersihkan .00 jika desimalnya 0
                                     $val = (float)$val == (int)$val ? (int)$val : $val;
                                 @endphp
                                 {{ $val }} {{ $ind->satuan }}
@@ -144,7 +142,6 @@
                         </tr>
                     @endforeach
                 @else
-                    {{-- Jika tidak ada indikator --}}
                     <tr>
                         <td class="text-center">{{ $no++ }}.</td>
                         <td>{{ $sasaran->sasaran }}</td>
@@ -174,7 +171,6 @@
                         @if($anggaran->subKegiatan)
                             {{ $anggaran->subKegiatan->nama }}
                         @else
-                            {{-- Regex Clean: Hapus angka di depan nama program agar rapi --}}
                             {{ preg_replace('/^[\d\.]+\s*/', '', $anggaran->nama_program_kegiatan) }}
                         @endif
                     </td>
@@ -196,11 +192,20 @@
     {{-- TABEL 3: TANDA TANGAN --}}
     <table class="table-signature">
         <tr>
+            {{-- KIRI: PIHAK PERTAMA (YANG MEMBUAT PERJANJIAN) --}}
             <td style="width: 50%;">
-                <p class="font-bold">PIHAK KEDUA,</p>
+                <p class="font-bold" style="margin-bottom: 5px;">PIHAK PERTAMA,</p>
+                
+                {{-- Jabatan Tetap Uppercase --}}
+                <p class="font-bold uppercase" style="margin-top: 0;">
+                    {{ $jabatan->nama }}
+                </p>
+
                 <div class="sign-space"></div> 
+
                 @if($pegawai)
-                    <p class="name-underline uppercase">{{ $pegawai->nama }}</p>
+                    {{-- PERBAIKAN: Hapus class 'uppercase' agar Gelar sesuai input Database --}}
+                    <p class="name-underline">{{ $pegawai->nama }}</p>
                     <p>NIP. {{ $pegawai->nip }}</p>
                 @else
                     <p class="name-underline">(Belum Ada Pejabat)</p>
@@ -208,14 +213,32 @@
                 @endif
             </td>
 
+            {{-- KANAN: PIHAK KEDUA (ATASAN LANGSUNG) --}}
             <td style="width: 50%;">
-                <p class="font-bold">PIHAK PERTAMA,</p>
-                <div class="sign-space"></div> 
+                <p class="font-bold" style="margin-bottom: 5px;">PIHAK KEDUA,</p>
+                
                 @if($is_kepala_dinas)
-                    <p class="name-underline uppercase">H. MUHIDIN</p>
-                    {{-- <p>NIP. ...</p> --}}
+                    <p class="font-bold uppercase" style="margin-top: 0;">
+                        GUBERNUR KALIMANTAN SELATAN
+                    </p>
+                @elseif(isset($atasan_jabatan) && $atasan_jabatan)
+                    <p class="font-bold uppercase" style="margin-top: 0;">
+                        {{ $atasan_jabatan->nama }}
+                    </p>
+                @else
+                    <p class="font-bold uppercase" style="margin-top: 0;">
+                        (JABATAN ATASAN)
+                    </p>
+                @endif
+
+                <div class="sign-space"></div> 
+                
+                @if($is_kepala_dinas)
+                    {{-- Nama Gubernur Hardcoded, tapi kita sesuaikan style-nya --}}
+                    <p class="name-underline">H. MUHIDIN</p>
                 @elseif($atasan_pegawai)
-                    <p class="name-underline uppercase">{{ $atasan_pegawai->nama }}</p>
+                    {{-- PERBAIKAN: Hapus class 'uppercase' agar Gelar sesuai input Database --}}
+                    <p class="name-underline">{{ $atasan_pegawai->nama }}</p>
                     <p>NIP. {{ $atasan_pegawai->nip }}</p>
                 @else
                     <p class="name-underline">(Atasan Belum Diset)</p>

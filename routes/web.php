@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage; // <--- PENTING: Import Library Storage
+use Illuminate\Support\Facades\Storage; 
 
 // --- 1. LIVEWIRE COMPONENTS ---
 use App\Livewire\Auth\Login;
@@ -27,7 +27,7 @@ use App\Livewire\PengukuranKinerja as DetailPengukuranKinerja;
 use App\Livewire\PengaturanKinerja;
 
 // --- 2. MODELS ---
-use App\Models\PerjanjianKinerja as PkModel;
+use App\Models\PerjanjianKinerja as PkModel; // Alias biar gak bentrok sama Livewire
 use App\Models\Jabatan;
 use App\Models\Pegawai;
 use App\Models\Tujuan;
@@ -37,7 +37,7 @@ use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\PohonKinerja;
 
-// --- 4. EXPORT & PDF ---
+// --- 3. EXPORT & PDF ---
 use App\Exports\DokumenRenstraExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -73,7 +73,6 @@ Route::middleware('auth')->group(function () {
         Route::get('/admin/dashboard', AdminDashboard::class)->name('admin.dashboard');
         Route::get('/admin/atur-jadwal', AturJadwal::class)->name('admin.atur-jadwal');
         Route::get('/admin/manajemen-user', ManajemenUser::class)->name('admin.manajemen-user');
-
     });
 
 
@@ -84,25 +83,13 @@ Route::middleware('auth')->group(function () {
 
 
     // 5. FITUR DOWNLOAD AMAN (SECURE FILE DOWNLOAD)
-    // ----------------------------------------------------------------------
-    // Ini adalah "Pintu Khusus". Hanya user login yang bisa akses link ini.
-    // Link ini akan mengambil file dari "Brankas" (Folder Private).
     Route::get('/dokumen/unduh/{folder}/{filename}', function ($folder, $filename) {
-        
-        // Gabungkan folder dan nama file (Contoh: dokumen-rahasia/sk-2025.pdf)
-        // Pastikan folder sesuai dengan tempat Anda upload (misal: 'dokumen-rahasia')
         $path = $folder . '/' . $filename;
-
-        // Cek apakah file ada di storage?
         if (!Storage::exists($path)) {
             abort(404, 'File tidak ditemukan.');
         }
-
-        // Paksa download file ke browser user
         return Storage::download($path);
-
     })->name('dokumen.download');
-    // ----------------------------------------------------------------------
 
 
     // --- MASTER DATA ---
@@ -115,11 +102,11 @@ Route::middleware('auth')->group(function () {
         
         // CETAK PDF RENSTRA
         Route::get('/dokumen/cetak', function () {
-            $tujuans = \App\Models\Tujuan::with('pohonKinerja.indikators')->get();
-            $sasarans = \App\Models\Sasaran::with('pohonKinerja.indikators')->get();
-            $outcomes = \App\Models\Outcome::with(['program', 'pohonKinerja.indikators'])->get();
-            $kegiatans = \App\Models\Kegiatan::with('pohonKinerja.indikators')->whereNotNull('output')->get();
-            $sub_kegiatans = \App\Models\SubKegiatan::with('pohonKinerja.indikators')->get();
+            $tujuans = Tujuan::with('pohonKinerja.indikators')->get();
+            $sasarans = Sasaran::with('pohonKinerja.indikators')->get();
+            $outcomes = Outcome::with(['program', 'pohonKinerja.indikators'])->get();
+            $kegiatans = Kegiatan::with('pohonKinerja.indikators')->whereNotNull('output')->get();
+            $sub_kegiatans = SubKegiatan::with('pohonKinerja.indikators')->get();
 
             $header = ['unit_kerja' => 'DINAS KESEHATAN', 'periode' => '2025 - 2029'];
             
@@ -134,11 +121,11 @@ Route::middleware('auth')->group(function () {
         // EXPORT EXCEL RENSTRA
         Route::get('/dokumen/excel', function () {
             $data = [
-                'tujuans' => \App\Models\Tujuan::with('pohonKinerja.indikators')->get(),
-                'sasarans' => \App\Models\Sasaran::with('pohonKinerja.indikators')->get(),
-                'outcomes' => \App\Models\Outcome::with(['program', 'pohonKinerja.indikators'])->get(),
-                'kegiatans' => \App\Models\Kegiatan::with('pohonKinerja.indikators')->whereNotNull('output')->get(),
-                'sub_kegiatans' => \App\Models\SubKegiatan::with('pohonKinerja.indikators')->get(),
+                'tujuans' => Tujuan::with('pohonKinerja.indikators')->get(),
+                'sasarans' => Sasaran::with('pohonKinerja.indikators')->get(),
+                'outcomes' => Outcome::with(['program', 'pohonKinerja.indikators'])->get(),
+                'kegiatans' => Kegiatan::with('pohonKinerja.indikators')->whereNotNull('output')->get(),
+                'sub_kegiatans' => SubKegiatan::with('pohonKinerja.indikators')->get(),
                 'header' => ['unit_kerja' => 'DINAS KESEHATAN', 'periode' => '2025 - 2029']
             ];
             return Excel::download(new DokumenRenstraExport($data), 'Matriks_RENSTRA_Dinas_Kesehatan.xlsx');
@@ -160,14 +147,16 @@ Route::middleware('auth')->group(function () {
         Route::get('/perjanjian-kinerja/{id}', PerjanjianKinerjaDetail::class)->name('perjanjian.kinerja.detail');
         Route::get('/perjanjian-kinerja/lihat/{id}', PerjanjianKinerjaLihat::class)->name('perjanjian.kinerja.lihat');
         
-        // CETAK PERJANJIAN KINERJA
+        // CETAK PERJANJIAN KINERJA (UPDATED)
         Route::get('/perjanjian-kinerja/cetak/{id}', function ($id) {
+            // 1. Ambil Data PK Lengkap
             $pk = PkModel::with(['jabatan', 'pegawai', 'sasarans.indikators', 'anggarans.subKegiatan'])->findOrFail($id);
             $jabatan = $pk->jabatan;
             
+            // 2. Tentukan Logic Kepala Dinas / Atasan
             $is_kepala_dinas = is_null($jabatan->parent_id);
             $atasan_pegawai = null;
-            $atasan_jabatan = null;
+            $atasan_jabatan = null; // <--- Variabel penting untuk Pihak Pertama
 
             if ($jabatan->parent_id) {
                 $parentJabatan = Jabatan::find($jabatan->parent_id);
@@ -177,13 +166,14 @@ Route::middleware('auth')->group(function () {
                 }
             }
             
+            // 3. Load PDF dengan Data Lengkap
             $pdf = Pdf::loadView('cetak.perjanjian-kinerja', [
                 'pk' => $pk,
                 'jabatan' => $jabatan,
                 'pegawai' => $pk->pegawai,
                 'is_kepala_dinas' => $is_kepala_dinas,
                 'atasan_pegawai' => $atasan_pegawai,
-                'atasan_jabatan' => $atasan_jabatan
+                'atasan_jabatan' => $atasan_jabatan // <--- Pastikan ini terkirim
             ]);
 
             $pdf->setPaper('a4', 'portrait');
