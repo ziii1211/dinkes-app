@@ -15,15 +15,14 @@ class SubKegiatanRenstra extends Component
     public $kegiatan;
 
     // --- FILTER STATES ---
-    // Variable ini penting agar filter tidak hilang saat refresh komponen (klik modal, simpan, dll)
     public $filter_outcome_id; 
-    public $filter_output_id;
+    public $filter_output_id; // <--- INI KUNCI UTAMANYA
 
     // --- STATES MODAL ---
-    public $isOpen = false;          // Modal Sub Kegiatan
-    public $isOpenIndikator = false; // Modal Indikator
-    public $isOpenTarget = false;    // Modal Target & Pagu
-    public $isOpenPJ = false;        // Modal Penanggung Jawab
+    public $isOpen = false;
+    public $isOpenIndikator = false;
+    public $isOpenTarget = false;
+    public $isOpenPJ = false;
     public $isEditMode = false;
 
     // --- FORM SUB KEGIATAN ---
@@ -47,41 +46,43 @@ class SubKegiatanRenstra extends Component
 
     public function mount($id)
     {
-        // 1. Ambil Data Dasar (Tanpa filter dulu)
         $this->kegiatan = Kegiatan::findOrFail($id);
         $this->program = Program::findOrFail($this->kegiatan->program_id);
 
-        // 2. Tangkap Parameter dari URL dan simpan ke properti public
         $this->filter_outcome_id = request()->query('outcome_id');
         $this->filter_output_id = request()->query('output_id');
     }
 
     public function render()
     {
-        // 3. TERAPKAN FILTER DI RENDER (Agar permanen saat re-render)
-        
-        // Filter Outcome (Untuk tampilan info di atas)
+        // Filter Outcome (Info di atas)
         $this->program->load(['outcomes' => function($q) {
             if($this->filter_outcome_id) {
                 $q->where('id', $this->filter_outcome_id);
             }
         }]);
 
-        // Filter Output (Untuk tampilan info di tengah)
+        // Filter Output (Info di tengah)
         $this->kegiatan->load(['outputs' => function($q) {
             if($this->filter_output_id) {
                 $q->where('id', $this->filter_output_id);
             }
         }]);
 
+        // --- PERBAIKAN FILTER QUERY DISINI ---
+        $querySub = SubKegiatan::with(['indikators', 'jabatan'])
+            ->where('kegiatan_id', $this->kegiatan->id);
+
+        // Jika ada Filter Output ID (User sedang klik spesifik output), kita filter datanya
+        if ($this->filter_output_id) {
+            // Pastikan kolom 'output_kegiatan_id' ada di tabel sub_kegiatans
+            $querySub->where('output_kegiatan_id', $this->filter_output_id);
+        }
+
         return view('livewire.sub-kegiatan-renstra', [
             'program' => $this->program,
             'kegiatan' => $this->kegiatan,
-
-            'sub_kegiatans' => SubKegiatan::with(['indikators', 'jabatan'])
-                ->where('kegiatan_id', $this->kegiatan->id)
-                ->orderBy('id', 'asc') // Data baru masuk di bawah
-                ->get(),
+            'sub_kegiatans' => $querySub->orderBy('id', 'asc')->get(),
             'jabatans' => Jabatan::all()
         ]);
     }
@@ -122,16 +123,26 @@ class SubKegiatanRenstra extends Component
                 'kode' => $this->kode, 
                 'nama' => $this->nama, 
                 'output' => $this->output
+                // Note: output_kegiatan_id biasanya tidak diubah saat edit kecuali perlu dipindah
             ]);
+            
+            // Notifikasi Modern Update
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'title' => 'Diperbarui',
+                'message' => 'Data Sub Kegiatan berhasil diperbarui.'
+            ]);
+
         } else {
+            // --- PERBAIKAN DISINI: SIMPAN output_kegiatan_id ---
             $sub = SubKegiatan::create([
-                'kegiatan_id' => $this->kegiatan->id, 
+                'kegiatan_id' => $this->kegiatan->id,
+                'output_kegiatan_id' => $this->filter_output_id, // <--- PENTING! Agar data terikat ke Output spesifik
                 'kode' => $this->kode, 
                 'nama' => $this->nama, 
                 'output' => $this->output
             ]);
 
-            // Jika ada input indikator awal saat create
             if (!empty($this->ind_keterangan) && !empty($this->ind_satuan)) {
                 IndikatorSubKegiatan::create([
                     'sub_kegiatan_id' => $sub->id,
@@ -139,12 +150,17 @@ class SubKegiatanRenstra extends Component
                     'satuan' => $this->ind_satuan
                 ]);
             }
+
+            // Notifikasi Modern Simpan
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'title' => 'Berhasil',
+                'message' => 'Sub Kegiatan baru berhasil ditambahkan.'
+            ]);
         }
 
         $this->closeModal();
-
-        // --- REFRESH HALAMAN OTOMATIS ---
-        return redirect(request()->header('Referer'));
+        // return redirect(request()->header('Referer')); // Tidak perlu redirect jika pakai Livewire
     }
 
     public function edit($id) {
@@ -161,10 +177,16 @@ class SubKegiatanRenstra extends Component
 
     public function delete($id) { 
         $data = SubKegiatan::find($id); 
-        if ($data) $data->delete(); 
-
-        // --- REFRESH HALAMAN OTOMATIS ---
-        return redirect(request()->header('Referer'));
+        if ($data) {
+            $data->delete(); 
+            
+            // Notifikasi Modern Hapus
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'title' => 'Terhapus',
+                'message' => 'Data Sub Kegiatan telah dihapus.'
+            ]);
+        }
     }
 
     // --- PENANGGUNG JAWAB ---
@@ -182,11 +204,14 @@ class SubKegiatanRenstra extends Component
         $data = SubKegiatan::find($this->sub_kegiatan_id);
         if ($data) { 
             $data->update(['jabatan_id' => $this->pj_jabatan_id ?: null]); 
+            
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'title' => 'Disimpan',
+                'message' => 'Penanggung Jawab berhasil diupdate.'
+            ]);
         }
         $this->closeModal();
-
-        // --- REFRESH HALAMAN OTOMATIS ---
-        return redirect(request()->header('Referer'));
     }
 
     // --- INDIKATOR ---
@@ -221,22 +246,23 @@ class SubKegiatanRenstra extends Component
         ];
 
         if ($this->isEditMode) { 
-            IndikatorSubKegiatan::find($this->indikator_id)->update($data); 
+            IndikatorSubKegiatan::find($this->indikator_id)->update($data);
+            $pesan = 'Indikator diperbarui.';
         } else { 
             IndikatorSubKegiatan::create($data); 
+            $pesan = 'Indikator ditambahkan.';
         }
-        $this->closeModal();
 
-        // --- REFRESH HALAMAN OTOMATIS ---
-        return redirect(request()->header('Referer'));
+        $this->dispatch('alert', ['type'=>'success', 'title'=>'Berhasil', 'message'=>$pesan]);
+        $this->closeModal();
     }
 
     public function deleteIndikator($id) { 
         $ind = IndikatorSubKegiatan::find($id); 
-        if ($ind) $ind->delete(); 
-
-        // --- REFRESH HALAMAN OTOMATIS ---
-        return redirect(request()->header('Referer'));
+        if ($ind) {
+            $ind->delete(); 
+            $this->dispatch('alert', ['type'=>'success', 'title'=>'Terhapus', 'message'=>'Indikator dihapus.']);
+        }
     }
 
     // --- TARGET & PAGU ---
@@ -253,7 +279,6 @@ class SubKegiatanRenstra extends Component
         }
     }
 
-    // Helper untuk membersihkan format Rupiah
     private function bersihkanAngka($nilai)
     {
         if (empty($nilai)) return 0;
@@ -271,10 +296,9 @@ class SubKegiatanRenstra extends Component
                 $data['pagu_'.$y] = $this->bersihkanAngka($this->{'pagu_'.$y});
             }
             $ind->update($data);
+            
+            $this->dispatch('alert', ['type'=>'success', 'title'=>'Disimpan', 'message'=>'Target & Pagu berhasil disimpan.']);
         }
         $this->closeModal();
-
-        // --- REFRESH HALAMAN OTOMATIS ---
-        return redirect(request()->header('Referer'));
     }
 }

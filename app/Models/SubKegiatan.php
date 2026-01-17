@@ -12,6 +12,7 @@ class SubKegiatan extends Model
     // PERBAIKAN: Menambahkan properti fillable agar bisa diinput via create()
     protected $fillable = [
         'kegiatan_id',
+        'output_kegiatan_id', // <--- TAMBAHKAN INI
         'kode',
         'nama',
         'output',
