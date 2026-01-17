@@ -53,39 +53,42 @@ class SubKegiatanRenstra extends Component
         $this->filter_output_id = request()->query('output_id');
     }
 
-    public function render()
-    {
-        // Filter Outcome (Info di atas)
-        $this->program->load(['outcomes' => function($q) {
-            if($this->filter_outcome_id) {
-                $q->where('id', $this->filter_outcome_id);
-            }
-        }]);
+    // File: app/Livewire/SubKegiatanRenstra.php
 
-        // Filter Output (Info di tengah)
-        $this->kegiatan->load(['outputs' => function($q) {
-            if($this->filter_output_id) {
-                $q->where('id', $this->filter_output_id);
-            }
-        }]);
+public function render()
+{
+    // --- PERBAIKAN DI SINI ---
+    // Daripada menggunakan $this->program->load(), kita query manual agar filter 'pasti' jalan
+    // dan tidak terganggu oleh cache relasi di object $program
+    $filteredOutcomes = $this->program->outcomes()
+        ->when($this->filter_outcome_id, function($q) {
+            $q->where('id', $this->filter_outcome_id);
+        })
+        ->get();
 
-        // --- PERBAIKAN FILTER QUERY DISINI ---
-        $querySub = SubKegiatan::with(['indikators', 'jabatan'])
-            ->where('kegiatan_id', $this->kegiatan->id);
-
-        // Jika ada Filter Output ID (User sedang klik spesifik output), kita filter datanya
-        if ($this->filter_output_id) {
-            // Pastikan kolom 'output_kegiatan_id' ada di tabel sub_kegiatans
-            $querySub->where('output_kegiatan_id', $this->filter_output_id);
+    // Filter Output (Info di tengah) - Jika ini sudah benar menurut Anda, biarkan load-nya
+    $this->kegiatan->load(['outputs' => function($q) {
+        if($this->filter_output_id) {
+            $q->where('id', $this->filter_output_id);
         }
+    }]);
 
-        return view('livewire.sub-kegiatan-renstra', [
-            'program' => $this->program,
-            'kegiatan' => $this->kegiatan,
-            'sub_kegiatans' => $querySub->orderBy('id', 'asc')->get(),
-            'jabatans' => Jabatan::all()
-        ]);
+    // Query Sub Kegiatan
+    $querySub = SubKegiatan::with(['indikators', 'jabatan'])
+        ->where('kegiatan_id', $this->kegiatan->id);
+
+    if ($this->filter_output_id) {
+        $querySub->where('output_kegiatan_id', $this->filter_output_id);
     }
+
+    return view('livewire.sub-kegiatan-renstra', [
+        'program' => $this->program,
+        'outcomes_view' => $filteredOutcomes, // <--- Kirim variabel baru ini ke Blade
+        'kegiatan' => $this->kegiatan,
+        'sub_kegiatans' => $querySub->orderBy('id', 'asc')->get(),
+        'jabatans' => Jabatan::all()
+    ]);
+}
 
     public function closeModal()
     {

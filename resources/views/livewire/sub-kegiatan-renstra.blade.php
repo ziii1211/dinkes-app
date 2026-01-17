@@ -33,18 +33,21 @@
         </div>
 
         {{-- INFORMASI TENGAH --}}
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
-                <h4 class="text-sm font-bold text-gray-800 mb-2">Outcome</h4>
-                <div class="text-gray-600 text-sm">
-                    {{-- LOOP OUTCOME (Otomatis hanya 1 karena sudah difilter di PHP) --}}
-                    @forelse($program->outcomes as $out)
-                    <div class="mb-1 flex items-start"><span class="mr-2">•</span><span>{{ $out->outcome }}</span></div>
-                    @empty
-                    <span class="italic text-gray-400">Data outcome tidak spesifik.</span>
-                    @endforelse
+       <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
+        <h4 class="text-sm font-bold text-gray-800 mb-2">Outcome</h4>
+        <div class="text-gray-600 text-sm">
+            {{-- PERBAIKAN: Gunakan variabel $outcomes_view yang dikirim dari controller --}}
+            @forelse($outcomes_view as $out)
+                <div class="mb-1 flex items-start">
+                    <span class="mr-2">•</span>
+                    <span>{{ $out->outcome }}</span>
                 </div>
-            </div>
+            @empty
+                <span class="italic text-gray-400">Data outcome tidak spesifik atau belum dipilih.</span>
+            @endforelse
+        </div>
+    </div>
             <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 md:p-6">
                 <h4 class="text-sm font-bold text-gray-800 mb-2">Kegiatan</h4>
                 <p class="text-gray-600 text-sm uppercase font-medium">{{ $kegiatan->kode }} {{ $kegiatan->nama }}</p>
@@ -458,6 +461,7 @@
                                     <option value="Persen">Persen</option>
                                     <option value="Poin">Poin</option>
                                     <option value="Rupiah">Rupiah</option>
+                                    <option value="Sarana">Sarana</option>
                                     <option value="Unit">Unit</option>
                                 </select>
                                 @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
@@ -528,6 +532,7 @@
                         <option value="Persen">Persen</option>
                         <option value="Poin">Poin</option>
                         <option value="Rupiah">Rupiah</option>
+                        <option value="Sarana">Sarana</option>
                         <option value="Unit">Unit</option>
                     </select>
                     @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
