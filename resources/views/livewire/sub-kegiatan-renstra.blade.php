@@ -442,6 +442,7 @@
                                     <option value="">Pilih Satuan</option>
                                     <option value="Angka">Angka</option>
                                     <option value="Barang">Barang</option>
+                                    <option value="Berita acara">Berita Acara</option>
                                     <option value="Bulan">Bulan</option>
                                     <option value="Data/Bulan">Data/Bulan</option>
                                     <option value="Dokumen">Dokumen</option>
@@ -463,6 +464,7 @@
                                     <option value="Rupiah">Rupiah</option>
                                     <option value="Sarana">Sarana</option>
                                     <option value="Unit">Unit</option>
+                                    <option value="Unit kinerja">Unit Kinerja</option>
                                 </select>
                                 @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                             </div>
@@ -513,6 +515,7 @@
                         <option value="">Pilih Satuan</option>
                         <option value="Angka">Angka</option>
                         <option value="Barang">Barang</option>
+                        <option value="Berita acara">Berita Acara</option>
                         <option value="Bulan">Bulan</option>
                         <option value="Data/Bulan">Data/Bulan</option>
                         <option value="Dokumen">Dokumen</option>
@@ -534,6 +537,7 @@
                         <option value="Rupiah">Rupiah</option>
                         <option value="Sarana">Sarana</option>
                         <option value="Unit">Unit</option>
+                        <option value="Unit kinerja">Unit Kinerja</option>
                     </select>
                     @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
