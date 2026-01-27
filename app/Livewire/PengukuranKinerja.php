@@ -116,17 +116,26 @@ class PengukuranKinerja extends Component
         $currentUserJabatanId = $currentUserPegawai ? $currentUserPegawai->jabatan_id : null;
 
         // 2. PEGAWAI: Hanya bisa Edit data miliknya sendiri
-        // Logika: NIP User Login == NIP Pegawai pemilik Jabatan yang sedang dibuka
-        if ($this->pegawai && $user->nip === $this->pegawai->nip) {
-            $this->canEdit = true; 
-            // Pegawai tidak bisa komentar/menanggapi diri sendiri (opsional)
+        // Logika: Role harus 'pegawai' DAN NIP cocok
+        if ($user->role === 'pegawai') {
+            if ($this->pegawai && $user->nip === $this->pegawai->nip) {
+                $this->canEdit = true; 
+            }
         }
 
-        // 3. PIMPINAN: Hanya bisa Menanggapi Bawahan Langsung
-        // Logika: Jabatan yang dibuka ($this->jabatan) adalah ANAK dari Jabatan User Login
+        // 3. PIMPINAN: Hanya bisa Menanggapi
         if ($user->role === 'pimpinan' && $currentUserJabatanId) {
+            
+            // A. Menanggapi Bawahan Langsung (Hierarki Parent-Child)
+            // Jabatan yang dibuka (child) memiliki parent_id == Jabatan User Login
             if ($this->jabatan->parent_id == $currentUserJabatanId) {
-                $this->canComment = true; // Hanya boleh komentar, TIDAK boleh edit data bawahan
+                $this->canComment = true;
+            }
+
+            // B. Khusus Kepala Dinas (Top Level) -> Bisa Tanggapan Sendiri
+            // Syarat: Sedang lihat jabatan sendiri DAN tidak punya atasan (parent_id NULL)
+            if ($this->jabatan->id == $currentUserJabatanId && is_null($this->jabatan->parent_id)) {
+                $this->canComment = true;
             }
         }
     }
