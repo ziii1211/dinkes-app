@@ -43,6 +43,7 @@ class KegiatanRenstra extends Component
     public $indikator_id;
     public $ind_keterangan;
     public $ind_satuan;
+    public $ind_arah; // PROPERTI BARU
 
     public $target_2025;
     public $target_2026;
@@ -110,7 +111,7 @@ class KegiatanRenstra extends Component
         $this->reset([
             'kegiatan_id', 'kode', 'nama', 'isEditMode', 
             'output', 'output_id', 'selected_output_id', 
-            'ind_keterangan', 'ind_satuan', 'indikator_id', 
+            'ind_keterangan', 'ind_satuan', 'indikator_id', 'ind_arah',
             'target_2025', 'target_2026', 'target_2027', 'target_2028', 'target_2029', 'target_2030', 
             'target_satuan', 'pj_kegiatan_text', 'pj_jabatan_id'
         ]);
@@ -239,6 +240,7 @@ class KegiatanRenstra extends Component
             $this->selected_output_id = $ind->output_kegiatan_id; // Set ID Output induk
             $this->ind_keterangan = $ind->keterangan;
             $this->ind_satuan = $ind->satuan;
+            $this->ind_arah = $ind->arah; // UPDATE: Load Arah
             $this->isEditMode = true;
             $this->isOpenIndikator = true;
         }
@@ -246,12 +248,17 @@ class KegiatanRenstra extends Component
 
     public function storeIndikator()
     {
-        $this->validate(['ind_keterangan' => 'required', 'ind_satuan' => 'required']);
+        $this->validate([
+            'ind_keterangan' => 'required', 
+            'ind_satuan' => 'required', // FIX: Tambah koma
+            'ind_arah' => 'required'    // FIX: Validasi Arah
+        ]);
         
         $data = [
             'output_kegiatan_id' => $this->selected_output_id, // Gunakan ID Output
             'keterangan' => $this->ind_keterangan, 
-            'satuan' => $this->ind_satuan
+            'satuan' => $this->ind_satuan, // FIX: Tambah koma
+            'arah' => $this->ind_arah      // UPDATE: Simpan Arah
         ];
         
         if ($this->isEditMode) {

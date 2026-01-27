@@ -13,7 +13,8 @@ class IndikatorKegiatan extends Model
         // PERBAIKAN 1: Pastikan tulisannya 'output', bukan 'ouput'
         'output_kegiatan_id', 
         'keterangan',  
-        'satuan',      
+        'satuan', 
+        'arah',     
         
         // Target Tahunan
         'target_2025',
