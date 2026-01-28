@@ -434,7 +434,7 @@
                             <option value="Poin">Poin</option>
                             <option value="Rupiah">Rupiah</option>
                             <option value="Unit">Unit</option>
-                            <option value="Unit kinerja">Unit Kinerja</option>
+                            <option value="Unit kinerja">Unit Kerja</option>
                             <option value="Sarana">Sarana</option>
                         </select>
                         @error('formAksiSatuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror

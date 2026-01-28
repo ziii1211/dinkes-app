@@ -432,7 +432,7 @@
                         <option value="Rupiah">Rupiah</option>
                         <option value="Sarana">Sarana</option>
                         <option value="Unit">Unit</option>
-                        <option value="Unit kinerja">Unit Kinerja</option>
+                        <option value="Unit kerja">Unit Kerja</option>
                     </select>
                 </div>
                 <div>

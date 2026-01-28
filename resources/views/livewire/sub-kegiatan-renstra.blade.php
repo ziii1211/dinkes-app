@@ -537,7 +537,7 @@
                         <option value="Rupiah">Rupiah</option>
                         <option value="Sarana">Sarana</option>
                         <option value="Unit">Unit</option>
-                        <option value="Unit kinerja">Unit Kinerja</option>
+                        <option value="Unit kinerja">Unit Kerja</option>
                     </select>
                     @error('ind_satuan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
