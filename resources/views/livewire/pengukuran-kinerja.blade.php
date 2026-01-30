@@ -163,7 +163,8 @@
             {{-- SCROLLABLE TABLE --}}
             <div class="overflow-x-auto rounded-lg border border-gray-100 min-h-[300px]">
                 <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
-                    <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    {{-- FIX: Ubah text-gray-500 menjadi text-black pada header --}}
+                    <thead class="bg-gray-50 text-xs font-bold text-black uppercase tracking-wider border-b border-gray-200">
                         <tr>
                             <th class="px-6 py-4 min-w-[300px] w-1/3">Rencana Hasil Kerja &rarr; Indikator</th>
                             <th class="px-4 py-4 text-center min-w-[120px] w-32">Target</th>
@@ -174,11 +175,13 @@
                             <th class="px-4 py-4 text-center min-w-[120px] w-32">Aksi</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-700">
+                    {{-- FIX: Ubah text-gray-700 menjadi text-black pada body --}}
+                    <tbody class="divide-y divide-gray-100 text-black">
                         @if($pk)
                             @foreach($pk->sasarans as $sasaran)
                                 <tr class="bg-blue-50 border-b border-blue-100">
-                                    <td colspan="7" class="px-6 py-3 font-bold text-gray-800 flex items-start gap-2 whitespace-normal">
+                                    {{-- FIX: text-gray-800 -> text-black --}}
+                                    <td colspan="7" class="px-6 py-3 font-bold text-black flex items-start gap-2 whitespace-normal">
                                         <svg class="w-4 h-4 text-blue-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-8a2 2 0 012-2h14a2 2 0 012 2v8M3 13l6-6m0 0l6 6m-6-6v12"></path></svg>
                                         {{ $sasaran->sasaran }}
                                     </td>
@@ -187,19 +190,24 @@
                                     <tr class="hover:bg-gray-50 transition-colors">
                                         <td class="px-6 py-4 pl-10 align-middle whitespace-normal">
                                             <div class="flex items-start gap-2">
-                                                <span class="text-gray-400 mt-0.5">&rarr;</span>
-                                                <span class="text-gray-700 font-medium">{{ $ind->nama_indikator }}</span>
+                                                {{-- FIX: Arrow text-gray-400 -> text-black agar terlihat --}}
+                                                <span class="text-black mt-0.5">&rarr;</span>
+                                                {{-- FIX: text-gray-700 -> text-black --}}
+                                                <span class="text-black font-medium">{{ $ind->nama_indikator }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-4 text-center font-bold text-gray-800 align-middle">{{ $ind->target_tahunan }} {{ $ind->satuan }}</td>
-                                        <td class="px-4 py-4 text-center align-middle text-gray-800">{{ $ind->realisasi_bulan ?? '-' }}</td>
-                                        <td class="px-4 py-4 text-center align-middle text-gray-800">{{ $ind->capaian_bulan ?? '-' }}</td>
-                                        <td class="px-4 py-4 text-gray-500 align-middle text-xs italic whitespace-normal">{{ $ind->catatan_bulan ?? '-' }}</td>
+                                        {{-- FIX: Semua kolom data diubah ke text-black --}}
+                                        <td class="px-4 py-4 text-center font-bold text-black align-middle">{{ $ind->target_tahunan }} {{ $ind->satuan }}</td>
+                                        <td class="px-4 py-4 text-center align-middle text-black">{{ $ind->realisasi_bulan ?? '-' }}</td>
+                                        <td class="px-4 py-4 text-center align-middle text-black">{{ $ind->capaian_bulan ?? '-' }}</td>
+                                        <td class="px-4 py-4 text-black align-middle text-xs italic whitespace-normal">{{ $ind->catatan_bulan ?? '-' }}</td>
                                         
                                         {{-- KOLOM TANGGAPAN --}}
                                         <td class="px-4 py-4 align-middle text-center">
-                                            <div class="text-xs text-gray-700 mb-2 font-medium {{ $ind->tanggapan_bulan ? 'block' : 'hidden' }} whitespace-normal">{{ $ind->tanggapan_bulan ?? '-' }}</div>
-                                            <div class="{{ !$ind->tanggapan_bulan ? 'block' : 'hidden' }} text-gray-400 text-xs mb-2">-</div>
+                                            {{-- FIX: text-gray-700 -> text-black --}}
+                                            <div class="text-xs text-black mb-2 font-medium {{ $ind->tanggapan_bulan ? 'block' : 'hidden' }} whitespace-normal">{{ $ind->tanggapan_bulan ?? '-' }}</div>
+                                            {{-- FIX: text-gray-400 -> text-black --}}
+                                            <div class="{{ !$ind->tanggapan_bulan ? 'block' : 'hidden' }} text-black text-xs mb-2">-</div>
                                             
                                             @if($canComment)
                                                 <button wire:click="openTanggapan({{ $ind->id }}, '{{ addslashes($ind->nama_indikator) }}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center justify-center gap-1 mx-auto transition-colors">
@@ -225,7 +233,8 @@
                                 @endforeach
                             @endforeach
                         @else
-                            <tr><td colspan="7" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data Perjanjian Kinerja (Final) untuk tahun {{ $tahun }}.</td></tr>
+                            {{-- FIX: Placeholder text changed to black --}}
+                            <tr><td colspan="7" class="px-6 py-12 text-center text-black italic">Belum ada data Perjanjian Kinerja (Final) untuk tahun {{ $tahun }}.</td></tr>
                         @endif
                     </tbody>
                 </table>
@@ -252,7 +261,8 @@
             {{-- SCROLLABLE TABLE --}}
             <div class="overflow-x-auto rounded-lg border border-gray-100 min-h-[200px]">
                 <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
-                    <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    {{-- FIX: Ubah text-gray-500 menjadi text-black pada header --}}
+                    <thead class="bg-gray-50 text-xs font-bold text-black uppercase tracking-wider border-b border-gray-200">
                         <tr>
                             <th class="px-6 py-4 min-w-[250px] w-1/2">RENCANA AKSI</th>
                             <th class="px-4 py-4 text-center min-w-[100px] w-24">TARGET</th>
@@ -262,13 +272,15 @@
                             <th class="px-4 py-4 text-center min-w-[120px] w-32">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-700">
+                    {{-- FIX: Ubah text-gray-700 menjadi text-black pada body --}}
+                    <tbody class="divide-y divide-gray-100 text-black">
                         @forelse($rencanaAksis as $aksi)
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 align-middle text-gray-800 font-medium leading-relaxed whitespace-normal">{{ $aksi->nama_aksi }}</td>
+                                {{-- FIX: Semua kolom diubah ke text-black --}}
+                                <td class="px-6 py-4 align-middle text-black font-medium leading-relaxed whitespace-normal">{{ $aksi->nama_aksi }}</td>
                                 <td class="px-4 py-4 text-center align-middle font-bold text-blue-600 bg-blue-50 rounded-lg">{{ $aksi->target }}</td>
-                                <td class="px-4 py-4 text-center align-middle text-gray-600"><span class="px-2 py-1 bg-gray-100 rounded text-xs font-semibold">{{ $aksi->satuan }}</span></td>
-                                <td class="px-4 py-4 text-center align-middle text-gray-800 font-medium">{{ $aksi->realisasi_bulan ?? '-' }}</td>
+                                <td class="px-4 py-4 text-center align-middle text-black"><span class="px-2 py-1 bg-gray-100 rounded text-xs font-semibold">{{ $aksi->satuan }}</span></td>
+                                <td class="px-4 py-4 text-center align-middle text-black font-medium">{{ $aksi->realisasi_bulan ?? '-' }}</td>
                                 <td class="px-4 py-4 text-center align-middle">
                                     @if($aksi->capaian_bulan !== null)
                                         <span class="px-2 py-1 rounded text-xs font-bold text-white bg-green-500">{{ $aksi->capaian_bulan }}%</span>
@@ -293,14 +305,14 @@
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="6" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data Rencana Aksi.</td></tr>
+                            <tr><td colspan="6" class="px-6 py-12 text-center text-black italic">Belum ada data Rencana Aksi.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
             </div>
         </div>
 
-        {{-- TABEL PENJELASAN --}}
+        {{-- TABEL PENJELASAN (SUDAH FIX) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
             <div class="px-6 py-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h3 class="text-lg font-bold text-gray-800">Penjelasan per Indikator Kinerja</h3>
@@ -320,7 +332,7 @@
             {{-- SCROLLABLE TABLE --}}
             <div class="overflow-x-auto rounded-lg border border-gray-100 min-h-[200px]">
                 <table class="w-full text-left text-sm whitespace-nowrap md:whitespace-normal">
-                    <thead class="bg-gray-50 text-xs font-bold text-gray-500 uppercase tracking-wider border-b border-gray-200">
+                    <thead class="bg-gray-50 text-xs font-bold text-black uppercase tracking-wider border-b border-gray-200">
                         <tr>
                             <th class="px-6 py-4 w-16 text-center min-w-[50px]">NO</th>
                             <th class="px-4 py-4 w-1/3 min-w-[200px]">UPAYA</th>
@@ -329,25 +341,25 @@
                             <th class="px-4 py-4 w-32 text-center min-w-[100px]">AKSI</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-100 text-gray-700">
+                    <tbody class="divide-y divide-gray-100 text-black">
                         @forelse($penjelasans as $item)
                             <tr class="hover:bg-gray-50 transition-colors">
-                                <td class="px-6 py-4 text-center text-gray-500">{{ $loop->iteration }}</td>
-                                <td class="px-4 py-4 align-middle text-gray-800 leading-relaxed whitespace-normal">{{ $item->upaya ?? '-' }}</td>
-                                <td class="px-4 py-4 align-middle text-gray-800 leading-relaxed whitespace-normal">{{ $item->hambatan ?? '-' }}</td>
-                                <td class="px-4 py-4 align-middle text-gray-800 leading-relaxed whitespace-normal">{{ $item->tindak_lanjut ?? '-' }}</td>
+                                <td class="px-6 py-4 text-center text-black font-medium">{{ $loop->iteration }}</td>
+                                <td class="px-4 py-4 align-middle text-black leading-relaxed whitespace-normal">{{ $item->upaya ?? '-' }}</td>
+                                <td class="px-4 py-4 align-middle text-black leading-relaxed whitespace-normal">{{ $item->hambatan ?? '-' }}</td>
+                                <td class="px-4 py-4 align-middle text-black leading-relaxed whitespace-normal">{{ $item->tindak_lanjut ?? '-' }}</td>
                                 <td class="px-4 py-4 text-center align-middle">
                                     @if($canEdit)
                                         <button wire:click="hapusPenjelasan({{ $item->id }})" wire:confirm="Yakin ingin menghapus poin ini?" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border border-red-200 text-xs font-bold rounded shadow-sm transition-colors">
                                             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     @else
-                                        <span class="text-xs text-gray-400 italic">Locked</span>
+                                        <span class="text-xs text-black italic">Locked</span>
                                     @endif
                                 </td>
                             </tr>
                         @empty
-                            <tr><td colspan="5" class="px-6 py-12 text-center text-gray-400 italic">Belum ada data penjelasan.</td></tr>
+                            <tr><td colspan="5" class="px-6 py-12 text-center text-black italic">Belum ada data penjelasan.</td></tr>
                         @endforelse
                     </tbody>
                 </table>
@@ -356,7 +368,7 @@
 
     </div>
 
-    {{-- MODAL-MODAL (Sama seperti sebelumnya, hanya memastikan responsif di mobile dengan max-width) --}}
+    {{-- MODAL-MODAL --}}
     
     {{-- MODAL ATUR JADWAL --}}
     @if($isOpenAturJadwal)
@@ -372,11 +384,13 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Tanggal Mulai</label>
-                    <input type="date" wire:model="formJadwalMulai" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                    {{-- FIX: text-black pada input --}}
+                    <input type="date" wire:model="formJadwalMulai" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-purple-500 outline-none">
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Batas Akhir (Tenggat)</label>
-                    <input type="date" wire:model="formJadwalSelesai" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-purple-500 outline-none">
+                    {{-- FIX: text-black pada input --}}
+                    <input type="date" wire:model="formJadwalSelesai" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-purple-500 outline-none">
                 </div>
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
@@ -398,18 +412,21 @@
             <div class="p-6 space-y-4">
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Nama Rencana Aksi</label>
-                    <textarea wire:model="formAksiNama" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: Melaksanakan koordinasi..."></textarea>
+                    {{-- FIX: text-black pada textarea --}}
+                    <textarea wire:model="formAksiNama" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: Melaksanakan koordinasi..."></textarea>
                     @error('formAksiNama') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
                 <div class="grid grid-cols-2 gap-4">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Target</label>
-                        <input type="number" wire:model="formAksiTarget" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="100">
+                        {{-- FIX: text-black pada input --}}
+                        <input type="number" wire:model="formAksiTarget" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none" placeholder="100">
                         @error('formAksiTarget') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                     </div>
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Satuan</label>
-                        <select wire:model="formAksiSatuan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        {{-- FIX: text-black pada select --}}
+                        <select wire:model="formAksiSatuan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                             <option value="">Pilih Satuan</option>
                             <option value="Angka">Angka</option>
                             <option value="Barang">Barang</option>
@@ -468,7 +485,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Realisasi Bulan Ini</label>
-                    <input type="number" step="0.01" wire:model="realisasiInput" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    {{-- FIX: text-black pada input --}}
+                    <input type="number" step="0.01" wire:model="realisasiInput" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none">
                     @error('realisasiInput') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
                 @if($showCapaianInput)
@@ -478,14 +496,16 @@
                     </label>
                     <p class="text-xs text-yellow-600 mb-2">Indikator ini memiliki arah <strong>menurun/negatif</strong>. Silakan isi capaian manual jika diperlukan.</p>
                     <div class="flex items-center gap-2">
-                        <input type="number" step="0.01" wire:model="capaianInput" class="w-full border border-yellow-300 rounded-lg px-4 py-2 text-sm focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="Contoh: 100">
+                        {{-- FIX: text-black pada input --}}
+                        <input type="number" step="0.01" wire:model="capaianInput" class="w-full border border-yellow-300 rounded-lg px-4 py-2 text-sm text-black focus:ring-2 focus:ring-yellow-500 outline-none" placeholder="Contoh: 100">
                         <span class="font-bold text-gray-500">%</span>
                     </div>
                 </div>
                 @endif
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Catatan</label>
-                    <textarea wire:model="catatanInput" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
+                    {{-- FIX: text-black pada textarea --}}
+                    <textarea wire:model="catatanInput" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none"></textarea>
                 </div>
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
@@ -511,7 +531,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Isi Tanggapan</label>
-                    <textarea wire:model="tanggapanInput" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Berikan masukan atau arahan terkait capaian ini..."></textarea>
+                    {{-- FIX: text-black pada textarea --}}
+                    <textarea wire:model="tanggapanInput" rows="4" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Berikan masukan atau arahan terkait capaian ini..."></textarea>
                     @error('tanggapanInput') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -542,7 +563,8 @@
                 </div>
                 <div>
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Realisasi Bulan Ini</label>
-                    <input type="number" step="1" wire:model="realisasiAksiInput" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none">
+                    {{-- FIX: text-black pada input --}}
+                    <input type="number" step="1" wire:model="realisasiAksiInput" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none">
                     @error('realisasiAksiInput') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
             </div>
@@ -554,7 +576,7 @@
     </div>
     @endif
 
-    {{-- MODAL TAMBAH PENJELASAN --}}
+    {{-- MODAL TAMBAH PENJELASAN (Reference: Already Correct) --}}
     @if($isOpenTambahPenjelasan)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity p-4" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
@@ -564,18 +586,18 @@
             </div>
             <div class="p-6 space-y-4">
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Upaya</label>
-                    <textarea wire:model="formUpaya" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan upaya yang dilakukan..."></textarea>
+                    <label class="block text-sm font-semibold text-black mb-2">Upaya</label>
+                    <textarea wire:model="formUpaya" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan upaya yang dilakukan..."></textarea>
                     @error('formUpaya') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Hambatan</label>
-                    <textarea wire:model="formHambatan" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan hambatan yang ditemui..."></textarea>
+                    <label class="block text-sm font-semibold text-black mb-2">Hambatan</label>
+                    <textarea wire:model="formHambatan" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan hambatan yang ditemui..."></textarea>
                     @error('formHambatan') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
                 <div>
-                    <label class="block text-sm font-semibold text-gray-700 mb-2">Rencana Tindak Lanjut</label>
-                    <textarea wire:model="formRtl" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan rencana tindak lanjut..."></textarea>
+                    <label class="block text-sm font-semibold text-black mb-2">Rencana Tindak Lanjut</label>
+                    <textarea wire:model="formRtl" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-black focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Uraikan rencana tindak lanjut..."></textarea>
                     @error('formRtl') <span class="text-red-500 text-xs">{{ $message }}</span> @enderror
                 </div>
             </div>
