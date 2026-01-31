@@ -57,7 +57,6 @@
                     <tr>
                         <th class="px-4 py-3 w-20 text-center border-r border-slate-200">Kode</th>
                         <th class="px-4 py-3 min-w-[250px] border-r border-slate-200">Uraian</th>
-                        {{-- Kolom Input dilebarkan agar nyaman --}}
                         <th class="px-4 py-3 w-64 border-r border-slate-200">Sub Output</th>
                         <th class="px-4 py-3 w-32 border-r border-slate-200">Satuan</th>
                         <th class="px-4 py-3 w-44 text-right border-r border-slate-200 bg-blue-50/20">Pagu Anggaran</th>
@@ -76,7 +75,8 @@
                             $namaProgram = $program->nama ?? $program->nama_program ?? 'Program';
                         @endphp
                         
-                        <tr class="bg-blue-100/70 border-t-2 border-blue-200">
+                        {{-- FIX: wire:key wajib unik --}}
+                        <tr class="bg-blue-100/70 border-t-2 border-blue-200" wire:key="prog-{{ $programId }}">
                             <td class="px-4 py-3 font-bold text-blue-900 border-r border-blue-200 font-mono text-center align-top">
                                 {{ $program->kode ?? '-' }}
                             </td>
@@ -93,7 +93,7 @@
                             @endphp
 
                             {{-- KEGIATAN --}}
-                            <tr class="bg-gray-50 border-t border-gray-200">
+                            <tr class="bg-gray-50 border-t border-gray-200" wire:key="keg-{{ $kegiatanId }}">
                                 <td class="px-4 py-2 font-semibold text-gray-600 border-r border-gray-200 font-mono text-center align-top">
                                     {{ $kegiatan->kode ?? '-' }}
                                 </td>
@@ -105,7 +105,10 @@
 
                             {{-- SUB KEGIATAN (INPUT ROW) --}}
                             @foreach($details as $detail)
-                                <tr class="hover:bg-yellow-50 transition-colors group border-b border-gray-100 bg-white">
+                                {{-- FIX: wire:key pada detail --}}
+                                <tr class="hover:bg-yellow-50 transition-colors group border-b border-gray-100 bg-white" 
+                                    wire:key="detail-{{ $detail->id }}">
+                                    
                                     {{-- Kode --}}
                                     <td class="px-4 py-2.5 text-center font-mono text-xs text-gray-500 border-r border-gray-200 align-top pt-4">
                                         {{ $detail->kode }}
@@ -118,7 +121,7 @@
                                         </div>
                                     </td>
 
-                                    {{-- INPUT MANUAL: Sub Output (Textarea) --}}
+                                    {{-- Sub Output --}}
                                     <td class="p-2 border-r border-gray-200 align-top">
                                         <textarea 
                                             wire:model.defer="inputs.{{ $detail->id }}.sub_output" 
@@ -128,7 +131,7 @@
                                         ></textarea>
                                     </td>
 
-                                    {{-- INPUT MANUAL: Satuan --}}
+                                    {{-- Satuan --}}
                                     <td class="p-2 border-r border-gray-200 align-top">
                                         <input type="text" 
                                                wire:model.defer="inputs.{{ $detail->id }}.satuan_unit" 
@@ -137,23 +140,25 @@
                                         >
                                     </td>
 
-                                    {{-- INPUT MANUAL: Anggaran (AlpineJS) --}}
+                                    {{-- FIX: Input Anggaran menggunakan logic Alpine baru --}}
                                     <td class="p-2 border-r border-gray-200 align-top bg-blue-50/5" 
-                                        x-data="rupiahInput(@entangle('inputs.'.$detail->id.'.pagu_anggaran').defer)">
+                                        x-data="rupiahInput('inputs.{{ $detail->id }}.pagu_anggaran', '{{ $inputs[$detail->id]['pagu_anggaran'] ?? 0 }}')">
                                         <input type="text" 
                                                x-model="displayValue"
-                                               @input="formatCurrency($event)"
+                                               @input="updateWire"
+                                               @blur="updateWire"
                                                class="w-full text-xs text-right font-medium text-gray-800 border border-gray-200 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md px-2 py-2 transition-all placeholder-gray-300"
                                                placeholder="Rp 0"
                                         >
                                     </td>
 
-                                    {{-- INPUT MANUAL: Realisasi (AlpineJS) --}}
+                                    {{-- FIX: Input Realisasi menggunakan logic Alpine baru --}}
                                     <td class="p-2 border-r border-gray-200 align-top bg-green-50/5" 
-                                        x-data="rupiahInput(@entangle('inputs.'.$detail->id.'.pagu_realisasi').defer)">
+                                        x-data="rupiahInput('inputs.{{ $detail->id }}.pagu_realisasi', '{{ $inputs[$detail->id]['pagu_realisasi'] ?? 0 }}')">
                                         <input type="text" 
                                                x-model="displayValue"
-                                               @input="formatCurrency($event)"
+                                               @input="updateWire"
+                                               @blur="updateWire"
                                                class="w-full text-xs text-right font-bold text-green-700 border border-gray-200 focus:border-green-500 focus:ring-1 focus:ring-green-500 rounded-md px-2 py-2 transition-all placeholder-gray-300"
                                                placeholder="Rp 0"
                                         >
@@ -206,21 +211,25 @@
         </div>
     </div>
 
-    {{-- SCRIPT ALPINE JS --}}
+    {{-- SCRIPT ALPINE JS (FIXED) --}}
     <script>
         document.addEventListener('alpine:init', () => {
-            Alpine.data('rupiahInput', (entangledModel) => ({
-                value: entangledModel, 
-                displayValue: '', 
+            Alpine.data('rupiahInput', (modelName, initialValue) => ({
+                displayValue: '',
+                modelName: modelName,
 
                 init() {
-                    // Isi nilai awal dari backend
-                    this.formatInitial(this.value);
+                    // Format nilai awal saat load
+                    this.formatInitial(initialValue);
+                },
+
+                updateWire(e) {
+                    // 1. Format tampilan di input (agar user melihat "Rp ...")
+                    this.formatCurrency(e);
                     
-                    // Pantau jika backend mengupdate nilai (misal setelah saveAll)
-                    this.$watch('value', (newValue) => {
-                        this.formatInitial(newValue);
-                    });
+                    // 2. Kirim data (masih ada "Rp"-nya tidak masalah, PHP yang bersihkan) ke Livewire
+                    // Gunakan $wire.set agar lebih pasti tersimpan
+                    this.$wire.set(this.modelName, this.displayValue);
                 },
 
                 formatCurrency(e) {
@@ -237,14 +246,12 @@
                     }
 
                     this.displayValue = rupiah ? 'Rp ' + rupiah : '';
-                    this.value = this.displayValue; // Update ke Livewire (defer)
                 },
 
                 formatInitial(val) {
                     if(!val) { this.displayValue = ''; return; }
-                    // Hapus karakter non-digit untuk diproses
                     let stringVal = val.toString().replace(/[^0-9]/g, '');
-                    if(!stringVal) { this.displayValue = ''; return; }
+                    if(!stringVal || stringVal == '0') { this.displayValue = ''; return; }
 
                     let sisa = stringVal.length % 3;
                     let rupiah = stringVal.substr(0, sisa);

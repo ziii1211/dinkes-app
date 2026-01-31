@@ -34,7 +34,6 @@
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                     Daftar Laporan 
                     
-
                 <button wire:click="create" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md focus:ring-4 focus:ring-blue-100 transform active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
                     <span>Laporan Baru</span>

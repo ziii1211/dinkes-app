@@ -47,27 +47,42 @@ class InputData extends Component
     {
         DB::beginTransaction();
         try {
+            // Pastikan array inputs tidak kosong atau error
+            if (empty($this->inputs)) {
+                // Jika kosong, mungkin reload halaman diperlukan atau tidak ada data yang diubah
+                session()->flash('error', 'Tidak ada data untuk disimpan.');
+                return;
+            }
+
             foreach ($this->inputs as $detailId => $data) {
                 $detail = DetailLaporanKonsolidasi::find($detailId);
                 
                 if ($detail) {
-                    // Bersihkan format Rupiah sebelum simpan ke DB
-                    // Hapus semua karakter kecuali angka
-                    $anggaranClean = preg_replace('/[^0-9]/', '', $data['pagu_anggaran'] ?? '0');
-                    $realisasiClean = preg_replace('/[^0-9]/', '', $data['pagu_realisasi'] ?? '0');
+                    // Ambil data, default ke '0' jika kosong
+                    $rawAnggaran = isset($data['pagu_anggaran']) && $data['pagu_anggaran'] !== '' ? $data['pagu_anggaran'] : '0';
+                    $rawRealisasi = isset($data['pagu_realisasi']) && $data['pagu_realisasi'] !== '' ? $data['pagu_realisasi'] : '0';
+
+                    // Bersihkan format Rupiah (hanya ambil angka)
+                    // Contoh: "Rp 1.000.000" -> "1000000"
+                    // Contoh: "1000000" -> "1000000"
+                    $anggaranClean = preg_replace('/[^0-9]/', '', $rawAnggaran);
+                    $realisasiClean = preg_replace('/[^0-9]/', '', $rawRealisasi);
+
+                    // Konversi ke float, pastikan valid
+                    $anggaranVal = $anggaranClean === '' ? 0 : (float) $anggaranClean;
+                    $realisasiVal = $realisasiClean === '' ? 0 : (float) $realisasiClean;
 
                     $detail->update([
-                        'sub_output'    => $data['sub_output'],
-                        'satuan_unit'   => $data['satuan_unit'],
-                        'pagu_anggaran' => (float) $anggaranClean,
-                        'pagu_realisasi'=> (float) $realisasiClean,
+                        'sub_output'    => $data['sub_output'] ?? null,
+                        'satuan_unit'   => $data['satuan_unit'] ?? null,
+                        'pagu_anggaran' => $anggaranVal,
+                        'pagu_realisasi'=> $realisasiVal,
                     ]);
                 }
             }
             
             DB::commit();
             
-            // PENTING: Reload data agar format Rupiah muncul kembali di inputan
             $this->loadData(); 
             
             session()->flash('message', 'Data berhasil disimpan.');
