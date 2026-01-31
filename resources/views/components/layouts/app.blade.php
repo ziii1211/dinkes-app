@@ -138,6 +138,8 @@
                         @else 
                             
                             {{-- Admin & Pegawai Menu Desktop --}}
+                            
+                            {{-- Matrik Renstra --}}
                             <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Matrik Renstra
@@ -152,6 +154,7 @@
                                 </div>
                             </div>
 
+                            {{-- Perencanaan Kinerja --}}
                             <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Perencanaan Kinerja
@@ -163,6 +166,7 @@
                                 </div>
                             </div>
 
+                            {{-- Pengukuran Kinerja --}}
                             <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Pengukuran Kinerja
@@ -173,6 +177,20 @@
                                 </div>
                             </div>
 
+                            {{-- NEW: Laporan (Konsolidasi) - KHUSUS ADMIN --}}
+                            @if(auth()->user()->role == 'admin')
+                                <div class="relative group">
+                                    <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                        Laporan
+                                        <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                    </button>
+                                    <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                        <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Laporan Konsolidasi</a>
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- Master Data --}}
                             <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Master Data
@@ -183,6 +201,7 @@
                                 </div>
                             </div>
                             
+                            {{-- Admin Menu --}}
                             @if(auth()->user()->role == 'admin')
                                 <a href="{{ route('admin.manajemen-user') }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('admin.manajemen-user') ? 'text-blue-700 dark:text-blue-400' : '' }}">
                                     Manajemen User
@@ -312,6 +331,19 @@
                                 <a href="{{ route('pengukuran.bulanan') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Pengukuran Bulanan</a>
                             </div>
                         </div>
+
+                        {{-- NEW: Laporan (Konsolidasi) Mobile - KHUSUS ADMIN --}}
+                        @if(auth()->user()->role == 'admin')
+                            <div x-data="{ expanded: false }">
+                                <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
+                                    <span>Laporan</span>
+                                    <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
+                                <div x-show="expanded" class="pl-4 space-y-1">
+                                    <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Laporan Konsolidasi</a>
+                                </div>
+                            </div>
+                        @endif
 
                         <div x-data="{ expanded: false }">
                             <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">

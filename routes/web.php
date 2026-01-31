@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use Illuminate\Support\Facades\Storage; 
+use Illuminate\Support\Facades\Storage;
 
 // --- 1. LIVEWIRE COMPONENTS ---
 use App\Livewire\Auth\Login;
@@ -25,6 +25,11 @@ use App\Livewire\PerjanjianKinerjaLihat;
 use App\Livewire\PengukuranBulanan;
 use App\Livewire\PengukuranKinerja as DetailPengukuranKinerja;
 use App\Livewire\PengaturanKinerja;
+
+// --- TAMBAHAN BARU: Laporan Konsolidasi ---
+use App\Livewire\LaporanKonsolidasi\Index as LaporanKonsolidasiIndex;
+// use App\Livewire\LaporanKonsolidasi\Form as LaporanKonsolidasiForm;
+use App\Livewire\LaporanKonsolidasi\InputData as LaporanKonsolidasiInput;
 
 // --- 2. MODELS ---
 use App\Models\PerjanjianKinerja as PkModel; // Alias biar gak bentrok sama Livewire
@@ -189,4 +194,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/atur-kinerja/{jabatanId}', PengaturanKinerja::class)->name('pengukuran.atur');
         Route::get('/pengukuran/{jabatanId}', DetailPengukuranKinerja::class)->name('pengukuran.detail');
     });
+
+  // --- LAPORAN KONSOLIDASI (BARU - SUDAH DIAKTIFKAN) ---
+    Route::middleware('role:admin')->prefix('laporan-konsolidasi')->group(function () {
+        Route::get('/', LaporanKonsolidasiIndex::class)->name('laporan-konsolidasi.index');
+        // Route::get('/tambah', LaporanKonsolidasiForm::class)->name('laporan-konsolidasi.create');
+        // Route::get('/{id}/edit', LaporanKonsolidasiForm::class)->name('laporan-konsolidasi.edit');
+        Route::get('/{id}/input-data', LaporanKonsolidasiInput::class)->name('laporan-konsolidasi.input');
+    });
+
 });
