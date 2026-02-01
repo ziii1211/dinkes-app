@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\LaporanKonsolidasi;
 use App\Models\DetailLaporanKonsolidasi;
 use App\Models\Program;
+use App\Models\Kegiatan; 
 use App\Models\SubKegiatan;
 use Illuminate\Support\Facades\DB;
 
@@ -14,7 +15,10 @@ class InputData extends Component
     public $laporan;
     public $isOpenProgram = false;
     public $selectedProgramId;
-    public $inputs = []; 
+    
+    public $inputs = [];         // Untuk Detail (Sub Kegiatan)
+    public $programInputs = [];  // Untuk Program (Anggaran & Realisasi)
+    public $kegiatanInputs = []; // Untuk Kegiatan (Anggaran & Realisasi)
 
     public function mount($id)
     {
@@ -24,21 +28,43 @@ class InputData extends Component
 
     public function loadData()
     {
-        // Ambil data detail dengan relasi lengkap
+        // 1. Ambil data detail
         $details = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan.program'])
                     ->where('laporan_konsolidasi_id', $this->laporan->id)
                     ->get();
 
-        // Reset array inputs
+        // 2. Load ke $inputs
         $this->inputs = [];
-
         foreach ($details as $detail) {
             $this->inputs[$detail->id] = [
                 'sub_output' => $detail->sub_output,
                 'satuan_unit' => $detail->satuan_unit,
-                // Format angka dari DB ke tampilan "1.000.000" (String)
                 'pagu_anggaran' => $detail->pagu_anggaran ? number_format($detail->pagu_anggaran, 0, ',', '.') : '',
                 'pagu_realisasi' => $detail->pagu_realisasi ? number_format($detail->pagu_realisasi, 0, ',', '.') : '',
+            ];
+        }
+
+        // 3. Load Data PROGRAM (Anggaran + Realisasi)
+        $programIds = $details->pluck('subKegiatan.kegiatan.program_id')->unique()->filter();
+        $programs = Program::whereIn('id', $programIds)->get();
+        
+        $this->programInputs = [];
+        foreach($programs as $prog) {
+            $this->programInputs[$prog->id] = [
+                'pagu_anggaran' => $prog->pagu_anggaran ? number_format($prog->pagu_anggaran, 0, ',', '.') : '',
+                'pagu_realisasi' => $prog->pagu_realisasi ? number_format($prog->pagu_realisasi, 0, ',', '.') : '' // BARU
+            ];
+        }
+
+        // 4. Load Data KEGIATAN (Anggaran + Realisasi)
+        $kegiatanIds = $details->pluck('subKegiatan.kegiatan_id')->unique()->filter();
+        $kegiatans = Kegiatan::whereIn('id', $kegiatanIds)->get();
+
+        $this->kegiatanInputs = [];
+        foreach($kegiatans as $keg) {
+            $this->kegiatanInputs[$keg->id] = [
+                'pagu_anggaran' => $keg->pagu_anggaran ? number_format($keg->pagu_anggaran, 0, ',', '.') : '',
+                'pagu_realisasi' => $keg->pagu_realisasi ? number_format($keg->pagu_realisasi, 0, ',', '.') : '' // BARU
             ];
         }
     }
@@ -47,45 +73,42 @@ class InputData extends Component
     {
         DB::beginTransaction();
         try {
-            // Pastikan array inputs tidak kosong atau error
-            if (empty($this->inputs)) {
-                // Jika kosong, mungkin reload halaman diperlukan atau tidak ada data yang diubah
-                session()->flash('error', 'Tidak ada data untuk disimpan.');
-                return;
-            }
-
+            // --- 1. Simpan Data Detail ---
             foreach ($this->inputs as $detailId => $data) {
                 $detail = DetailLaporanKonsolidasi::find($detailId);
-                
                 if ($detail) {
-                    // Ambil data, default ke '0' jika kosong
-                    $rawAnggaran = isset($data['pagu_anggaran']) && $data['pagu_anggaran'] !== '' ? $data['pagu_anggaran'] : '0';
-                    $rawRealisasi = isset($data['pagu_realisasi']) && $data['pagu_realisasi'] !== '' ? $data['pagu_realisasi'] : '0';
-
-                    // Bersihkan format Rupiah (hanya ambil angka)
-                    // Contoh: "Rp 1.000.000" -> "1000000"
-                    // Contoh: "1000000" -> "1000000"
-                    $anggaranClean = preg_replace('/[^0-9]/', '', $rawAnggaran);
-                    $realisasiClean = preg_replace('/[^0-9]/', '', $rawRealisasi);
-
-                    // Konversi ke float, pastikan valid
-                    $anggaranVal = $anggaranClean === '' ? 0 : (float) $anggaranClean;
-                    $realisasiVal = $realisasiClean === '' ? 0 : (float) $realisasiClean;
-
                     $detail->update([
                         'sub_output'    => $data['sub_output'] ?? null,
                         'satuan_unit'   => $data['satuan_unit'] ?? null,
-                        'pagu_anggaran' => $anggaranVal,
-                        'pagu_realisasi'=> $realisasiVal,
+                        'pagu_anggaran' => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
+                        'pagu_realisasi'=> $this->cleanRupiah($data['pagu_realisasi'] ?? '0'),
+                    ]);
+                }
+            }
+
+            // --- 2. Simpan Data PROGRAM ---
+            if (!empty($this->programInputs)) {
+                foreach ($this->programInputs as $progId => $data) {
+                    Program::where('id', $progId)->update([
+                        'pagu_anggaran' => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
+                        'pagu_realisasi'=> $this->cleanRupiah($data['pagu_realisasi'] ?? '0') // BARU
+                    ]);
+                }
+            }
+
+            // --- 3. Simpan Data KEGIATAN ---
+            if (!empty($this->kegiatanInputs)) {
+                foreach ($this->kegiatanInputs as $kegId => $data) {
+                    Kegiatan::where('id', $kegId)->update([
+                        'pagu_anggaran' => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
+                        'pagu_realisasi'=> $this->cleanRupiah($data['pagu_realisasi'] ?? '0') // BARU
                     ]);
                 }
             }
             
             DB::commit();
-            
             $this->loadData(); 
-            
-            session()->flash('message', 'Data berhasil disimpan.');
+            session()->flash('message', 'Semua data berhasil disimpan.');
             
         } catch (\Exception $e) {
             DB::rollBack();
@@ -93,13 +116,17 @@ class InputData extends Component
         }
     }
 
+    // Helper kecil untuk bersihkan rupiah
+    private function cleanRupiah($val)
+    {
+        $clean = preg_replace('/[^0-9]/', '', $val);
+        return $clean === '' ? 0 : (float) $clean;
+    }
+
     public function deleteDetail($id)
     {
         DetailLaporanKonsolidasi::find($id)->delete();
-        // Jangan lupa hapus key dari array inputs agar tidak error di view
         unset($this->inputs[$id]);
-        
-        // Panggil loadData agar grouping ulang dan total terupdate
         $this->loadData(); 
     }
 
@@ -107,14 +134,22 @@ class InputData extends Component
     {
         $programs = Program::all(); 
 
-        // Query data untuk ditampilkan (perlu di-query ulang agar total update real-time)
         $detailsRaw = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan.program'])
                         ->where('laporan_konsolidasi_id', $this->laporan->id)
                         ->get();
 
-        // Hitung total (ambil data mentah dari DB)
-        $totalAnggaran = $detailsRaw->sum('pagu_anggaran');
-        $totalRealisasi = $detailsRaw->sum('pagu_realisasi');
+        $programIds = $detailsRaw->pluck('subKegiatan.kegiatan.program_id')->unique()->filter()->toArray();
+        $kegiatanIds = $detailsRaw->pluck('subKegiatan.kegiatan_id')->unique()->filter()->toArray();
+
+        // 1. HITUNG TOTAL ANGGARAN (Prog + Keg + Sub)
+        $totalAnggaran = Program::whereIn('id', $programIds)->sum('pagu_anggaran')
+                       + Kegiatan::whereIn('id', $kegiatanIds)->sum('pagu_anggaran')
+                       + $detailsRaw->sum('pagu_anggaran');
+        
+        // 2. HITUNG TOTAL REALISASI (Prog + Keg + Sub) -- BARU --
+        $totalRealisasi = Program::whereIn('id', $programIds)->sum('pagu_realisasi')
+                        + Kegiatan::whereIn('id', $kegiatanIds)->sum('pagu_realisasi')
+                        + $detailsRaw->sum('pagu_realisasi');
 
         // Logic Sorting & Grouping
         $detailsSorted = $detailsRaw->sortBy(function($detail) {
@@ -140,7 +175,6 @@ class InputData extends Component
         ]);
     }
 
-    // --- MODAL LOGIC (TETAP SAMA) ---
     public function openProgramModal() { $this->isOpenProgram = true; }
     public function closeProgramModal() { $this->isOpenProgram = false; $this->selectedProgramId = null; }
     

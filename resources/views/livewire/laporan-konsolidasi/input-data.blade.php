@@ -1,4 +1,4 @@
-<div class="space-y-6 pb-24">
+<div class="space-y-6">
     
     {{-- HEADER --}}
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
@@ -43,10 +43,20 @@
             Rincian Matrik Renstra
         </h3>
         
-        <button wire:click="openProgramModal" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
-            Tambah Program
-        </button>
+        <div class="flex items-center gap-3">
+            <button wire:click="openProgramModal" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95">
+                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
+                Tambah Program
+            </button>
+
+            <button wire:click="saveAll" 
+                    wire:loading.attr="disabled"
+                    class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
+                <svg wire:loading.remove class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
+                <svg wire:loading class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                Simpan
+            </button>
+        </div>
     </div>
 
     {{-- TABEL INPUT DATA --}}
@@ -75,7 +85,6 @@
                             $namaProgram = $program->nama ?? $program->nama_program ?? 'Program';
                         @endphp
                         
-                        {{-- FIX: wire:key wajib unik --}}
                         <tr class="bg-blue-100/70 border-t-2 border-blue-200" wire:key="prog-{{ $programId }}">
                             <td class="px-4 py-3 font-bold text-blue-900 border-r border-blue-200 font-mono text-center align-top">
                                 {{ $program->kode ?? '-' }}
@@ -83,7 +92,34 @@
                             <td class="px-4 py-3 font-bold text-blue-900 border-r border-blue-200">
                                 {{ $namaProgram }}
                             </td>
-                            <td colspan="5" class="bg-gray-50/50"></td>
+                            <td class="bg-gray-50/50 border-r border-blue-200"></td>
+                            <td class="bg-gray-50/50 border-r border-blue-200"></td>
+
+                            {{-- PROGRAM: Anggaran --}}
+                            <td class="p-2 border-r border-blue-200 align-top bg-blue-200/20" 
+                                x-data="rupiahInput('programInputs.{{ $programId }}.pagu_anggaran', '{{ $programInputs[$programId]['pagu_anggaran'] ?? 0 }}')">
+                                <input type="text" 
+                                       x-model="displayValue"
+                                       @input="updateWire"
+                                       @blur="updateWire"
+                                       class="w-full text-xs text-right font-bold text-blue-800 bg-white border border-blue-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md px-2 py-2 transition-all placeholder-blue-300"
+                                       placeholder="Rp 0"
+                                >
+                            </td>
+                            
+                            {{-- PROGRAM: Realisasi (BARU) --}}
+                            <td class="p-2 border-r border-blue-200 align-top bg-green-200/20" 
+                                x-data="rupiahInput('programInputs.{{ $programId }}.pagu_realisasi', '{{ $programInputs[$programId]['pagu_realisasi'] ?? 0 }}')">
+                                <input type="text" 
+                                       x-model="displayValue"
+                                       @input="updateWire"
+                                       @blur="updateWire"
+                                       class="w-full text-xs text-right font-bold text-green-800 bg-white border border-green-300 focus:border-green-500 focus:ring-1 focus:ring-green-500 rounded-md px-2 py-2 transition-all placeholder-green-300"
+                                       placeholder="Rp 0"
+                                >
+                            </td>
+
+                            <td class="bg-gray-50/50"></td>
                         </tr>
 
                         @foreach($kegiatanGroups as $kegiatanId => $details)
@@ -100,12 +136,38 @@
                                 <td class="px-4 py-2 font-semibold text-gray-700 border-r border-gray-200 pl-8">
                                     {{ $namaKegiatan }}
                                 </td>
-                                <td colspan="5"></td>
+                                <td class="border-r border-gray-200"></td>
+                                <td class="border-r border-gray-200"></td>
+
+                                {{-- KEGIATAN: Anggaran --}}
+                                <td class="p-2 border-r border-gray-200 align-top bg-gray-100/50" 
+                                    x-data="rupiahInput('kegiatanInputs.{{ $kegiatanId }}.pagu_anggaran', '{{ $kegiatanInputs[$kegiatanId]['pagu_anggaran'] ?? 0 }}')">
+                                    <input type="text" 
+                                           x-model="displayValue"
+                                           @input="updateWire"
+                                           @blur="updateWire"
+                                           class="w-full text-xs text-right font-semibold text-gray-700 bg-white border border-gray-300 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 rounded-md px-2 py-2 transition-all placeholder-gray-400"
+                                           placeholder="Rp 0"
+                                    >
+                                </td>
+
+                                {{-- KEGIATAN: Realisasi (BARU) --}}
+                                <td class="p-2 border-r border-gray-200 align-top bg-gray-100/50" 
+                                    x-data="rupiahInput('kegiatanInputs.{{ $kegiatanId }}.pagu_realisasi', '{{ $kegiatanInputs[$kegiatanId]['pagu_realisasi'] ?? 0 }}')">
+                                    <input type="text" 
+                                           x-model="displayValue"
+                                           @input="updateWire"
+                                           @blur="updateWire"
+                                           class="w-full text-xs text-right font-semibold text-gray-700 bg-white border border-gray-300 focus:border-green-500 focus:ring-1 focus:ring-green-500 rounded-md px-2 py-2 transition-all placeholder-gray-400"
+                                           placeholder="Rp 0"
+                                    >
+                                </td>
+
+                                <td></td>
                             </tr>
 
                             {{-- SUB KEGIATAN (INPUT ROW) --}}
                             @foreach($details as $detail)
-                                {{-- FIX: wire:key pada detail --}}
                                 <tr class="hover:bg-yellow-50 transition-colors group border-b border-gray-100 bg-white" 
                                     wire:key="detail-{{ $detail->id }}">
                                     
@@ -140,7 +202,7 @@
                                         >
                                     </td>
 
-                                    {{-- FIX: Input Anggaran menggunakan logic Alpine baru --}}
+                                    {{-- Anggaran Sub --}}
                                     <td class="p-2 border-r border-gray-200 align-top bg-blue-50/5" 
                                         x-data="rupiahInput('inputs.{{ $detail->id }}.pagu_anggaran', '{{ $inputs[$detail->id]['pagu_anggaran'] ?? 0 }}')">
                                         <input type="text" 
@@ -152,7 +214,7 @@
                                         >
                                     </td>
 
-                                    {{-- FIX: Input Realisasi menggunakan logic Alpine baru --}}
+                                    {{-- Realisasi Sub --}}
                                     <td class="p-2 border-r border-gray-200 align-top bg-green-50/5" 
                                         x-data="rupiahInput('inputs.{{ $detail->id }}.pagu_realisasi', '{{ $inputs[$detail->id]['pagu_realisasi'] ?? 0 }}')">
                                         <input type="text" 
@@ -193,25 +255,7 @@
         </div>
     </div>
 
-    {{-- FIXED BOTTOM BAR (SAVE BUTTON) --}}
-    <div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 shadow-lg p-4 z-40 md:pl-64">
-        <div class="max-w-7xl mx-auto flex justify-between items-center px-4">
-            <div class="text-xs text-gray-500 flex items-center gap-1">
-                <svg class="w-4 h-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>Jangan lupa klik simpan setelah mengubah data.</span>
-            </div>
-            
-            <button wire:click="saveAll" 
-                    wire:loading.attr="disabled"
-                    class="inline-flex items-center gap-2 px-6 py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
-                <svg wire:loading.remove class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                <svg wire:loading class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                Simpan Perubahan
-            </button>
-        </div>
-    </div>
-
-    {{-- SCRIPT ALPINE JS (FIXED) --}}
+    {{-- SCRIPT ALPINE JS (TETAP SAMA) --}}
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('rupiahInput', (modelName, initialValue) => ({
@@ -219,16 +263,11 @@
                 modelName: modelName,
 
                 init() {
-                    // Format nilai awal saat load
                     this.formatInitial(initialValue);
                 },
 
                 updateWire(e) {
-                    // 1. Format tampilan di input (agar user melihat "Rp ...")
                     this.formatCurrency(e);
-                    
-                    // 2. Kirim data (masih ada "Rp"-nya tidak masalah, PHP yang bersihkan) ke Livewire
-                    // Gunakan $wire.set agar lebih pasti tersimpan
                     this.$wire.set(this.modelName, this.displayValue);
                 },
 
