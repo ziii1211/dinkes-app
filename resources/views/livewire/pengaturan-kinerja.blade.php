@@ -26,7 +26,7 @@
 
         <div class="max-w-7xl mx-auto bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden relative mt-4">
             
-            {{-- TOMBOL KEMBALI (Absolute di Desktop, Relative di Mobile biar gak nutup konten) --}}
+            {{-- TOMBOL KEMBALI --}}
             <div class="md:absolute md:top-6 md:right-6 flex justify-end p-4 md:p-0">
                 <a href="{{ route('pengukuran.bulanan') }}" class="text-gray-400 hover:text-gray-600 transition-colors z-10 p-2 bg-gray-50 md:bg-transparent rounded-full md:rounded-none">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -123,74 +123,67 @@
                             @endforeach
                         </div>
 
-                        @if($selectedMonth == (int)date('n'))
-                            {{-- TABEL SCROLLABLE --}}
-                            <div class="overflow-x-auto border border-gray-200 rounded-lg animate-fade-in-down min-h-[300px]">
-                                <table class="w-full text-left text-sm border-collapse whitespace-nowrap md:whitespace-normal">
-                                    <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-bold tracking-wider">
-                                        <tr>
-                                            <th class="px-4 py-3 text-center border-b border-gray-200 w-12 min-w-[50px]">NO</th>
-                                            <th class="px-4 py-3 border-b border-gray-200 min-w-[250px] md:w-1/3">KINERJA UTAMA (KU)</th>
-                                            <th class="px-4 py-3 border-b border-gray-200 min-w-[250px] md:w-1/3">INDIKATOR KINERJA (IKU)</th>
-                                            <th class="px-4 py-3 text-center border-b border-gray-200 min-w-[100px]">SATUAN</th>
-                                            <th class="px-4 py-3 text-center border-b border-gray-200 min-w-[100px]">TARGET</th>
-                                            <th class="px-4 py-3 text-center border-b border-gray-200 min-w-[100px]">ARAH</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-gray-100 text-gray-700 bg-white">
-                                        @forelse($currentPk->sasarans as $index => $sasaran)
-                                            @php 
-                                                $indikators = $sasaran->indikators ?? collect([]);
-                                                $rowspan = $indikators->count() ?: 1;
-                                                $firstIndikator = $indikators->first();
-                                            @endphp
+                        {{-- PERBAIKAN: Hapus pengecekan IF current month. Tabel selalu muncul. --}}
+                        {{-- TABEL SCROLLABLE --}}
+                        <div class="overflow-x-auto border border-gray-200 rounded-lg animate-fade-in-down min-h-[300px]">
+                            <table class="w-full text-left text-sm border-collapse whitespace-nowrap md:whitespace-normal">
+                                <thead class="bg-gray-50 text-gray-500 uppercase text-xs font-bold tracking-wider">
+                                    <tr>
+                                        <th class="px-4 py-3 text-center border-b border-gray-200 w-12 min-w-[50px]">NO</th>
+                                        <th class="px-4 py-3 border-b border-gray-200 min-w-[250px] md:w-1/3">KINERJA UTAMA (KU)</th>
+                                        <th class="px-4 py-3 border-b border-gray-200 min-w-[250px] md:w-1/3">INDIKATOR KINERJA (IKU)</th>
+                                        <th class="px-4 py-3 text-center border-b border-gray-200 min-w-[100px]">SATUAN</th>
+                                        <th class="px-4 py-3 text-center border-b border-gray-200 min-w-[100px]">TARGET</th>
+                                        <th class="px-4 py-3 text-center border-b border-gray-200 min-w-[100px]">ARAH</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-100 text-gray-700 bg-white">
+                                    @forelse($currentPk->sasarans as $index => $sasaran)
+                                        @php 
+                                            $indikators = $sasaran->indikators ?? collect([]);
+                                            $rowspan = $indikators->count() ?: 1;
+                                            $firstIndikator = $indikators->first();
+                                        @endphp
 
-                                            <tr class="hover:bg-gray-50 transition-colors">
-                                                <td class="px-4 py-4 text-center align-top border-r border-gray-50 text-gray-500 font-medium" rowspan="{{ $rowspan }}">
-                                                    {{ $index + 1 }}
-                                                </td>
-                                                <td class="px-4 py-4 align-top border-r border-gray-50 font-medium text-gray-800 leading-relaxed whitespace-normal" rowspan="{{ $rowspan }}">
-                                                    {{ $sasaran->sasaran }}
-                                                </td>
+                                        <tr class="hover:bg-gray-50 transition-colors">
+                                            <td class="px-4 py-4 text-center align-top border-r border-gray-50 text-gray-500 font-medium" rowspan="{{ $rowspan }}">
+                                                {{ $index + 1 }}
+                                            </td>
+                                            <td class="px-4 py-4 align-top border-r border-gray-50 font-medium text-gray-800 leading-relaxed whitespace-normal" rowspan="{{ $rowspan }}">
+                                                {{ $sasaran->sasaran }}
+                                            </td>
 
-                                                @if($firstIndikator)
-                                                    <td class="px-4 py-4 align-top border-r border-gray-50 whitespace-normal">{{ $firstIndikator->nama_indikator }}</td>
-                                                    <td class="px-4 py-4 text-center align-top border-r border-gray-50">{{ $firstIndikator->satuan }}</td>
-                                                    <td class="px-4 py-4 text-center align-top font-bold text-gray-800 border-r border-gray-50">{{ $firstIndikator->target }}</td>
-                                                    <td class="px-4 py-4 text-center align-top uppercase text-xs font-bold text-gray-500">{{ $firstIndikator->arah }}</td>
-                                                @else
-                                                    <td colspan="4" class="px-4 py-4 text-center italic text-gray-400">Tidak ada indikator</td>
-                                                @endif
-                                            </tr>
-
-                                            @if($rowspan > 1)
-                                                @foreach($indikators->skip(1) as $ind)
-                                                <tr class="hover:bg-gray-50 transition-colors">
-                                                    <td class="px-4 py-4 align-top border-r border-gray-50 whitespace-normal">{{ $ind->nama_indikator }}</td>
-                                                    <td class="px-4 py-4 text-center align-top border-r border-gray-50">{{ $ind->satuan }}</td>
-                                                    <td class="px-4 py-4 text-center align-top font-bold text-gray-800 border-r border-gray-50">{{ $ind->target }}</td>
-                                                    <td class="px-4 py-4 text-center align-top uppercase text-xs font-bold text-gray-500">{{ $ind->arah }}</td>
-                                                </tr>
-                                                @endforeach
+                                            @if($firstIndikator)
+                                                <td class="px-4 py-4 align-top border-r border-gray-50 whitespace-normal">{{ $firstIndikator->nama_indikator }}</td>
+                                                <td class="px-4 py-4 text-center align-top border-r border-gray-50">{{ $firstIndikator->satuan }}</td>
+                                                <td class="px-4 py-4 text-center align-top font-bold text-gray-800 border-r border-gray-50">{{ $firstIndikator->target }}</td>
+                                                <td class="px-4 py-4 text-center align-top uppercase text-xs font-bold text-gray-500">{{ $firstIndikator->arah }}</td>
+                                            @else
+                                                <td colspan="4" class="px-4 py-4 text-center italic text-gray-400">Tidak ada indikator</td>
                                             @endif
+                                        </tr>
 
-                                        @empty
-                                            <tr>
-                                                <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic bg-gray-50">
-                                                    Data sasaran kinerja kosong.
-                                                </td>
+                                        @if($rowspan > 1)
+                                            @foreach($indikators->skip(1) as $ind)
+                                            <tr class="hover:bg-gray-50 transition-colors">
+                                                <td class="px-4 py-4 align-top border-r border-gray-50 whitespace-normal">{{ $ind->nama_indikator }}</td>
+                                                <td class="px-4 py-4 text-center align-top border-r border-gray-50">{{ $ind->satuan }}</td>
+                                                <td class="px-4 py-4 text-center align-top font-bold text-gray-800 border-r border-gray-50">{{ $ind->target }}</td>
+                                                <td class="px-4 py-4 text-center align-top uppercase text-xs font-bold text-gray-500">{{ $ind->arah }}</td>
                                             </tr>
-                                        @endforelse
-                                    </tbody>
-                                </table>
-                            </div>
-                        @else
-                            <div class="py-12 flex flex-col items-center justify-center text-gray-400 border-2 border-dashed border-gray-200 rounded-lg animate-fade-in-down">
-                                <svg class="w-16 h-16 text-gray-200 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                                <p class="text-lg font-medium text-gray-500">Data untuk bulan {{ $months[$selectedMonth] }} belum tersedia.</p>
-                                <p class="text-sm mt-1">Data hanya tersedia untuk bulan berjalan ({{ $months[(int)date('n')] }}).</p>
-                            </div>
-                        @endif
+                                            @endforeach
+                                        @endif
+
+                                    @empty
+                                        <tr>
+                                            <td colspan="6" class="px-6 py-12 text-center text-gray-400 italic bg-gray-50">
+                                                Data sasaran kinerja kosong.
+                                            </td>
+                                        </tr>
+                                    @endforelse
+                                </tbody>
+                            </table>
+                        </div>
 
                     </div>
                 </div>

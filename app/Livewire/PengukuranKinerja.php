@@ -80,7 +80,26 @@ class PengukuranKinerja extends Component
         $defaultTahun = $lastPk ? $lastPk->tahun : date('Y');
         $this->tahun = request()->query('tahun', $defaultTahun);
         
-        $this->selectedMonth = (int) date('n');
+        // --- PERBAIKAN LOGIKA DEFAULT BULAN (SOLUSI MASALAH USER) ---
+        // Cek apakah ada jadwal yang sedang aktif (OPEN) saat ini.
+        // Jika pegawai akses di bulan Februari, tapi jadwal Januari masih dibuka (misal sampai tgl 6 Feb),
+        // maka otomatis pilih bulan Januari.
+        
+        $now = Carbon::now();
+        $activeSchedule = JadwalPengukuran::where('tahun', $this->tahun)
+            ->where('is_active', true)
+            ->whereDate('tanggal_mulai', '<=', $now)
+            ->whereDate('tanggal_selesai', '>=', $now)
+            ->first();
+
+        if ($activeSchedule) {
+            // Jika ada jadwal aktif, arahkan user langsung ke bulan tersebut
+            $this->selectedMonth = $activeSchedule->bulan;
+        } else {
+            // Jika tidak ada jadwal aktif, baru default ke bulan kalender saat ini
+            $this->selectedMonth = (int) date('n');
+        }
+        // -------------------------------------------------------------
 
         $currentYear = date('Y');
         $this->availableYears = range($currentYear - 2, $currentYear + 5);
@@ -167,11 +186,21 @@ class PengukuranKinerja extends Component
         // Cek Jadwal dulu, karena ini bisa menganulir $canEdit
         $this->checkScheduleStatus();
 
-        // 1. Ambil PK Utama
+        // --- PERBAIKAN LOGIKA PENGAMBILAN PK (VERSIONING) ---
+        // Ambil PK yang statusnya disetujui DAN tanggal pembuatannya (created_at)
+        // LEBIH KECIL ATAU SAMA DENGAN bulan yang sedang dipilih.
+        // Lalu ambil yang paling baru (Latest) di antara yang memenuhi syarat tersebut.
+        
         $this->pk = PerjanjianKinerja::with(['sasarans.indikators'])
             ->where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
             ->where('status_verifikasi', 'disetujui')
+            ->where(function($query) {
+                // Pastikan created_at tidak melebihi bulan yang dipilih
+                $query->whereYear('created_at', $this->tahun)
+                      ->whereMonth('created_at', '<=', $this->selectedMonth);
+            })
+            ->latest('created_at') // Ambil versi terbaru yang valid per bulan tersebut
             ->first();
 
         if ($this->pk) {
@@ -330,7 +359,7 @@ class PengukuranKinerja extends Component
         ), $namaFile);
     }
 
-    // --- STATUS JADWAL ---
+    // --- STATUS JADWAL (GLOBAL OPEN ACCESS) ---
     public function checkScheduleStatus()
     {
         $isAdmin = Auth::user()->role === 'admin';
@@ -344,49 +373,57 @@ class PengukuranKinerja extends Component
             return;
         }
 
-        // 2. Ambil Jadwal dari DB
-        $jadwal = JadwalPengukuran::where('tahun', $this->tahun)
-            ->where('bulan', $this->selectedMonth)
-            ->first();
-
         $now = Carbon::now();
 
-        // 3. Logika Penentuan Pesan & Status
-        if ($jadwal && $jadwal->is_active) {
-            // PERBAIKAN 3: Jika jadwal ada, Admin juga melihat hitung mundur (real time info)
-            // Tapi Admin tetap bisa edit (isScheduleOpen = true) meskipun waktu habis.
-            
-            $start = Carbon::parse($jadwal->tanggal_mulai)->startOfDay();
-            $end = Carbon::parse($jadwal->tanggal_selesai)->endOfDay();
-            $this->deadlineDate = $end->translatedFormat('d F Y H:i') . ' WITA';
+        // 2. LOGIKA GLOBAL OPEN ACCESS (REVISI BARU)
+        // Kita HAPUS filter ->where('bulan', ...)
+        // Logic: Cek apakah ada SEBARANG jadwal yang aktif di tahun ini.
+        // Jika Admin buka jadwal "Januari", maka Februari, Maret, dst otomatis ikut terbuka.
+        
+        $activeSchedule = JadwalPengukuran::where('tahun', $this->tahun)
+            ->where('is_active', true)
+            ->whereDate('tanggal_mulai', '<=', $now)
+            ->whereDate('tanggal_selesai', '>=', $now)
+            ->orderBy('tanggal_selesai', 'desc') // Ambil yang deadline-nya paling lama
+            ->first();
 
-            if ($now->between($start, $end)) {
-                // MASIH DALAM PERIODE
-                $this->isScheduleOpen = true;
-                $diff = $now->diff($end);
-                $this->scheduleMessage = ($diff->days > 0) 
-                    ? "Sisa Waktu: {$diff->days} Hari {$diff->h} Jam lagi." 
-                    : "Segera Berakhir: {$diff->h} Jam {$diff->i} Menit lagi.";
-            } else if ($now->gt($end)) {
-                // SUDAH LEWAT TENGGAT
-                // Admin tetap bisa akses (Open), User biasa terkunci (False)
-                $this->isScheduleOpen = $isAdmin ? true : false;
-                $this->scheduleMessage = "Batas waktu telah berakhir pada {$this->deadlineDate}.";
-            } else {
-                // BELUM MULAI
-                // Admin tetap bisa akses (Open), User biasa terkunci (False)
-                $this->isScheduleOpen = $isAdmin ? true : false;
-                $this->scheduleMessage = "Jadwal belum dimulai. Dibuka pada " . $start->translatedFormat('d F Y');
-            }
+        // 3. Logika Penentuan Pesan & Status
+        if ($activeSchedule) {
+            $this->isScheduleOpen = true;
+            
+            $end = Carbon::parse($activeSchedule->tanggal_selesai)->endOfDay();
+            $this->deadlineDate = $end->translatedFormat('d F Y H:i') . ' WITA';
+            $diff = $now->diff($end);
+
+            $sisaWaktu = ($diff->days > 0) 
+                    ? "{$diff->days} Hari {$diff->h} Jam lagi" 
+                    : "{$diff->h} Jam {$diff->i} Menit lagi";
+
+            // Karena ini Global Open, pesannya kita buat umum
+            $this->scheduleMessage = "Jadwal Pengisian Terbuka (Sisa: {$sisaWaktu}).";
+
         } else {
-            // JIKA JADWAL BELUM DIATUR/TIDAK ADA DI DB
+            // JIKA TIDAK ADA JADWAL AKTIF SAMA SEKALI
+            
+            // Cek history jadwal terakhir di bulan yang dipilih user (hanya untuk info expired)
+            $expiredSchedule = JadwalPengukuran::where('tahun', $this->tahun)
+                ->where('bulan', $this->selectedMonth)
+                ->whereDate('tanggal_selesai', '<', $now)
+                ->first();
+
             if ($isAdmin) {
                 $this->isScheduleOpen = true;
-                $this->scheduleMessage = "Mode Admin: Akses penuh (Bypass jadwal / Belum disetting).";
+                $this->scheduleMessage = "Mode Admin: Akses penuh.";
             } else {
                 $this->isScheduleOpen = false;
-                $this->deadlineDate = '-';
-                $this->scheduleMessage = "Jadwal pengisian belum dibuka oleh Admin.";
+                if ($expiredSchedule) {
+                    $end = Carbon::parse($expiredSchedule->tanggal_selesai)->endOfDay();
+                    $this->deadlineDate = $end->translatedFormat('d F Y H:i') . ' WITA';
+                    $this->scheduleMessage = "Batas waktu untuk bulan ini telah berakhir pada {$this->deadlineDate}.";
+                } else {
+                    $this->deadlineDate = '-';
+                    $this->scheduleMessage = "Tidak ada Jadwal Pengisian yang aktif saat ini.";
+                }
             }
         }
 
