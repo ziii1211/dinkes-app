@@ -10,12 +10,10 @@ use App\Models\RealisasiKinerja;
 use App\Models\RealisasiRencanaAksi;
 use App\Models\JadwalPengukuran;
 use App\Models\PenjelasanKinerja;
-use App\Models\Pegawai; // PENTING: Import Model Pegawai
+use App\Models\Pegawai; 
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
-
-// Tambahkan Import Ini untuk Fitur Export Excel
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LaporanKinerjaBulananExport;
 
@@ -24,18 +22,17 @@ class PengukuranKinerja extends Component
     public $jabatan;
     public $pegawai;
 
+    // Filter
     public $tahun;
     public $selectedMonth;
-
     public $availableYears = [];
 
+    // Data Utama
     public $pk = null;
     public $rencanaAksis = [];
-
-    // Properti Penjelasan Kinerja (Tabel 3 Kolom)
     public $penjelasans = [];
     
-    // --- TAMBAHAN BARU: ID untuk Edit Penjelasan ---
+    // ID untuk Edit Penjelasan
     public $penjelasanId = null; 
 
     // Form Input Penjelasan (3 Field Manual)
@@ -49,8 +46,8 @@ class PengukuranKinerja extends Component
     public $scheduleMessage = '';
 
     // --- ACCESS CONTROL STATES ---
-    public $canEdit = false;     // Untuk Pegawai (Input Realisasi) & Admin
-    public $canComment = false;  // Untuk Pimpinan (Beri Tanggapan) & Admin
+    public $canEdit = false;     
+    public $canComment = false;  
 
     // --- MODAL STATES ---
     public $isOpenRealisasi = false;
@@ -79,15 +76,11 @@ class PengukuranKinerja extends Component
             ->latest('tahun')
             ->first();
 
-        // PERBAIKAN 1: Ambil tahun dari URL (request get) jika ada, untuk menghindari reset saat redirect
+        // Ambil tahun dari URL (request get) jika ada
         $defaultTahun = $lastPk ? $lastPk->tahun : date('Y');
         $this->tahun = request()->query('tahun', $defaultTahun);
         
-        // --- PERBAIKAN LOGIKA DEFAULT BULAN (SOLUSI MASALAH USER) ---
-        // Cek apakah ada jadwal yang sedang aktif (OPEN) saat ini.
-        // Jika pegawai akses di bulan Februari, tapi jadwal Januari masih dibuka (misal sampai tgl 6 Feb),
-        // maka otomatis pilih bulan Januari.
-        
+        // --- LOGIKA DEFAULT BULAN ---
         $now = Carbon::now();
         $activeSchedule = JadwalPengukuran::where('tahun', $this->tahun)
             ->where('is_active', true)
@@ -96,13 +89,10 @@ class PengukuranKinerja extends Component
             ->first();
 
         if ($activeSchedule) {
-            // Jika ada jadwal aktif, arahkan user langsung ke bulan tersebut
             $this->selectedMonth = $activeSchedule->bulan;
         } else {
-            // Jika tidak ada jadwal aktif, baru default ke bulan kalender saat ini
             $this->selectedMonth = (int) date('n');
         }
-        // -------------------------------------------------------------
 
         $currentYear = date('Y');
         $this->availableYears = range($currentYear - 2, $currentYear + 5);
@@ -114,48 +104,34 @@ class PengukuranKinerja extends Component
         $this->loadData();
     }
 
-    /**
-     * LOGIKA UTAMA OTORISASI (Authorization)
-     */
     private function checkAccess()
     {
         $user = Auth::user();
-
-        // Reset dulu ke false
         $this->canEdit = false;
         $this->canComment = false;
 
-        // 1. ADMIN: Dewa (Bisa Edit Data & Bisa Komentar di mana saja)
+        // 1. ADMIN
         if ($user->role === 'admin') {
             $this->canEdit = true;
             $this->canComment = true;
             return;
         }
 
-        // Cari Data Pegawai dari User yang sedang login
-        // (Asumsi: User NIP sama dengan Pegawai NIP)
         $currentUserPegawai = Pegawai::where('nip', $user->nip)->first();
         $currentUserJabatanId = $currentUserPegawai ? $currentUserPegawai->jabatan_id : null;
 
-        // 2. PEGAWAI: Hanya bisa Edit data miliknya sendiri
-        // Logika: Role harus 'pegawai' DAN NIP cocok
+        // 2. PEGAWAI
         if ($user->role === 'pegawai') {
             if ($this->pegawai && $user->nip === $this->pegawai->nip) {
                 $this->canEdit = true; 
             }
         }
 
-        // 3. PIMPINAN: Hanya bisa Menanggapi
+        // 3. PIMPINAN
         if ($user->role === 'pimpinan' && $currentUserJabatanId) {
-            
-            // A. Menanggapi Bawahan Langsung (Hierarki Parent-Child)
-            // Jabatan yang dibuka (child) memiliki parent_id == Jabatan User Login
             if ($this->jabatan->parent_id == $currentUserJabatanId) {
                 $this->canComment = true;
             }
-
-            // B. Khusus Kepala Dinas (Top Level) -> Bisa Tanggapan Sendiri
-            // Syarat: Sedang lihat jabatan sendiri DAN tidak punya atasan (parent_id NULL)
             if ($this->jabatan->id == $currentUserJabatanId && is_null($this->jabatan->parent_id)) {
                 $this->canComment = true;
             }
@@ -165,7 +141,6 @@ class PengukuranKinerja extends Component
     public function setTahun($year)
     {
         $this->tahun = $year;
-        // PERBAIKAN 2: Gunakan redirect()->route() agar method tetap GET dan tidak error MethodNotAllowed
         return redirect()->route('pengukuran.detail', [
             'jabatanId' => $this->jabatan->id,
             'tahun' => $year
@@ -184,26 +159,20 @@ class PengukuranKinerja extends Component
         return (float) str_replace(',', '.', (string) $value);
     }
 
+    /**
+     * LOGIKA UTAMA: Mengambil Data PK, Rencana Aksi & Realisasi
+     */
     public function loadData()
     {
-        // Cek Jadwal dulu, karena ini bisa menganulir $canEdit
         $this->checkScheduleStatus();
 
-        // --- PERBAIKAN LOGIKA PENGAMBILAN PK (VERSIONING) ---
-        // Ambil PK yang statusnya disetujui DAN tanggal pembuatannya (created_at)
-        // LEBIH KECIL ATAU SAMA DENGAN bulan yang sedang dipilih.
-        // Lalu ambil yang paling baru (Latest) di antara yang memenuhi syarat tersebut.
-        
+        // 1. Ambil PK (Filter berdasarkan kolom bulan yang dipilih)
         $this->pk = PerjanjianKinerja::with(['sasarans.indikators'])
             ->where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
             ->where('status_verifikasi', 'disetujui')
-            ->where(function($query) {
-                // Pastikan created_at tidak melebihi bulan yang dipilih
-                $query->whereYear('created_at', $this->tahun)
-                      ->whereMonth('created_at', '<=', $this->selectedMonth);
-            })
-            ->latest('created_at') // Ambil versi terbaru yang valid per bulan tersebut
+            ->where('bulan', $this->selectedMonth) // Filter Bulan
+            ->latest('id')
             ->first();
 
         if ($this->pk) {
@@ -251,9 +220,10 @@ class PengukuranKinerja extends Component
             }
         }
 
-        // 2. Ambil Rencana Aksi
+        // 2. Ambil Rencana Aksi (Filter by Bulan & Tahun)
         $this->rencanaAksis = RencanaAksi::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
+            ->where('bulan', $this->selectedMonth) // <--- PERBAIKAN: Filter Bulan
             ->get();
 
         $realisasiAksiMap = RealisasiRencanaAksi::whereIn('rencana_aksi_id', $this->rencanaAksis->pluck('id'))
@@ -294,31 +264,24 @@ class PengukuranKinerja extends Component
     // --- MANAJEMEN PENJELASAN KINERJA ---
     public function openTambahPenjelasan()
     {
-        // Proteksi Akses
         if (!$this->canEdit) {
             $this->dispatch('alert', ['type' => 'error', 'message' => 'Akses ditolak.']);
             return;
         }
-
-        // UPDATED: Reset form dan ID (kosongkan ID agar jadi mode Tambah)
         $this->reset(['formUpaya', 'formHambatan', 'formRtl', 'penjelasanId']);
         $this->isOpenTambahPenjelasan = true;
     }
 
-    // --- TAMBAHAN BARU: Method untuk Edit ---
     public function editPenjelasan($id)
     {
         if (!$this->canEdit) return;
 
         $item = PenjelasanKinerja::find($id);
-        
-        // Pastikan item ada dan milik jabatan yang sedang dibuka
         if ($item && $item->jabatan_id == $this->jabatan->id) {
             $this->penjelasanId = $item->id;
             $this->formUpaya = $item->upaya;
             $this->formHambatan = $item->hambatan;
             $this->formRtl = $item->tindak_lanjut;
-            
             $this->isOpenTambahPenjelasan = true;
         }
     }
@@ -330,7 +293,7 @@ class PengukuranKinerja extends Component
 
     public function simpanPenjelasan()
     {
-        if (!$this->canEdit) return; // Proteksi Backend
+        if (!$this->canEdit) return;
 
         $this->validate([
             'formUpaya' => 'nullable|string',
@@ -338,9 +301,8 @@ class PengukuranKinerja extends Component
             'formRtl' => 'nullable|string',
         ]);
 
-        // UPDATED: Menggunakan updateOrCreate untuk menangani Edit & Tambah
         PenjelasanKinerja::updateOrCreate(
-            ['id' => $this->penjelasanId], // Jika ada ID, lakukan Update. Jika null, Create baru.
+            ['id' => $this->penjelasanId],
             [
                 'jabatan_id' => $this->jabatan->id,
                 'bulan' => $this->selectedMonth,
@@ -358,7 +320,7 @@ class PengukuranKinerja extends Component
 
     public function hapusPenjelasan($id)
     {
-        if (!$this->canEdit) return; // Proteksi Backend
+        if (!$this->canEdit) return;
 
         $item = PenjelasanKinerja::find($id);
         if ($item && $item->jabatan_id == $this->jabatan->id) {
@@ -385,12 +347,11 @@ class PengukuranKinerja extends Component
         ), $namaFile);
     }
 
-    // --- STATUS JADWAL (GLOBAL OPEN ACCESS) ---
+    // --- STATUS JADWAL ---
     public function checkScheduleStatus()
     {
         $isAdmin = Auth::user()->role === 'admin';
 
-        // 1. Cek Model
         if (!class_exists(JadwalPengukuran::class)) {
             if ($isAdmin) {
                 $this->isScheduleOpen = true;
@@ -400,38 +361,23 @@ class PengukuranKinerja extends Component
         }
 
         $now = Carbon::now();
-
-        // 2. LOGIKA GLOBAL OPEN ACCESS (REVISI BARU)
-        // Kita HAPUS filter ->where('bulan', ...)
-        // Logic: Cek apakah ada SEBARANG jadwal yang aktif di tahun ini.
-        // Jika Admin buka jadwal "Januari", maka Februari, Maret, dst otomatis ikut terbuka.
-        
         $activeSchedule = JadwalPengukuran::where('tahun', $this->tahun)
             ->where('is_active', true)
             ->whereDate('tanggal_mulai', '<=', $now)
             ->whereDate('tanggal_selesai', '>=', $now)
-            ->orderBy('tanggal_selesai', 'desc') // Ambil yang deadline-nya paling lama
+            ->orderBy('tanggal_selesai', 'desc')
             ->first();
 
-        // 3. Logika Penentuan Pesan & Status
         if ($activeSchedule) {
             $this->isScheduleOpen = true;
-            
             $end = Carbon::parse($activeSchedule->tanggal_selesai)->endOfDay();
             $this->deadlineDate = $end->translatedFormat('d F Y H:i') . ' WITA';
             $diff = $now->diff($end);
-
             $sisaWaktu = ($diff->days > 0) 
                     ? "{$diff->days} Hari {$diff->h} Jam lagi" 
                     : "{$diff->h} Jam {$diff->i} Menit lagi";
-
-            // Karena ini Global Open, pesannya kita buat umum
             $this->scheduleMessage = "Jadwal Pengisian Terbuka (Sisa: {$sisaWaktu}).";
-
         } else {
-            // JIKA TIDAK ADA JADWAL AKTIF SAMA SEKALI
-            
-            // Cek history jadwal terakhir di bulan yang dipilih user (hanya untuk info expired)
             $expiredSchedule = JadwalPengukuran::where('tahun', $this->tahun)
                 ->where('bulan', $this->selectedMonth)
                 ->whereDate('tanggal_selesai', '<', $now)
@@ -453,8 +399,6 @@ class PengukuranKinerja extends Component
             }
         }
 
-        // Finalisasi: Pastikan Admin selalu bisa edit, 
-        // User hanya bisa edit jika isScheduleOpen bernilai true.
         if (!$this->isScheduleOpen && !$isAdmin) {
             $this->canEdit = false;
         }
@@ -463,7 +407,6 @@ class PengukuranKinerja extends Component
     // --- MODAL JADWAL ---
     public function openAturJadwal()
     {
-        // Hanya Admin
         if (Auth::user()->role !== 'admin') return;
 
         $jadwal = JadwalPengukuran::where('tahun', $this->tahun)->where('bulan', $this->selectedMonth)->first();
@@ -502,12 +445,10 @@ class PengukuranKinerja extends Component
     // --- REALISASI INDIKATOR ---
     public function openRealisasi($id, $nama, $target, $satuan, $arah = '')
     {
-        // Proteksi
         if (!$this->canEdit) {
             $this->dispatch('alert', ['type' => 'error', 'message' => 'Anda tidak memiliki akses edit (Jadwal tutup atau bukan data Anda).']);
             return;
         }
-
         $this->indikatorId = $id;
         $this->indikatorNama = $nama;
         $this->indikatorTarget = $target;
@@ -528,7 +469,7 @@ class PengukuranKinerja extends Component
 
     public function simpanRealisasi()
     {
-        if (!$this->canEdit) return; // Proteksi Backend
+        if (!$this->canEdit) return;
 
         $this->validate(['realisasiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
         $cleanRealisasi = str_replace(',', '.', $this->realisasiInput);
@@ -552,7 +493,6 @@ class PengukuranKinerja extends Component
             $this->dispatch('alert', ['type' => 'error', 'message' => 'Akses ditolak.']);
             return;
         }
-
         $this->aksiId = $id;
         $aksi = RencanaAksi::find($id);
         $this->aksiNama = $aksi->nama_aksi;
@@ -570,25 +510,22 @@ class PengukuranKinerja extends Component
 
     public function simpanRealisasiAksi()
     {
-        if (!$this->canEdit) return; // Proteksi Backend
-
+        if (!$this->canEdit) return;
         $this->validate(['realisasiAksiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
         $cleanRealisasi = str_replace(',', '.', $this->realisasiAksiInput);
         RealisasiRencanaAksi::updateOrCreate(
             ['rencana_aksi_id' => $this->aksiId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun],
             ['realisasi' => $cleanRealisasi]
         );
-
         $this->closeRealisasiAksi();
         session()->flash('message', 'Realisasi aksi berhasil disimpan.');
         return redirect(request()->header('Referer'));
     }
 
-    // --- RENCANA AKSI MANUAL ---
+    // --- RENCANA AKSI MANUAL (CRUD) ---
     public function openTambahAksi()
     {
         if (!$this->canEdit) return;
-
         $this->reset(['formAksiNama', 'formAksiTarget', 'formAksiSatuan']);
         $this->isOpenTambahAksi = true;
     }
@@ -600,13 +537,15 @@ class PengukuranKinerja extends Component
 
     public function storeRencanaAksi()
     {
-        if (!$this->canEdit) return; // Proteksi Backend
-
+        if (!$this->canEdit) return;
+        
         $this->validate(['formAksiNama' => 'required', 'formAksiTarget' => 'required', 'formAksiSatuan' => 'required']);
         $cleanTarget = str_replace(',', '.', $this->formAksiTarget);
+        
         RencanaAksi::create([
             'jabatan_id' => $this->jabatan->id,
             'tahun' => $this->tahun,
+            'bulan' => $this->selectedMonth, // <--- PENTING: Simpan Bulan
             'nama_aksi' => $this->formAksiNama,
             'target' => $cleanTarget,
             'satuan' => $this->formAksiSatuan
@@ -619,8 +558,7 @@ class PengukuranKinerja extends Component
 
     public function deleteRencanaAksi($id)
     {
-        if (!$this->canEdit) return; // Proteksi Backend
-
+        if (!$this->canEdit) return;
         $aksi = RencanaAksi::find($id);
         if ($aksi) {
             RealisasiRencanaAksi::where('rencana_aksi_id', $id)->delete();
@@ -630,15 +568,13 @@ class PengukuranKinerja extends Component
         return redirect(request()->header('Referer'));
     }
 
-    // --- TANGGAPAN (Fitur Khusus Pimpinan & Admin) ---
+    // --- TANGGAPAN (PIMPINAN) ---
     public function openTanggapan($id, $nama)
     {
-        // Gunakan checkAccess ($canComment)
         if (!$this->canComment) {
             $this->dispatch('alert', ['type' => 'error', 'message' => 'Anda tidak memiliki wewenang untuk menanggapi bawahan ini.']);
             return;
         }
-
         $this->indikatorId = $id;
         $this->indikatorNama = $nama;
         $data = RealisasiKinerja::where('indikator_id', $id)->where('bulan', $this->selectedMonth)->where('tahun', $this->tahun)->first();
@@ -653,14 +589,11 @@ class PengukuranKinerja extends Component
 
     public function simpanTanggapan()
     {
-        // Proteksi Backend
         if (!$this->canComment) return;
-
         RealisasiKinerja::updateOrCreate(
             ['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun],
             ['tanggapan' => $this->tanggapanInput]
         );
-
         $this->closeTanggapan();
         session()->flash('message', 'Tanggapan berhasil disimpan.');
         return redirect(request()->header('Referer'));

@@ -17,6 +17,7 @@ class RencanaAksi extends Model
         'nama_aksi',
         'target',
         'satuan',
+        'bulan',
     ];
 
     public function jabatan()

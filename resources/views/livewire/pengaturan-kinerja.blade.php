@@ -5,7 +5,6 @@
     </x-slot>
 
     <x-slot:breadcrumb>
-        {{-- BREADCRUMB RESPONSIF --}}
         <div class="overflow-x-auto whitespace-nowrap pb-2">
             <a href="/" class="hover:text-blue-100 transition-colors">Dashboard</a>
             <span class="mx-2">/</span>
@@ -52,27 +51,33 @@
                     </div>
                 </div>
 
-                {{-- PILIH DOKUMEN PK --}}
+                {{-- PILIH DOKUMEN PK (METODE BARU: 1 OPSI) --}}
                 <div class="bg-gray-50 rounded-xl p-4 md:p-6 border border-gray-100">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Pilih Dokumen PK (status: Terpublikasi)</label>
                     <div class="flex flex-col md:flex-row gap-4">
                         <div class="flex-1">
-                            <select wire:model="selectedPkId" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer">
-                                <option value="">-- Pilih PK --</option>
-                                @forelse($pkList as $pk)
-                                    <option value="{{ $pk->id }}">{{ $pk->keterangan }}</option>
-                                @empty
-                                    <option value="" disabled>Tidak ada PK Terpublikasi di tahun {{ $filterTahun }}</option>
-                                @endforelse
+                            {{-- Dropdown terikat ke selectedPkOption --}}
+                            <select wire:model="selectedPkOption" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm text-gray-600 focus:ring-2 focus:ring-blue-500 outline-none bg-white cursor-pointer">
+                                @if(empty($pkList))
+                                    <option value="">-- Tidak ada PK Terpublikasi di tahun {{ $filterTahun }} --</option>
+                                @else
+                                    {{-- Loop array manual --}}
+                                    @foreach($pkList as $option)
+                                        <option value="{{ $option['value'] }}">{{ $option['label'] }}</option>
+                                    @endforeach
+                                @endif
                             </select>
                         </div>
-                        <button wire:click="loadPkDetail" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-colors">
+                        {{-- Tombol memanggil fungsi tampilkanPk --}}
+                        <button wire:click="tampilkanPk" class="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2.5 rounded-lg text-sm font-bold flex items-center justify-center gap-2 shadow-sm transition-colors">
                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
                             Tampilkan PK
                         </button>
                     </div>
                 </div>
 
+                {{-- TAMPILAN DATA (TABEL & BULAN) --}}
+                {{-- Kita gunakan currentPk sebagai penanda data sudah diload --}}
                 @if($currentPk)
                 <div class="pt-2 animate-fade-in-down">
                     <h3 class="text-lg font-bold text-gray-800 mb-6 flex flex-wrap items-center gap-2">
@@ -100,7 +105,7 @@
                             </div>
                         </div>
 
-                        {{-- PILIH BULAN --}}
+                        {{-- PILIH BULAN (TABS) --}}
                         <div class="flex flex-wrap items-center gap-2 mb-6">
                             <span class="text-sm text-gray-500 mr-2 font-medium w-full sm:w-auto mb-2 sm:mb-0">Pilih bulan pengisian:</span>
                             @php
@@ -123,7 +128,6 @@
                             @endforeach
                         </div>
 
-                        {{-- PERBAIKAN: Hapus pengecekan IF current month. Tabel selalu muncul. --}}
                         {{-- TABEL SCROLLABLE --}}
                         <div class="overflow-x-auto border border-gray-200 rounded-lg animate-fade-in-down min-h-[300px]">
                             <table class="w-full text-left text-sm border-collapse whitespace-nowrap md:whitespace-normal">
@@ -184,10 +188,12 @@
                                 </tbody>
                             </table>
                         </div>
-
                     </div>
                 </div>
+                {{-- @else --}}
+                {{-- Bagian else tidak diperlukan, karena jika kosong, area tabel simply tidak muncul --}}
                 @endif
+                {{-- END IF currentPk --}}
 
             </div>
         </div>

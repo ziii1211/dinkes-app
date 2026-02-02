@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Jabatan;
 use App\Models\PerjanjianKinerja;
-use Carbon\Carbon; // Pastikan Import Carbon ada
+use Carbon\Carbon;
 
 class PengaturanKinerja extends Component
 {
@@ -17,8 +17,9 @@ class PengaturanKinerja extends Component
     public $selectedMonth;
     
     // Data Seleksi
-    public $selectedPkId = '';
-    public $pkList = [];
+    public $pkList = []; // Bukan lagi collection model, tapi array opsi simpel
+    public $selectedPkOption = ''; // Property baru untuk dropdown simpel
+    public $selectedPkId = ''; // Tetap dipakai untuk menyimpan ID PK bulan aktif
     public $currentPk = null;
 
     public function mount($jabatanId)
@@ -26,93 +27,94 @@ class PengaturanKinerja extends Component
         $this->jabatan = Jabatan::with('pegawai')->findOrFail($jabatanId);
         $this->pegawai = $this->jabatan->pegawai;
 
-        // Mengambil PK terakhir untuk set default tahun
+        // Set Default Tahun
         $lastPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
                     ->where('status_verifikasi', 'disetujui') 
                     ->latest('tahun')
                     ->first();
 
         $this->filterTahun = $lastPk ? $lastPk->tahun : date('Y');
-        
-        // Default ke bulan sekarang
         $this->selectedMonth = (int) date('n');
 
-        // 1. Load List untuk Dropdown (Opsional)
-        $this->loadPkList();
-
-        // 2. Load PK Secara Cerdas berdasarkan Bulan Sekarang
-        $this->loadPkAutomatic();
+        $this->checkPkAvailability();
     }
 
     /**
-     * Mengambil daftar semua PK di tahun tersebut (untuk Dropdown)
+     * [UBAH] Cek ketersediaan PK di tahun terpilih
+     * Jika ada, buat 1 opsi generic: "PK [Jabatan] Tahun [Tahun]"
      */
-    public function loadPkList()
+    public function checkPkAvailability()
     {
-        $this->pkList = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
+        $exists = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->filterTahun)
-            ->where('status_verifikasi', 'disetujui') 
-            ->orderBy('created_at', 'desc') // Urutkan dari yang terbaru
-            ->get();
+            ->where('status_verifikasi', 'disetujui')
+            ->exists();
             
-        // Catatan: Kita hapus logika "auto select first" di sini 
-        // karena akan ditangani oleh loadPkAutomatic()
-        if ($this->pkList->isEmpty()) {
-            $this->selectedPkId = '';
+        $this->pkList = [];
+        $this->selectedPkOption = '';
+
+        if ($exists) {
+            // Buat opsi tunggal
+            $label = "Perjanjian Kinerja " . $this->jabatan->nama . " Tahun " . $this->filterTahun;
+            $this->pkList = [
+                ['value' => 'exist', 'label' => $label]
+            ];
+            // Otomatis pilih opsi tersebut agar user tidak perlu klik dropdown lagi jika cuma 1
+            $this->selectedPkOption = 'exist';
+        } else {
+            // Reset jika tidak ada data
             $this->currentPk = null;
         }
     }
 
     public function updatedFilterTahun()
     {
-        $this->loadPkList();
-        $this->loadPkAutomatic(); // Reset pilihan ke data yang relevan tahun baru
+        $this->checkPkAvailability();
+        $this->currentPk = null; // Reset tampilan saat ganti tahun
     }
 
-    /**
-     * LOGIKA UTAMA: Ganti Bulan -> Cari Data PK yang Sesuai
-     */
     public function selectMonth($monthIndex)
     {
         $this->selectedMonth = $monthIndex;
-        $this->loadPkAutomatic(); // <--- INI KUNCINYA
+        // Hanya load otomatis jika data sudah ditampilkan sebelumnya (currentPk tidak null)
+        if ($this->currentPk) {
+            $this->loadPkAutomatic(); 
+        }
     }
 
     /**
-     * Mencari PK versi terakhir yang dibuat PADA atau SEBELUM bulan yang dipilih.
+     * [BARU] Fungsi yang dipanggil saat tombol "Tampilkan PK" diklik
+     */
+    public function tampilkanPk()
+    {
+        if ($this->selectedPkOption == 'exist') {
+            $this->loadPkAutomatic();
+        }
+    }
+
+    /**
+     * Mencari PK versi terakhir berdasarkan KOLOM BULAN
      */
     public function loadPkAutomatic()
     {
-        // Cari PK yang:
-        // 1. Tahun sesuai filter
-        // 2. Status Disetujui
-        // 3. Tanggal buat (created_at) <= Bulan yang dipilih
-        // 4. Ambil yang paling baru (Latest)
-        
         $pk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->filterTahun)
             ->where('status_verifikasi', 'disetujui')
-            ->where(function($query) {
-                $query->whereYear('created_at', $this->filterTahun)
-                      ->whereMonth('created_at', '<=', $this->selectedMonth);
-            })
-            ->latest('created_at')
+            ->where('bulan', $this->selectedMonth) // Filter Bulan Aktif
+            ->latest('id')
             ->first();
 
         if ($pk) {
             $this->selectedPkId = $pk->id;
-            $this->loadPkDetail(); // Tampilkan datanya
+            $this->loadPkDetail();
         } else {
-            // Jika tidak ada data di bulan tersebut (misal pilih Jan tapi data baru dibuat Maret)
-            // Maka kosongkan atau bisa cari fallback lain jika mau.
+            // Jika bulan ini kosong, tapi tahunnya ada (karena opsi dropdown 'exist')
+            // Kita set currentPk null, tapi biarkan UI tetap merender kerangka
             $this->selectedPkId = '';
             $this->currentPk = null;
         }
     }
 
-    /**
-     * Load Detail PK berdasarkan ID yang terpilih
-     */
     public function loadPkDetail()
     {
         if ($this->selectedPkId) {
@@ -120,7 +122,6 @@ class PengaturanKinerja extends Component
                 ->find($this->selectedPkId);
 
             if ($this->currentPk) {
-                // Gunakan target spesifik tahun jika ada logic revisi target
                 $tahun = $this->currentPk->tahun;
                 $colTarget = 'target_' . $tahun; 
 
@@ -130,12 +131,10 @@ class PengaturanKinerja extends Component
                     }
                 }
             }
-        } else {
-            $this->currentPk = null;
         }
     }
 
-    // --- FUNGSI HAPUS RKH ---
+    // --- FUNGSI HAPUS & UPDATE (TETAP SAMA) ---
     public function deleteRkh()
     {
         if ($this->selectedPkId) {
@@ -146,12 +145,14 @@ class PengaturanKinerja extends Component
                     $sasaran->delete(); 
                 }
                 $pk->delete(); 
+                
+                // Refresh ketersediaan setelah hapus
+                $this->checkPkAvailability();
+                $this->loadPkAutomatic();
             }
-            return redirect(request()->header('Referer'));
         }
     }
 
-    // --- FUNGSI PERBARUI BULANAN RHK ---
     public function updateBulananRhk()
     {
         session()->flash('message', 'Data Rencana Hasil Kerja (RHK) Bulan ini berhasil diperbarui!');

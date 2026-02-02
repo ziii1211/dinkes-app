@@ -22,7 +22,7 @@ class PerjanjianKinerja extends Model
         'keterangan',
         'status',             // Status umum (Draft/Final)
         'tanggal_penetapan',
-        
+        'bulan',
         // --- KOLOM TAMBAHAN (VERIFIKASI) ---
         'status_verifikasi',  // 'disetujui', 'ditolak', 'menunggu'
         'tanggal_verifikasi', // Tanggal disetujui

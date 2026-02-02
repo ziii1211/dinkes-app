@@ -2,7 +2,6 @@
     <x-slot:title>Detail Perjanjian Kinerja</x-slot>
     
     <x-slot:breadcrumb>
-        {{-- BREADCRUMB RESPONSIF --}}
         <div class="overflow-x-auto whitespace-nowrap pb-2">
             <a href="/" class="hover:text-white transition-colors">Dashboard</a>
             <span class="mx-2">/</span>
@@ -16,6 +15,7 @@
 
     <div class="space-y-6 md:space-y-8">
         
+        {{-- SECTION INFO JABATAN (TETAP SAMA) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-4 py-4 md:px-6 md:py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white gap-4">
                 <h3 class="font-medium text-gray-800 text-base flex items-center">
@@ -29,10 +29,9 @@
                 </a>
             </div>
             
-            {{-- PADDING RESPONSIF --}}
             <div class="p-4 md:p-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
-                    {{-- INFO JABATAN --}}
+                    {{-- INFO DETAIL (TETAP SAMA) --}}
                     <div class="space-y-4">
                         <div class="grid grid-cols-12 gap-2 md:gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-12 sm:col-span-4 text-xs md:text-sm text-gray-500">Unit Kerja</div>
@@ -75,7 +74,7 @@
                         </div>
                     </div>
 
-                    {{-- STATISTIK KECIL --}}
+                    {{-- STATISTIK & TOMBOL BUAT PK (TETAP SAMA) --}}
                     <div class="bg-gray-50 rounded-xl p-4 md:p-6 border border-gray-100 flex flex-col justify-between">
                         <div class="space-y-3 mb-6">
                             <div class="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex justify-between items-center">
@@ -98,7 +97,6 @@
                             </div>
                         </div>
 
-                        {{-- HANYA ADMIN YANG BISA BUAT PK --}}
                         @if(auth()->user()->hasRole('admin'))
                         <button wire:click="openModal" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-bold rounded-lg shadow-md transition-transform transform active:scale-95 flex items-center justify-center gap-2">
                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -120,7 +118,6 @@
             </div>
 
             <div class="p-4 md:p-6">
-                {{-- FORM FILTER & SEARCH (STACK DI MOBILE) --}}
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
                     <div class="flex items-center text-sm text-gray-600 w-full sm:w-auto">
                         <span class="mr-2">Show</span>
@@ -134,13 +131,13 @@
                     </div>
                 </div>
 
-                {{-- TABEL SCROLLABLE --}}
                 <div class="overflow-x-auto rounded-lg border border-gray-100 min-h-[300px]">
                     <table class="w-full text-left text-sm whitespace-nowrap">
                         <thead class="bg-white text-gray-500 border-b border-gray-100 uppercase tracking-wider text-xs font-semibold">
                             <tr>
                                 <th class="px-6 py-4 text-center w-16 min-w-[50px]">#</th>
                                 <th class="px-6 py-4 w-24 min-w-[80px]">Tahun</th>
+                                <th class="px-6 py-4 w-32 min-w-[100px]">Bulan</th>
                                 <th class="px-6 py-4 min-w-[250px]">Keterangan</th>
                                 <th class="px-6 py-4 min-w-[200px]">Pengampu</th>
                                 <th class="px-6 py-4 text-center min-w-[100px]">Status</th>
@@ -152,6 +149,9 @@
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 text-center">{{ $pks->firstItem() + $index }}</td>
                                 <td class="px-6 py-4 font-normal text-gray-800">{{ $pk->tahun }}</td>
+                                <td class="px-6 py-4 font-normal text-gray-800">
+                                    {{ \Carbon\Carbon::createFromDate(null, $pk->bulan, null)->locale('id')->translatedFormat('F') }}
+                                </td>
                                 <td class="px-6 py-4 font-normal text-gray-800 whitespace-normal">{{ $pk->keterangan }}</td>
                                 <td class="px-6 py-4 whitespace-normal">
                                     @if($pk->pegawai)
@@ -163,21 +163,26 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     @if($pk->status_verifikasi == 'disetujui')
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-600 uppercase">
-                                            FINAL
-                                        </span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-green-100 text-green-600 uppercase">FINAL</span>
                                     @else
-                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 uppercase">
-                                            DRAFT
-                                        </span>
+                                        <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold bg-yellow-100 text-yellow-600 uppercase">DRAFT</span>
                                     @endif
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
+                                        {{-- TOMBOL EDIT BARU --}}
+                                        @if(auth()->user()->hasRole('admin'))
+                                        <button wire:click="edit({{ $pk->id }})" class="flex items-center px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 rounded text-xs font-medium transition-colors shadow-sm border border-yellow-200">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                            Edit
+                                        </button>
+                                        @endif
+
                                         <a href="{{ route('perjanjian.kinerja.lihat', $pk->id) }}" class="flex items-center px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-600 rounded text-xs font-medium transition-colors shadow-sm border border-gray-200">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                             Lihat
                                         </a>
+                                        
                                         <a href="{{ route('perjanjian.kinerja.print', $pk->id) }}" target="_blank" class="flex items-center px-3 py-1.5 bg-green-50 hover:bg-green-100 text-green-600 rounded text-xs font-medium transition-colors shadow-sm border border-green-200">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                                             Cetak
@@ -187,7 +192,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="6" class="px-6 py-10 text-center text-gray-400 italic bg-gray-50">
+                                <td colspan="7" class="px-6 py-10 text-center text-gray-400 italic bg-gray-50">
                                     Belum ada Perjanjian Kinerja untuk jabatan ini.
                                 </td>
                             </tr>
@@ -204,7 +209,10 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
-                <h3 class="text-lg font-bold text-gray-800">Buat Perjanjian Kinerja</h3>
+                {{-- [UPDATE] JUDUL DINAMIS --}}
+                <h3 class="text-lg font-bold text-gray-800">
+                    {{ $pkId ? 'Edit Perjanjian Kinerja' : 'Buat Perjanjian Kinerja' }}
+                </h3>
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
                 </button>
@@ -213,15 +221,34 @@
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tahun <span class="text-red-500">*</span></label>
-                        <select wire:model="tahun" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                        <select wire:model.live="tahun" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                             @for($y = date('Y')-1; $y <= date('Y')+2; $y++)
                                 <option value="{{ $y }}">{{ $y }}</option>
                             @endfor
                         </select>
                     </div>
-                    <div class="md:col-span-2">
+
+                    <div>
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Bulan <span class="text-red-500">*</span></label>
+                        <select wire:model.live="bulan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+
+                    <div class="md:col-span-3">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
-                        <input type="text" wire:model="keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: PK Sekretaris Tahun 2025">
+                        <input type="text" wire:model="keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: PK Sekretaris Bulan Januari 2025">
                     </div>
                 </div>
 
@@ -290,7 +317,8 @@
                 <button wire:click="closeModal" class="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none">Batal</button>
                 <button wire:click="store" class="px-6 py-2.5 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 focus:outline-none flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    Simpan
+                    {{-- [UPDATE] TOMBOL DINAMIS --}}
+                    {{ $pkId ? 'Update' : 'Simpan' }}
                 </button>
             </div>
         </div>
