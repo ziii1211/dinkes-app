@@ -37,12 +37,18 @@
     @endif
 
     {{-- TOOLBAR --}}
-    <div class="flex justify-between items-center">
-        <h3 class="text-lg font-bold text-gray-700 flex items-center gap-2">
-            <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-            Rincian Matrik Renstra
-        </h3>
+    <div class="flex flex-col md:flex-row justify-between items-center gap-4">
         
+        {{-- KIRI: Judul --}}
+        <div class="flex items-center gap-4">
+            <h3 class="text-lg font-bold text-gray-700 flex items-center gap-2">
+                <svg class="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                Rincian Matrik
+            </h3>
+            {{-- DROPDOWN DIHAPUS SESUAI REQUEST --}}
+        </div>
+        
+        {{-- KANAN: Tombol Aksi --}}
         <div class="flex items-center gap-3">
             <button wire:click="openProgramModal" class="inline-flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -60,7 +66,7 @@
     </div>
 
     {{-- TABEL INPUT DATA --}}
-    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden relative">
+    <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden relative flex flex-col">
         <div class="overflow-x-auto">
             <table class="w-full text-sm text-left border-collapse">
                 <thead class="bg-slate-50 text-slate-500 uppercase font-bold text-xs border-b border-slate-200">
@@ -107,7 +113,7 @@
                                 >
                             </td>
                             
-                            {{-- PROGRAM: Realisasi (BARU) --}}
+                            {{-- PROGRAM: Realisasi --}}
                             <td class="p-2 border-r border-blue-200 align-top bg-green-200/20" 
                                 x-data="rupiahInput('programInputs.{{ $programId }}.pagu_realisasi', '{{ $programInputs[$programId]['pagu_realisasi'] ?? 0 }}')">
                                 <input type="text" 
@@ -151,7 +157,7 @@
                                     >
                                 </td>
 
-                                {{-- KEGIATAN: Realisasi (BARU) --}}
+                                {{-- KEGIATAN: Realisasi --}}
                                 <td class="p-2 border-r border-gray-200 align-top bg-gray-100/50" 
                                     x-data="rupiahInput('kegiatanInputs.{{ $kegiatanId }}.pagu_realisasi', '{{ $kegiatanInputs[$kegiatanId]['pagu_realisasi'] ?? 0 }}')">
                                     <input type="text" 
@@ -253,9 +259,33 @@
                 </tbody>
             </table>
         </div>
+
+        {{-- PAGINATION & SHOWING INFO (BARU) --}}
+        <div class="bg-gray-50 border-t border-gray-200 px-4 py-3 sm:px-6 flex flex-col md:flex-row justify-between items-center gap-4">
+            
+            {{-- TEXT: Showing X to Y of Z --}}
+            <div class="text-sm text-gray-700">
+                @if($paginatedDetails->total() > 0)
+                    Showing 
+                    <span class="font-medium">{{ $paginatedDetails->firstItem() }}</span> 
+                    to 
+                    <span class="font-medium">{{ $paginatedDetails->lastItem() }}</span> 
+                    of 
+                    <span class="font-medium">{{ $paginatedDetails->total() }}</span> 
+                    results
+                @else
+                    Showing 0 results
+                @endif
+            </div>
+
+            {{-- LINKS: 1 2 3 ... --}}
+            <div>
+                {{ $paginatedDetails->links('livewire::tailwind') }}
+            </div>
+        </div>
     </div>
 
-    {{-- SCRIPT ALPINE JS (TETAP SAMA) --}}
+    {{-- SCRIPT ALPINE JS (TETAP) --}}
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('rupiahInput', (modelName, initialValue) => ({
@@ -306,7 +336,7 @@
         });
     </script>
 
-    {{-- MODAL PROGRAM (Tetap Sama) --}}
+    {{-- MODAL PROGRAM (Tetap) --}}
     @if($isOpenProgram)
     <div class="fixed inset-0 z-[99] overflow-y-auto" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">

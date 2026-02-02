@@ -3,8 +3,12 @@
 namespace App\Livewire\LaporanKonsolidasi;
 
 use Livewire\Component;
+use Livewire\WithPagination;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Request;
 use App\Models\LaporanKonsolidasi;
 use App\Models\DetailLaporanKonsolidasi;
+use App\Models\LaporanKonsolidasiAnggaran; // Load Model Baru
 use App\Models\Program;
 use App\Models\Kegiatan; 
 use App\Models\SubKegiatan;
@@ -12,13 +16,17 @@ use Illuminate\Support\Facades\DB;
 
 class InputData extends Component
 {
+    use WithPagination;
+
     public $laporan;
     public $isOpenProgram = false;
     public $selectedProgramId;
     
-    public $inputs = [];         // Untuk Detail (Sub Kegiatan)
-    public $programInputs = [];  // Untuk Program (Anggaran & Realisasi)
-    public $kegiatanInputs = []; // Untuk Kegiatan (Anggaran & Realisasi)
+    public $perPage = 10;
+    
+    public $inputs = [];         
+    public $programInputs = [];  
+    public $kegiatanInputs = []; 
 
     public function mount($id)
     {
@@ -26,14 +34,18 @@ class InputData extends Component
         $this->loadData();
     }
 
+    public function updatedPerPage()
+    {
+        $this->resetPage();
+    }
+
     public function loadData()
     {
-        // 1. Ambil data detail
+        // 1. Load Detail (Sub Kegiatan)
         $details = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan.program'])
                     ->where('laporan_konsolidasi_id', $this->laporan->id)
                     ->get();
 
-        // 2. Load ke $inputs
         $this->inputs = [];
         foreach ($details as $detail) {
             $this->inputs[$detail->id] = [
@@ -44,27 +56,40 @@ class InputData extends Component
             ];
         }
 
-        // 3. Load Data PROGRAM (Anggaran + Realisasi)
+        // 2. Load Data PROGRAM (Dari Tabel LaporanKonsolidasiAnggaran, BUKAN Master Program)
         $programIds = $details->pluck('subKegiatan.kegiatan.program_id')->unique()->filter();
-        $programs = Program::whereIn('id', $programIds)->get();
         
+        // Ambil data anggaran yang tersimpan KHUSUS untuk laporan ini
+        $savedPrograms = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
+                            ->whereNotNull('program_id')
+                            ->whereIn('program_id', $programIds)
+                            ->get()
+                            ->keyBy('program_id');
+
         $this->programInputs = [];
-        foreach($programs as $prog) {
-            $this->programInputs[$prog->id] = [
-                'pagu_anggaran' => $prog->pagu_anggaran ? number_format($prog->pagu_anggaran, 0, ',', '.') : '',
-                'pagu_realisasi' => $prog->pagu_realisasi ? number_format($prog->pagu_realisasi, 0, ',', '.') : '' // BARU
+        foreach($programIds as $progId) {
+            $saved = $savedPrograms[$progId] ?? null;
+            $this->programInputs[$progId] = [
+                'pagu_anggaran' => $saved ? number_format($saved->pagu_anggaran, 0, ',', '.') : '', // Default Kosong jika laporan baru
+                'pagu_realisasi' => $saved ? number_format($saved->pagu_realisasi, 0, ',', '.') : ''
             ];
         }
 
-        // 4. Load Data KEGIATAN (Anggaran + Realisasi)
+        // 3. Load Data KEGIATAN (Dari Tabel LaporanKonsolidasiAnggaran, BUKAN Master Kegiatan)
         $kegiatanIds = $details->pluck('subKegiatan.kegiatan_id')->unique()->filter();
-        $kegiatans = Kegiatan::whereIn('id', $kegiatanIds)->get();
+        
+        $savedKegiatans = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
+                            ->whereNotNull('kegiatan_id')
+                            ->whereIn('kegiatan_id', $kegiatanIds)
+                            ->get()
+                            ->keyBy('kegiatan_id');
 
         $this->kegiatanInputs = [];
-        foreach($kegiatans as $keg) {
-            $this->kegiatanInputs[$keg->id] = [
-                'pagu_anggaran' => $keg->pagu_anggaran ? number_format($keg->pagu_anggaran, 0, ',', '.') : '',
-                'pagu_realisasi' => $keg->pagu_realisasi ? number_format($keg->pagu_realisasi, 0, ',', '.') : '' // BARU
+        foreach($kegiatanIds as $kegId) {
+            $saved = $savedKegiatans[$kegId] ?? null;
+            $this->kegiatanInputs[$kegId] = [
+                'pagu_anggaran' => $saved ? number_format($saved->pagu_anggaran, 0, ',', '.') : '',
+                'pagu_realisasi' => $saved ? number_format($saved->pagu_realisasi, 0, ',', '.') : ''
             ];
         }
     }
@@ -73,7 +98,7 @@ class InputData extends Component
     {
         DB::beginTransaction();
         try {
-            // --- 1. Simpan Data Detail ---
+            // --- 1. Simpan Detail Sub Kegiatan ---
             foreach ($this->inputs as $detailId => $data) {
                 $detail = DetailLaporanKonsolidasi::find($detailId);
                 if ($detail) {
@@ -86,23 +111,35 @@ class InputData extends Component
                 }
             }
 
-            // --- 2. Simpan Data PROGRAM ---
+            // --- 2. Simpan Anggaran PROGRAM ke Tabel Baru ---
             if (!empty($this->programInputs)) {
                 foreach ($this->programInputs as $progId => $data) {
-                    Program::where('id', $progId)->update([
-                        'pagu_anggaran' => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
-                        'pagu_realisasi'=> $this->cleanRupiah($data['pagu_realisasi'] ?? '0') // BARU
-                    ]);
+                    LaporanKonsolidasiAnggaran::updateOrCreate(
+                        [
+                            'laporan_konsolidasi_id' => $this->laporan->id,
+                            'program_id' => $progId
+                        ],
+                        [
+                            'pagu_anggaran' => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
+                            'pagu_realisasi'=> $this->cleanRupiah($data['pagu_realisasi'] ?? '0')
+                        ]
+                    );
                 }
             }
 
-            // --- 3. Simpan Data KEGIATAN ---
+            // --- 3. Simpan Anggaran KEGIATAN ke Tabel Baru ---
             if (!empty($this->kegiatanInputs)) {
                 foreach ($this->kegiatanInputs as $kegId => $data) {
-                    Kegiatan::where('id', $kegId)->update([
-                        'pagu_anggaran' => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
-                        'pagu_realisasi'=> $this->cleanRupiah($data['pagu_realisasi'] ?? '0') // BARU
-                    ]);
+                    LaporanKonsolidasiAnggaran::updateOrCreate(
+                        [
+                            'laporan_konsolidasi_id' => $this->laporan->id,
+                            'kegiatan_id' => $kegId
+                        ],
+                        [
+                            'pagu_anggaran' => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
+                            'pagu_realisasi'=> $this->cleanRupiah($data['pagu_realisasi'] ?? '0')
+                        ]
+                    );
                 }
             }
             
@@ -116,7 +153,6 @@ class InputData extends Component
         }
     }
 
-    // Helper kecil untuk bersihkan rupiah
     private function cleanRupiah($val)
     {
         $clean = preg_replace('/[^0-9]/', '', $val);
@@ -132,26 +168,28 @@ class InputData extends Component
 
     public function render()
     {
-        $programs = Program::all(); 
-
+        // 1. Ambil Data Detail
         $detailsRaw = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan.program'])
                         ->where('laporan_konsolidasi_id', $this->laporan->id)
                         ->get();
 
-        $programIds = $detailsRaw->pluck('subKegiatan.kegiatan.program_id')->unique()->filter()->toArray();
-        $kegiatanIds = $detailsRaw->pluck('subKegiatan.kegiatan_id')->unique()->filter()->toArray();
+        // 2. Ambil Data Anggaran Program & Kegiatan dari Tabel KHUSUS Laporan ini
+        $anggaranKhusus = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)->get();
 
-        // 1. HITUNG TOTAL ANGGARAN (Prog + Keg + Sub)
-        $totalAnggaran = Program::whereIn('id', $programIds)->sum('pagu_anggaran')
-                       + Kegiatan::whereIn('id', $kegiatanIds)->sum('pagu_anggaran')
-                       + $detailsRaw->sum('pagu_anggaran');
+        // 3. HITUNG TOTAL (Gabungan Sub Kegiatan + Program + Kegiatan)
         
-        // 2. HITUNG TOTAL REALISASI (Prog + Keg + Sub) -- BARU --
-        $totalRealisasi = Program::whereIn('id', $programIds)->sum('pagu_realisasi')
-                        + Kegiatan::whereIn('id', $kegiatanIds)->sum('pagu_realisasi')
-                        + $detailsRaw->sum('pagu_realisasi');
+        // Total Sub Kegiatan
+        $subAnggaran = $detailsRaw->sum('pagu_anggaran');
+        $subRealisasi = $detailsRaw->sum('pagu_realisasi');
 
-        // Logic Sorting & Grouping
+        // Total Program & Kegiatan (Ambil dari tabel baru)
+        $progKegAnggaran = $anggaranKhusus->sum('pagu_anggaran');
+        $progKegRealisasi = $anggaranKhusus->sum('pagu_realisasi');
+
+        $totalAnggaran = $subAnggaran + $progKegAnggaran;
+        $totalRealisasi = $subRealisasi + $progKegRealisasi;
+
+        // 4. Sorting & Pagination Logic
         $detailsSorted = $detailsRaw->sortBy(function($detail) {
             $progKode = $detail->subKegiatan->kegiatan->program->kode ?? '99';
             $kegKode  = $detail->subKegiatan->kegiatan->kode ?? '99';
@@ -159,7 +197,18 @@ class InputData extends Component
             return $progKode . '.' . $kegKode . '.' . $subKode;
         });
 
-        $groupedData = $detailsSorted->groupBy(function($item) {
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $currentItems = $detailsSorted->slice(($currentPage - 1) * $this->perPage, $this->perPage)->all();
+        
+        $paginatedDetails = new LengthAwarePaginator(
+            $currentItems,
+            $detailsSorted->count(),
+            $this->perPage,
+            $currentPage,
+            ['path' => Request::url(), 'query' => Request::query()]
+        );
+
+        $groupedData = collect($currentItems)->groupBy(function($item) {
             return $item->subKegiatan->kegiatan->program_id ?? 0;
         })->map(function($programGroup) {
             return $programGroup->groupBy(function($item) {
@@ -168,13 +217,15 @@ class InputData extends Component
         });
 
         return view('livewire.laporan-konsolidasi.input-data', [
-            'programs' => $programs,
+            'programs' => Program::all(),
             'groupedData' => $groupedData,
+            'paginatedDetails' => $paginatedDetails, 
             'totalAnggaran' => $totalAnggaran,
             'totalRealisasi' => $totalRealisasi
         ]);
     }
 
+    // Modal Logic (Tetap)
     public function openProgramModal() { $this->isOpenProgram = true; }
     public function closeProgramModal() { $this->isOpenProgram = false; $this->selectedProgramId = null; }
     
@@ -195,7 +246,6 @@ class InputData extends Component
             foreach ($subKegiatans as $sub) {
                 $exists = DetailLaporanKonsolidasi::where('laporan_konsolidasi_id', $this->laporan->id)
                             ->where('sub_kegiatan_id', $sub->id)->exists();
-
                 if (!$exists) {
                     $namaLengkap = ($sub->kegiatan->program->nama ?? '-') . ' / ' . ($sub->kegiatan->nama ?? '-') . ' / ' . ($sub->nama ?? '-');
                     DetailLaporanKonsolidasi::create([
@@ -210,6 +260,9 @@ class InputData extends Component
             }
             DB::commit();
             session()->flash('message', 'Program berhasil ditambahkan.');
+            
+            return redirect()->route('laporan-konsolidasi.input', $this->laporan->id);
+            
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Error: ' . $e->getMessage());
