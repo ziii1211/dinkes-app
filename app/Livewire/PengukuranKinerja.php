@@ -34,6 +34,9 @@ class PengukuranKinerja extends Component
 
     // Properti Penjelasan Kinerja (Tabel 3 Kolom)
     public $penjelasans = [];
+    
+    // --- TAMBAHAN BARU: ID untuk Edit Penjelasan ---
+    public $penjelasanId = null; 
 
     // Form Input Penjelasan (3 Field Manual)
     public $formUpaya;
@@ -297,8 +300,27 @@ class PengukuranKinerja extends Component
             return;
         }
 
-        $this->reset(['formUpaya', 'formHambatan', 'formRtl']);
+        // UPDATED: Reset form dan ID (kosongkan ID agar jadi mode Tambah)
+        $this->reset(['formUpaya', 'formHambatan', 'formRtl', 'penjelasanId']);
         $this->isOpenTambahPenjelasan = true;
+    }
+
+    // --- TAMBAHAN BARU: Method untuk Edit ---
+    public function editPenjelasan($id)
+    {
+        if (!$this->canEdit) return;
+
+        $item = PenjelasanKinerja::find($id);
+        
+        // Pastikan item ada dan milik jabatan yang sedang dibuka
+        if ($item && $item->jabatan_id == $this->jabatan->id) {
+            $this->penjelasanId = $item->id;
+            $this->formUpaya = $item->upaya;
+            $this->formHambatan = $item->hambatan;
+            $this->formRtl = $item->tindak_lanjut;
+            
+            $this->isOpenTambahPenjelasan = true;
+        }
     }
 
     public function closeTambahPenjelasan()
@@ -316,17 +338,21 @@ class PengukuranKinerja extends Component
             'formRtl' => 'nullable|string',
         ]);
 
-        PenjelasanKinerja::create([
-            'jabatan_id' => $this->jabatan->id,
-            'bulan' => $this->selectedMonth,
-            'tahun' => $this->tahun,
-            'upaya' => $this->formUpaya,
-            'hambatan' => $this->formHambatan,
-            'tindak_lanjut' => $this->formRtl,
-        ]);
+        // UPDATED: Menggunakan updateOrCreate untuk menangani Edit & Tambah
+        PenjelasanKinerja::updateOrCreate(
+            ['id' => $this->penjelasanId], // Jika ada ID, lakukan Update. Jika null, Create baru.
+            [
+                'jabatan_id' => $this->jabatan->id,
+                'bulan' => $this->selectedMonth,
+                'tahun' => $this->tahun,
+                'upaya' => $this->formUpaya,
+                'hambatan' => $this->formHambatan,
+                'tindak_lanjut' => $this->formRtl,
+            ]
+        );
 
         $this->closeTambahPenjelasan();
-        session()->flash('message', 'Penjelasan kinerja berhasil ditambahkan.');
+        session()->flash('message', 'Penjelasan kinerja berhasil disimpan.');
         return redirect(request()->header('Referer'));
     }
 

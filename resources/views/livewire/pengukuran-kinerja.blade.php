@@ -312,7 +312,7 @@
             </div>
         </div>
 
-        {{-- TABEL PENJELASAN (SUDAH FIX) --}}
+        {{-- TABEL PENJELASAN (SUDAH DIPERBARUI DENGAN TOMBOL EDIT) --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden mt-6">
             <div class="px-6 py-5 border-b border-gray-100 flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
                 <h3 class="text-lg font-bold text-gray-800">Penjelasan per Indikator Kinerja</h3>
@@ -350,9 +350,17 @@
                                 <td class="px-4 py-4 align-middle text-black leading-relaxed whitespace-normal">{{ $item->tindak_lanjut ?? '-' }}</td>
                                 <td class="px-4 py-4 text-center align-middle">
                                     @if($canEdit)
-                                        <button wire:click="hapusPenjelasan({{ $item->id }})" wire:confirm="Yakin ingin menghapus poin ini?" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border border-red-200 text-xs font-bold rounded shadow-sm transition-colors">
-                                            <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                        </button>
+                                        <div class="flex items-center justify-center gap-2">
+                                            {{-- TOMBOL EDIT (Added) --}}
+                                            <button wire:click="editPenjelasan({{ $item->id }})" class="px-3 py-1.5 bg-yellow-100 hover:bg-yellow-200 text-yellow-600 hover:text-yellow-700 border border-yellow-200 text-xs font-bold rounded shadow-sm transition-colors">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                            </button>
+
+                                            {{-- TOMBOL HAPUS --}}
+                                            <button wire:click="hapusPenjelasan({{ $item->id }})" wire:confirm="Yakin ingin menghapus poin ini?" class="px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-600 hover:text-red-700 border border-red-200 text-xs font-bold rounded shadow-sm transition-colors">
+                                                <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            </button>
+                                        </div>
                                     @else
                                         <span class="text-xs text-black italic">Locked</span>
                                     @endif
@@ -576,12 +584,15 @@
     </div>
     @endif
 
-    {{-- MODAL TAMBAH PENJELASAN (Reference: Already Correct) --}}
+    {{-- MODAL TAMBAH/EDIT PENJELASAN --}}
     @if($isOpenTambahPenjelasan)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity p-4" x-data>
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-2xl overflow-hidden transform transition-all">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white">
-                <h3 class="text-lg font-bold text-gray-800">Tambah Penjelasan Kinerja</h3>
+                {{-- JUDUL DINAMIS --}}
+                <h3 class="text-lg font-bold text-gray-800">
+                    {{ $penjelasanId ? 'Edit Penjelasan Kinerja' : 'Tambah Penjelasan Kinerja' }}
+                </h3>
                 <button wire:click="closeTambahPenjelasan" class="text-gray-400 hover:text-gray-600 transition-colors focus:outline-none"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg></button>
             </div>
             <div class="p-6 space-y-4">
@@ -603,7 +614,10 @@
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3">
                 <button wire:click="closeTambahPenjelasan" class="px-5 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50">Batal</button>
-                <button wire:click="simpanPenjelasan" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm">Simpan</button>
+                <button wire:click="simpanPenjelasan" class="px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium rounded-lg shadow-sm">
+                    {{-- TEXT TOMBOL DINAMIS --}}
+                    {{ $penjelasanId ? 'Simpan Perubahan' : 'Simpan' }}
+                </button>
             </div>
         </div>
     </div>
