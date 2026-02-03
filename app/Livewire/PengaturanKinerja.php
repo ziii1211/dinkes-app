@@ -17,9 +17,9 @@ class PengaturanKinerja extends Component
     public $selectedMonth;
     
     // Data Seleksi
-    public $pkList = []; // Bukan lagi collection model, tapi array opsi simpel
-    public $selectedPkOption = ''; // Property baru untuk dropdown simpel
-    public $selectedPkId = ''; // Tetap dipakai untuk menyimpan ID PK bulan aktif
+    public $pkList = []; 
+    public $selectedPkOption = ''; 
+    public $selectedPkId = ''; 
     public $currentPk = null;
 
     public function mount($jabatanId)
@@ -34,15 +34,11 @@ class PengaturanKinerja extends Component
                     ->first();
 
         $this->filterTahun = $lastPk ? $lastPk->tahun : date('Y');
-        $this->selectedMonth = (int) date('n');
+        $this->selectedMonth = (int) date('n'); // Default Bulan Sekarang
 
         $this->checkPkAvailability();
     }
 
-    /**
-     * [UBAH] Cek ketersediaan PK di tahun terpilih
-     * Jika ada, buat 1 opsi generic: "PK [Jabatan] Tahun [Tahun]"
-     */
     public function checkPkAvailability()
     {
         $exists = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
@@ -54,15 +50,12 @@ class PengaturanKinerja extends Component
         $this->selectedPkOption = '';
 
         if ($exists) {
-            // Buat opsi tunggal
             $label = "Perjanjian Kinerja " . $this->jabatan->nama . " Tahun " . $this->filterTahun;
             $this->pkList = [
                 ['value' => 'exist', 'label' => $label]
             ];
-            // Otomatis pilih opsi tersebut agar user tidak perlu klik dropdown lagi jika cuma 1
             $this->selectedPkOption = 'exist';
         } else {
-            // Reset jika tidak ada data
             $this->currentPk = null;
         }
     }
@@ -70,46 +63,59 @@ class PengaturanKinerja extends Component
     public function updatedFilterTahun()
     {
         $this->checkPkAvailability();
-        $this->currentPk = null; // Reset tampilan saat ganti tahun
+        $this->currentPk = null; 
     }
 
     public function selectMonth($monthIndex)
     {
         $this->selectedMonth = $monthIndex;
-        // Hanya load otomatis jika data sudah ditampilkan sebelumnya (currentPk tidak null)
         if ($this->currentPk) {
-            $this->loadPkAutomatic(); 
+            $this->loadPkAutomatic(false); // False: Jangan auto-switch bulan jika manual klik tab
         }
     }
 
-    /**
-     * [BARU] Fungsi yang dipanggil saat tombol "Tampilkan PK" diklik
-     */
     public function tampilkanPk()
     {
         if ($this->selectedPkOption == 'exist') {
-            $this->loadPkAutomatic();
+            $this->loadPkAutomatic(true); // True: Boleh auto-switch bulan jika kosong
         }
     }
 
     /**
-     * Mencari PK versi terakhir berdasarkan KOLOM BULAN
+     * [PERBAIKAN] Logika Load PK Lebih Pintar
+     * @param bool $autoSwitchMonth Jika true, sistem akan mencari bulan lain jika bulan terpilih kosong
      */
-    public function loadPkAutomatic()
+    public function loadPkAutomatic($autoSwitchMonth = true)
     {
+        // 1. Coba cari di bulan yang sedang dipilih (selectedMonth)
         $pk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->filterTahun)
             ->where('status_verifikasi', 'disetujui')
-            ->where('bulan', $this->selectedMonth) // Filter Bulan Aktif
+            ->where('bulan', $this->selectedMonth) 
             ->latest('id')
             ->first();
 
+        // 2. [LOGIKA BARU] Jika kosong & mode auto-switch aktif (saat tombol Tampilkan diklik)
+        // Cari data di bulan apa saja yang tersedia (ambil yang paling baru)
+        if (!$pk && $autoSwitchMonth) {
+            $lastAvailablePk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
+                ->where('tahun', $this->filterTahun)
+                ->where('status_verifikasi', 'disetujui')
+                ->orderBy('bulan', 'desc') // Prioritaskan bulan paling akhir
+                ->first();
+
+            if ($lastAvailablePk) {
+                // KETEMU! Pindahkan tampilan ke bulan tersebut
+                $this->selectedMonth = $lastAvailablePk->bulan;
+                $pk = $lastAvailablePk;
+            }
+        }
+
+        // 3. Tampilkan Data
         if ($pk) {
             $this->selectedPkId = $pk->id;
             $this->loadPkDetail();
         } else {
-            // Jika bulan ini kosong, tapi tahunnya ada (karena opsi dropdown 'exist')
-            // Kita set currentPk null, tapi biarkan UI tetap merender kerangka
             $this->selectedPkId = '';
             $this->currentPk = null;
         }
@@ -134,7 +140,6 @@ class PengaturanKinerja extends Component
         }
     }
 
-    // --- FUNGSI HAPUS & UPDATE (TETAP SAMA) ---
     public function deleteRkh()
     {
         if ($this->selectedPkId) {
@@ -146,9 +151,10 @@ class PengaturanKinerja extends Component
                 }
                 $pk->delete(); 
                 
-                // Refresh ketersediaan setelah hapus
                 $this->checkPkAvailability();
-                $this->loadPkAutomatic();
+                
+                // Reload lagi, siapa tahu masih ada data di bulan lain
+                $this->loadPkAutomatic(true);
             }
         }
     }

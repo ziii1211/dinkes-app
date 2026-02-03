@@ -34,7 +34,6 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
     public function view(): View
     {
         // 1. Ambil Tanggal Hari Ini (Zona Waktu WITA / Banjarmasin)
-        // Ini akan menghasilkan tanggal '07', '08', dst sesuai waktu lokal saat export
         $hariIni = Carbon::now('Asia/Makassar')->format('d');
 
         // 2. Ambil data Jabatan & Atasan
@@ -53,39 +52,49 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
         }
         // ----------------------------------------------
 
-        // 3. Ambil data lainnya
+        // 3. Ambil Penjelasan Kinerja (Sudah Benar Filter Bulan)
         $penjelasans = PenjelasanKinerja::where('jabatan_id', $this->jabatanId)
                         ->where('bulan', $this->bulan)
                         ->where('tahun', $this->tahun)
                         ->get();
 
+        // 4. Ambil PK (FIX: Filter Berdasarkan Bulan yang Dipilih)
         $pk = PerjanjianKinerja::with(['sasarans.indikators'])
                 ->where('jabatan_id', $this->jabatanId)
                 ->where('tahun', $this->tahun)
                 ->where('status_verifikasi', 'disetujui')
+                // Tambahkan Filter Bulan agar data bulan lain tidak terambil
+                ->where('bulan', $this->bulan) 
+                ->latest('id') // Ambil revisi terbaru jika ada
                 ->first();
 
+        // 5. Ambil Realisasi Indikator
         $realisasiData = collect([]);
         if ($pk) {
             $indikatorIds = collect();
             foreach ($pk->sasarans as $sasaran) {
                 $indikatorIds = $indikatorIds->merge($sasaran->indikators->pluck('id'));
             }
+            // Ubah logic realisasi agar spesifik bulan ini (sesuai permintaan user)
             $realisasiData = RealisasiKinerja::whereIn('indikator_id', $indikatorIds)
                                 ->where('tahun', $this->tahun)
-                                ->where('bulan', '<=', $this->bulan)
+                                ->where('bulan', $this->bulan) // Hanya bulan ini
                                 ->get()
                                 ->groupBy('indikator_id');
         }
 
+        // 6. Ambil Rencana Aksi (FIX: Filter Berdasarkan Bulan)
         $rencanaAksis = RencanaAksi::where('jabatan_id', $this->jabatanId)
                             ->where('tahun', $this->tahun)
+                            // Filter Bulan Wajib Ada agar Rencana Aksi bulan lain tidak bocor
+                            ->where('bulan', $this->bulan) 
                             ->get();
 
+        // 7. Ambil Realisasi Rencana Aksi
         $aksiIds = $rencanaAksis->pluck('id');
         $realisasiAksiData = RealisasiRencanaAksi::whereIn('rencana_aksi_id', $aksiIds)
                                 ->where('tahun', $this->tahun)
-                                ->where('bulan', '<=', $this->bulan)
+                                ->where('bulan', $this->bulan) // Hanya bulan ini
                                 ->get()
                                 ->groupBy('rencana_aksi_id');
 
@@ -100,7 +109,7 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
             'rencanaAksis' => $rencanaAksis,
             'realisasiAksiData' => $realisasiAksiData,
             'namaBulan' => $this->getNamaBulan($this->bulan),
-            'hariIni' => $hariIni // Kirim variabel tanggal WITA ke view
+            'hariIni' => $hariIni 
         ]);
     }
 
