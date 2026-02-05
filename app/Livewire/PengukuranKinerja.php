@@ -160,23 +160,32 @@ class PengukuranKinerja extends Component
     }
 
     /**
-     * LOGIKA UTAMA: Mengambil Data PK, Rencana Aksi & Realisasi
+     * LOGIKA UTAMA: Mengambil Data PK (Murni vs Perubahan)
      */
     public function loadData()
     {
         $this->checkScheduleStatus();
 
-        // 1. Ambil PK (Filter berdasarkan kolom bulan yang dipilih)
+        // [LOGIKA BARU - SMART PK SELECTOR]
+        // 1. Cari PK di tahun ini.
+        // 2. Filter hanya PK yang 'bulan'-nya KURANG DARI atau SAMA DENGAN bulan yang sedang dilihat.
+        //    (Contoh: Lihat Agustus, maka cari PK yang dibuat Jan-Agust)
+        // 3. Urutkan berdasarkan bulan DESC (Terbesar/Terbaru).
+        //    (Contoh: Ada PK Jan & PK Sept. Kalau lihat Okt, ambil Sept. Kalau lihat Agust, ambil Jan).
+        
         $this->pk = PerjanjianKinerja::with(['sasarans.indikators'])
             ->where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
             ->where('status_verifikasi', 'disetujui')
-            ->where('bulan', $this->selectedMonth) // Filter Bulan
-            ->latest('id')
+            // Logika Effective Date:
+            ->where('bulan', '<=', $this->selectedMonth) 
+            ->orderBy('bulan', 'desc') // Prioritaskan PK Perubahan (bulan lebih besar)
+            ->orderBy('id', 'desc')    // Tie breaker
             ->first();
 
         if ($this->pk) {
             $colTarget = 'target_' . $this->tahun;
+            // Realisasi tetap per bulan spesifik
             $realisasiMap = RealisasiKinerja::where('bulan', $this->selectedMonth)
                 ->where('tahun', $this->tahun)
                 ->get()
@@ -220,10 +229,10 @@ class PengukuranKinerja extends Component
             }
         }
 
-        // 2. Ambil Rencana Aksi (Filter by Bulan & Tahun)
+        // 2. Ambil Rencana Aksi (Tetap per bulan spesifik)
         $this->rencanaAksis = RencanaAksi::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->tahun)
-            ->where('bulan', $this->selectedMonth) // <--- PERBAIKAN: Filter Bulan
+            ->where('bulan', $this->selectedMonth)
             ->get();
 
         $realisasiAksiMap = RealisasiRencanaAksi::whereIn('rencana_aksi_id', $this->rencanaAksis->pluck('id'))

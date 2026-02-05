@@ -16,7 +16,7 @@ use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Style\Border;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use stdClass; 
-use Carbon\Carbon; // PENTING: Import Carbon untuk Tanggal
+use Carbon\Carbon;
 
 class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWidths
 {
@@ -52,20 +52,24 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
         }
         // ----------------------------------------------
 
-        // 3. Ambil Penjelasan Kinerja (Sudah Benar Filter Bulan)
+        // 3. Ambil Penjelasan Kinerja (Tetap Filter Bulan Spesifik)
         $penjelasans = PenjelasanKinerja::where('jabatan_id', $this->jabatanId)
                         ->where('bulan', $this->bulan)
                         ->where('tahun', $this->tahun)
                         ->get();
 
-        // 4. Ambil PK (FIX: Filter Berdasarkan Bulan yang Dipilih)
+        // 4. Ambil PK (FIX: LOGIKA SMART PK / EFFECTIVE DATE)
+        // Masalah sebelumnya: where('bulan', $this->bulan) membuat bulan Feb kosong jika PK dibuat Jan.
+        // Solusi: Cari PK yang bulan-nya <= bulan laporan, ambil yang paling baru.
         $pk = PerjanjianKinerja::with(['sasarans.indikators'])
                 ->where('jabatan_id', $this->jabatanId)
                 ->where('tahun', $this->tahun)
                 ->where('status_verifikasi', 'disetujui')
-                // Tambahkan Filter Bulan agar data bulan lain tidak terambil
-                ->where('bulan', $this->bulan) 
-                ->latest('id') // Ambil revisi terbaru jika ada
+                
+                // [UPDATE PENTING DISINI]
+                ->where('bulan', '<=', $this->bulan) 
+                ->orderBy('bulan', 'desc') // Prioritaskan PK Perubahan (bulan lebih besar)
+                ->orderBy('id', 'desc')
                 ->first();
 
         // 5. Ambil Realisasi Indikator
@@ -73,20 +77,26 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
         if ($pk) {
             $indikatorIds = collect();
             foreach ($pk->sasarans as $sasaran) {
-                $indikatorIds = $indikatorIds->merge($sasaran->indikators->pluck('id'));
+                foreach ($sasaran->indikators as $indikator) {
+                    // Inject Target Tahunan yang benar sesuai PK yang terpilih
+                    $colTarget = 'target_' . $this->tahun;
+                    $indikator->target_tahunan = $indikator->$colTarget ?? $indikator->target;
+                    
+                    $indikatorIds->push($indikator->id);
+                }
             }
-            // Ubah logic realisasi agar spesifik bulan ini (sesuai permintaan user)
+            
+            // Logic realisasi tetap spesifik bulan ini (karena inputan bulanan)
             $realisasiData = RealisasiKinerja::whereIn('indikator_id', $indikatorIds)
                                 ->where('tahun', $this->tahun)
                                 ->where('bulan', $this->bulan) // Hanya bulan ini
                                 ->get()
-                                ->groupBy('indikator_id');
+                                ->keyBy('indikator_id'); // Pakai keyBy agar mudah diakses di view
         }
 
-        // 6. Ambil Rencana Aksi (FIX: Filter Berdasarkan Bulan)
+        // 6. Ambil Rencana Aksi (Tetap Filter Bulan Spesifik)
         $rencanaAksis = RencanaAksi::where('jabatan_id', $this->jabatanId)
                             ->where('tahun', $this->tahun)
-                            // Filter Bulan Wajib Ada agar Rencana Aksi bulan lain tidak bocor
                             ->where('bulan', $this->bulan) 
                             ->get();
 
@@ -94,9 +104,9 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
         $aksiIds = $rencanaAksis->pluck('id');
         $realisasiAksiData = RealisasiRencanaAksi::whereIn('rencana_aksi_id', $aksiIds)
                                 ->where('tahun', $this->tahun)
-                                ->where('bulan', $this->bulan) // Hanya bulan ini
+                                ->where('bulan', $this->bulan)
                                 ->get()
-                                ->groupBy('rencana_aksi_id');
+                                ->keyBy('rencana_aksi_id');
 
         return view('cetak.laporan-kinerja-bulanan', [
             'jabatan' => $jabatan,
@@ -105,7 +115,7 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
             'tahun' => $this->tahun,
             'penjelasans' => $penjelasans,
             'pk' => $pk,
-            'realisasiData' => $realisasiData,
+            'realisasiData' => $realisasiData, // Dikirim sebagai Keyed Collection
             'rencanaAksis' => $rencanaAksis,
             'realisasiAksiData' => $realisasiAksiData,
             'namaBulan' => $this->getNamaBulan($this->bulan),

@@ -19,9 +19,9 @@ class PerjanjianKinerjaDetail extends Component
 
     // --- MODAL PROPERTIES ---
     public $isOpen = false;
-    public $pkId = null; // [BARU] Untuk menyimpan ID saat Edit
+    public $pkId = null; 
     public $tahun;
-    public $bulan;
+    public $bulan; // [PENTING] Sekarang dipakai lagi untuk simpan "Mulai Berlaku"
     public $keterangan;
     
     // Data Display di Modal
@@ -49,7 +49,8 @@ class PerjanjianKinerjaDetail extends Component
             ->when($this->search, function($q) {
                 $q->where('keterangan', 'like', '%' . $this->search . '%');
             })
-            ->orderBy('id', 'asc')
+            ->orderBy('tahun', 'desc')
+            ->orderBy('bulan', 'desc') // Urutkan biar PK Perubahan muncul paling atas
             ->paginate(10);
 
         // --- LOGIKA STATISTIK ---
@@ -68,11 +69,10 @@ class PerjanjianKinerjaDetail extends Component
     // --- BUKA MODAL TAMBAH (RESET FORM) ---
     public function openModal()
     {
-        // [UPDATE] Reset pkId agar sistem tahu ini mode tambah baru
         $this->reset(['keterangan', 'pkId']); 
         
         $this->tahun = date('Y');
-        $this->bulan = (int) date('n');
+        $this->bulan = 1; // Default Januari (Asumsi PK Murni)
         
         // Generate Keterangan Awal
         $this->generateKeterangan();
@@ -83,14 +83,14 @@ class PerjanjianKinerjaDetail extends Component
         $this->isOpen = true;
     }
 
-    // --- [BARU] BUKA MODAL EDIT ---
+    // --- BUKA MODAL EDIT ---
     public function edit($id)
     {
         $pk = PerjanjianKinerja::findOrFail($id);
         
-        $this->pkId = $id; // Set ID yang sedang diedit
+        $this->pkId = $id; 
         $this->tahun = $pk->tahun;
-        $this->bulan = $pk->bulan;
+        $this->bulan = $pk->bulan; // Load bulan yang tersimpan
         $this->keterangan = $pk->keterangan;
 
         // Load Data Atasan untuk Display Modal
@@ -99,7 +99,7 @@ class PerjanjianKinerjaDetail extends Component
         $this->isOpen = true;
     }
 
-    // Helper untuk load data atasan (biar tidak duplikat kode)
+    // Helper untuk load data atasan
     private function loadAtasanData()
     {
         $this->atasan_pegawai = null;
@@ -114,62 +114,67 @@ class PerjanjianKinerjaDetail extends Component
         }
     }
 
-    // Live Update Keterangan (Hanya jalan jika mode Tambah / pkId null)
-    // Agar saat edit, keterangan user tidak tertimpa otomatis jika mereka ganti tahun/bulan
+    // Live Update Keterangan
     public function updatedBulan() { 
         if(!$this->pkId) $this->generateKeterangan(); 
     }
+    
     public function updatedTahun() { 
         if(!$this->pkId) $this->generateKeterangan(); 
     }
 
     public function generateKeterangan()
     {
-        $months = [
-            1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April', 
-            5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus', 
-            9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
-        ];
-        
-        $namaBulan = $months[$this->bulan] ?? '';
-        $this->keterangan = "PK " . $this->jabatan->nama . " Bulan " . $namaBulan . " " . $this->tahun;
+        // Fitur Pintar: Beda bulan, beda saran nama
+        if ($this->bulan == 1) {
+            // Jika Januari, biasanya Murni
+            $this->keterangan = "PK " . $this->jabatan->nama . " Tahun " . $this->tahun;
+        } else {
+            // Jika bukan Januari, biasanya Perubahan
+            $namaBulan = Carbon::createFromDate(null, $this->bulan, null)->locale('id')->translatedFormat('F');
+            $this->keterangan = "PK Perubahan " . $this->jabatan->nama . " (Mulai " . $namaBulan . " " . $this->tahun . ")";
+        }
     }
 
     public function closeModal()
     {
         $this->isOpen = false;
-        $this->reset(['pkId', 'keterangan']); // Bersihkan ID saat tutup
+        $this->reset(['pkId', 'keterangan']); 
     }
 
+    // --- LOGIKA PENYIMPANAN YANG DIPERBAIKI ---
     public function store()
     {
         $this->validate([
             'tahun' => 'required',
-            'bulan' => 'required|integer|min:1|max:12',
+            'bulan' => 'required|integer|min:1|max:12', // [UPDATE] Validasi Bulan Wajib Ada
             'keterangan' => 'required',
         ]);
 
-        // [UPDATE] Logika Simpan atau Update
+        // Siapkan Data
+        $dataToSave = [
+            'jabatan_id' => $this->jabatan->id,
+            'pegawai_id' => $this->pegawai ? $this->pegawai->id : null,
+            'tahun' => $this->tahun,
+            
+            // [UPDATE PENTING] Simpan nilai bulan yang dipilih user
+            // Ini akan menjadi "Effective Start Date"
+            'bulan' => $this->bulan, 
+            
+            'keterangan' => $this->keterangan,
+        ];
+
         if ($this->pkId) {
             // MODE UPDATE
             $pk = PerjanjianKinerja::findOrFail($this->pkId);
-            $pk->update([
-                'tahun' => $this->tahun,
-                'bulan' => $this->bulan,
-                'keterangan' => $this->keterangan,
-            ]);
+            $pk->update($dataToSave);
         } else {
-            // MODE CREATE (TAMBAH BARU)
-            PerjanjianKinerja::create([
-                'jabatan_id' => $this->jabatan->id,
-                'pegawai_id' => $this->pegawai ? $this->pegawai->id : null,
-                'tahun' => $this->tahun,
-                'bulan' => $this->bulan,
-                'keterangan' => $this->keterangan,
-                'status' => 'draft',
-                'status_verifikasi' => 'draft', 
-                'tanggal_penetapan' => Carbon::now('Asia/Makassar') 
-            ]);
+            // MODE CREATE
+            $dataToSave['status'] = 'draft';
+            $dataToSave['status_verifikasi'] = 'draft';
+            $dataToSave['tanggal_penetapan'] = Carbon::now('Asia/Makassar');
+
+            PerjanjianKinerja::create($dataToSave);
         }
 
         $this->closeModal();

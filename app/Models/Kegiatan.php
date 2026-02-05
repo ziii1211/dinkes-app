@@ -25,6 +25,11 @@ class Kegiatan extends Model
         return $this->belongsTo(Program::class);
     }
 
+    public function subKegiatans()
+    {
+        return $this->hasMany(SubKegiatan::class, 'kegiatan_id');
+    }
+
     // Relasi ke Anak (Indikator Kegiatan)
     public function indikators()
     {

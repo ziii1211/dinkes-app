@@ -197,6 +197,7 @@ Route::middleware('auth')->group(function () {
 
   // --- LAPORAN KONSOLIDASI (BARU - SUDAH DIAKTIFKAN) ---
     Route::middleware('role:admin')->prefix('laporan-konsolidasi')->group(function () {
+        Route::get('/master-data', \App\Livewire\Laporan\MasterData::class)->name('laporan.master');
         Route::get('/', LaporanKonsolidasiIndex::class)->name('laporan-konsolidasi.index');
         // Route::get('/tambah', LaporanKonsolidasiForm::class)->name('laporan-konsolidasi.create');
         // Route::get('/{id}/edit', LaporanKonsolidasiForm::class)->name('laporan-konsolidasi.edit');

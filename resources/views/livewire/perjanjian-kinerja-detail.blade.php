@@ -15,7 +15,7 @@
 
     <div class="space-y-6 md:space-y-8">
         
-        {{-- SECTION INFO JABATAN (TETAP SAMA) --}}
+        {{-- SECTION INFO JABATAN --}}
         <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
             <div class="px-4 py-4 md:px-6 md:py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white gap-4">
                 <h3 class="font-medium text-gray-800 text-base flex items-center">
@@ -31,7 +31,7 @@
             
             <div class="p-4 md:p-8">
                 <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-12">
-                    {{-- INFO DETAIL (TETAP SAMA) --}}
+                    {{-- INFO DETAIL --}}
                     <div class="space-y-4">
                         <div class="grid grid-cols-12 gap-2 md:gap-4 pb-4 border-b border-dashed border-gray-200 items-center">
                             <div class="col-span-12 sm:col-span-4 text-xs md:text-sm text-gray-500">Unit Kerja</div>
@@ -74,7 +74,7 @@
                         </div>
                     </div>
 
-                    {{-- STATISTIK & TOMBOL BUAT PK (TETAP SAMA) --}}
+                    {{-- STATISTIK & TOMBOL BUAT PK --}}
                     <div class="bg-gray-50 rounded-xl p-4 md:p-6 border border-gray-100 flex flex-col justify-between">
                         <div class="space-y-3 mb-6">
                             <div class="bg-white p-4 rounded-lg border border-blue-100 shadow-sm flex justify-between items-center">
@@ -136,8 +136,7 @@
                         <thead class="bg-white text-gray-500 border-b border-gray-100 uppercase tracking-wider text-xs font-semibold">
                             <tr>
                                 <th class="px-6 py-4 text-center w-16 min-w-[50px]">#</th>
-                                <th class="px-6 py-4 w-24 min-w-[80px]">Tahun</th>
-                                <th class="px-6 py-4 w-32 min-w-[100px]">Bulan</th>
+                                <th class="px-6 py-4 w-32 min-w-[120px]">Tahun / Berlaku</th>
                                 <th class="px-6 py-4 min-w-[250px]">Keterangan</th>
                                 <th class="px-6 py-4 min-w-[200px]">Pengampu</th>
                                 <th class="px-6 py-4 text-center min-w-[100px]">Status</th>
@@ -148,9 +147,17 @@
                             @forelse($pks as $index => $pk)
                             <tr class="hover:bg-gray-50 transition-colors">
                                 <td class="px-6 py-4 text-center">{{ $pks->firstItem() + $index }}</td>
-                                <td class="px-6 py-4 font-normal text-gray-800">{{ $pk->tahun }}</td>
                                 <td class="px-6 py-4 font-normal text-gray-800">
-                                    {{ \Carbon\Carbon::createFromDate(null, $pk->bulan, null)->locale('id')->translatedFormat('F') }}
+                                    <div class="font-bold">{{ $pk->tahun }}</div>
+                                    @if($pk->bulan)
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-blue-100 text-blue-800 mt-1">
+                                            Mulai: {{ \Carbon\Carbon::createFromDate(null, $pk->bulan, null)->locale('id')->isoFormat('MMMM') }}
+                                        </span>
+                                    @else
+                                        <span class="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-medium bg-gray-100 text-gray-600 mt-1">
+                                            Setahun Penuh
+                                        </span>
+                                    @endif
                                 </td>
                                 <td class="px-6 py-4 font-normal text-gray-800 whitespace-normal">{{ $pk->keterangan }}</td>
                                 <td class="px-6 py-4 whitespace-normal">
@@ -170,7 +177,8 @@
                                 </td>
                                 <td class="px-6 py-4 text-center">
                                     <div class="flex justify-center gap-2">
-                                        {{-- TOMBOL EDIT BARU --}}
+                                        
+                                        {{-- [UPDATE] TOMBOL EDIT DIKEMBALIKAN --}}
                                         @if(auth()->user()->hasRole('admin'))
                                         <button wire:click="edit({{ $pk->id }})" class="flex items-center px-3 py-1.5 bg-yellow-50 hover:bg-yellow-100 text-yellow-600 rounded text-xs font-medium transition-colors shadow-sm border border-yellow-200">
                                             <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -192,7 +200,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="px-6 py-10 text-center text-gray-400 italic bg-gray-50">
+                                <td colspan="6" class="px-6 py-10 text-center text-gray-400 italic bg-gray-50">
                                     Belum ada Perjanjian Kinerja untuk jabatan ini.
                                 </td>
                             </tr>
@@ -209,7 +217,6 @@
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm transition-opacity p-4">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-3xl overflow-hidden transform transition-all flex flex-col max-h-[90vh]">
             <div class="px-6 py-4 border-b border-gray-100 flex justify-between items-center bg-white shrink-0">
-                {{-- [UPDATE] JUDUL DINAMIS --}}
                 <h3 class="text-lg font-bold text-gray-800">
                     {{ $pkId ? 'Edit Perjanjian Kinerja' : 'Buat Perjanjian Kinerja' }}
                 </h3>
@@ -218,8 +225,8 @@
                 </button>
             </div>
             <div class="p-6 space-y-6 overflow-y-auto">
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="md:col-span-1">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Tahun <span class="text-red-500">*</span></label>
                         <select wire:model.live="tahun" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
                             @for($y = date('Y')-1; $y <= date('Y')+2; $y++)
@@ -228,10 +235,10 @@
                         </select>
                     </div>
 
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Bulan <span class="text-red-500">*</span></label>
+                    <div class="md:col-span-1">
+                        <label class="block text-sm font-semibold text-gray-700 mb-2">Mulai Berlaku (Bulan) <span class="text-red-500">*</span></label>
                         <select wire:model.live="bulan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none bg-white">
-                            <option value="1">Januari</option>
+                            <option value="1">Januari (Murni)</option>
                             <option value="2">Februari</option>
                             <option value="3">Maret</option>
                             <option value="4">April</option>
@@ -239,16 +246,19 @@
                             <option value="6">Juni</option>
                             <option value="7">Juli</option>
                             <option value="8">Agustus</option>
-                            <option value="9">September</option>
-                            <option value="10">Oktober</option>
+                            <option value="9">September (Perubahan)</option>
+                            <option value="10">Oktober (Perubahan)</option>
                             <option value="11">November</option>
                             <option value="12">Desember</option>
                         </select>
                     </div>
 
-                    <div class="md:col-span-3">
+                    <div class="md:col-span-2">
                         <label class="block text-sm font-semibold text-gray-700 mb-2">Keterangan <span class="text-red-500">*</span></label>
-                        <input type="text" wire:model="keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: PK Sekretaris Bulan Januari 2025">
+                        <input type="text" wire:model="keterangan" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none" placeholder="Contoh: PK Murni 2026 atau PK Perubahan 2026">
+                        <p class="text-xs text-gray-500 mt-1">
+                            *Pilih bulan <span class="font-bold">Januari</span> untuk PK Murni, atau bulan lain (misal <span class="font-bold">September/Oktober</span>) jika ini adalah PK Perubahan.
+                        </p>
                     </div>
                 </div>
 
@@ -317,7 +327,6 @@
                 <button wire:click="closeModal" class="px-6 py-2.5 bg-white border border-gray-300 text-gray-700 text-sm font-medium rounded-lg hover:bg-gray-50 focus:outline-none">Batal</button>
                 <button wire:click="store" class="px-6 py-2.5 bg-green-500 text-white text-sm font-medium rounded-lg hover:bg-green-600 focus:outline-none flex items-center gap-2 shadow-sm">
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path></svg>
-                    {{-- [UPDATE] TOMBOL DINAMIS --}}
                     {{ $pkId ? 'Update' : 'Simpan' }}
                 </button>
             </div>

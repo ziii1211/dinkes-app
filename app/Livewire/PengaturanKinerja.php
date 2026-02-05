@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Jabatan;
 use App\Models\PerjanjianKinerja;
+// use App\Models\PkIndikator; // Hapus ini agar tidak bingung
 use Carbon\Carbon;
 
 class PengaturanKinerja extends Component
@@ -22,12 +23,16 @@ class PengaturanKinerja extends Component
     public $selectedPkId = ''; 
     public $currentPk = null;
 
+    // Data Form Input (Target & Pagu Bulanan) - Kita siapkan saja array-nya
+    public $targetBulanan = [];
+    public $paguBulanan = [];
+
     public function mount($jabatanId)
     {
         $this->jabatan = Jabatan::with('pegawai')->findOrFail($jabatanId);
         $this->pegawai = $this->jabatan->pegawai;
 
-        // Set Default Tahun
+        // Set Default Tahun (Ambil yang paling terakhir dibuat/aktif)
         $lastPk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
                     ->where('status_verifikasi', 'disetujui') 
                     ->latest('tahun')
@@ -41,6 +46,7 @@ class PengaturanKinerja extends Component
 
     public function checkPkAvailability()
     {
+        // Cek apakah ada PK di tahun ini (Bulan apapun)
         $exists = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->filterTahun)
             ->where('status_verifikasi', 'disetujui')
@@ -69,75 +75,75 @@ class PengaturanKinerja extends Component
     public function selectMonth($monthIndex)
     {
         $this->selectedMonth = $monthIndex;
-        if ($this->currentPk) {
-            $this->loadPkAutomatic(false); // False: Jangan auto-switch bulan jika manual klik tab
+        
+        // Refresh data agar mengikuti logika bulan baru
+        if ($this->selectedPkOption == 'exist') {
+            $this->loadDataSmart();
         }
     }
 
     public function tampilkanPk()
     {
         if ($this->selectedPkOption == 'exist') {
-            $this->loadPkAutomatic(true); // True: Boleh auto-switch bulan jika kosong
+            $this->loadDataSmart();
         }
     }
 
     /**
-     * [PERBAIKAN] Logika Load PK Lebih Pintar
-     * @param bool $autoSwitchMonth Jika true, sistem akan mencari bulan lain jika bulan terpilih kosong
+     * [LOGIKA SMART LOAD]
+     * Mencari PK yang berlaku untuk bulan yang dipilih (Effective Date Logic)
      */
-    public function loadPkAutomatic($autoSwitchMonth = true)
+    public function loadDataSmart()
     {
-        // 1. Coba cari di bulan yang sedang dipilih (selectedMonth)
-        $pk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
+        // 1. Cari PK Murni atau Perubahan yang berlaku pada bulan ini ($this->selectedMonth)
+        // Logika: Cari PK dengan bulan <= selectedMonth, ambil yang paling besar bulannya.
+        
+        $pk = PerjanjianKinerja::with(['sasarans.indikators'])
+            ->where('jabatan_id', $this->jabatan->id)
             ->where('tahun', $this->filterTahun)
             ->where('status_verifikasi', 'disetujui')
-            ->where('bulan', $this->selectedMonth) 
-            ->latest('id')
+            ->where('bulan', '<=', $this->selectedMonth) // Kunci Logika Effective Date
+            ->orderBy('bulan', 'desc') // Prioritaskan PK Perubahan (bulan lebih besar)
+            ->orderBy('id', 'desc')
             ->first();
 
-        // 2. [LOGIKA BARU] Jika kosong & mode auto-switch aktif (saat tombol Tampilkan diklik)
-        // Cari data di bulan apa saja yang tersedia (ambil yang paling baru)
-        if (!$pk && $autoSwitchMonth) {
-            $lastAvailablePk = PerjanjianKinerja::where('jabatan_id', $this->jabatan->id)
-                ->where('tahun', $this->filterTahun)
-                ->where('status_verifikasi', 'disetujui')
-                ->orderBy('bulan', 'desc') // Prioritaskan bulan paling akhir
-                ->first();
+        $this->targetBulanan = [];
+        $this->paguBulanan = [];
 
-            if ($lastAvailablePk) {
-                // KETEMU! Pindahkan tampilan ke bulan tersebut
-                $this->selectedMonth = $lastAvailablePk->bulan;
-                $pk = $lastAvailablePk;
-            }
-        }
-
-        // 3. Tampilkan Data
         if ($pk) {
+            $this->currentPk = $pk;
             $this->selectedPkId = $pk->id;
-            $this->loadPkDetail();
+
+            // Load Detail Target Tahunan (untuk display)
+            $colTarget = 'target_' . $pk->tahun;
+            foreach ($this->currentPk->sasarans as $sasaran) {
+                foreach ($sasaran->indikators as $indikator) {
+                    // Mapping target tahunan dinamis
+                    $indikator->target = $indikator->$colTarget ?? $indikator->target;
+                    
+                    // Default target bulanan (kosongkan dulu karena tabel khusus belum ada)
+                    $this->targetBulanan[$indikator->id] = ''; 
+                }
+            }
+            
+            // [CATATAN] Bagian load target bulanan dari database dihapus dulu 
+            // karena tabel khusus untuk menyimpan breakdown bulanan belum tersedia.
+            
         } else {
-            $this->selectedPkId = '';
+            // Jika tidak ketemu PK sama sekali (misal user pilih Januari tapi PK dibuat Februari)
             $this->currentPk = null;
+            $this->selectedPkId = '';
         }
     }
 
-    public function loadPkDetail()
+    // Fungsi Simpan Target Bulanan (Sementara dinonaktifkan/placeholder)
+    public function simpanTarget($indikatorId)
     {
-        if ($this->selectedPkId) {
-            $this->currentPk = PerjanjianKinerja::with(['sasarans.indikators'])
-                ->find($this->selectedPkId);
+        if (!$this->currentPk) return;
 
-            if ($this->currentPk) {
-                $tahun = $this->currentPk->tahun;
-                $colTarget = 'target_' . $tahun; 
-
-                foreach ($this->currentPk->sasarans as $sasaran) {
-                    foreach ($sasaran->indikators as $indikator) {
-                        $indikator->target = $indikator->$colTarget ?? $indikator->target;
-                    }
-                }
-            }
-        }
+        // Logic simpan belum bisa dijalankan karena tabel target bulanan belum dibuat.
+        // Nanti bisa ditambahkan jika fitur breakdown bulanan diperlukan.
+        // $this->dispatch('alert', ['type' => 'info', 'message' => 'Fitur simpan target bulanan belum aktif.']);
     }
 
     public function deleteRkh()
@@ -145,6 +151,7 @@ class PengaturanKinerja extends Component
         if ($this->selectedPkId) {
             $pk = PerjanjianKinerja::find($this->selectedPkId);
             if ($pk) {
+                // Hapus child relations dulu jika perlu
                 foreach ($pk->sasarans as $sasaran) {
                     $sasaran->indikators()->delete();
                     $sasaran->delete(); 
@@ -152,9 +159,8 @@ class PengaturanKinerja extends Component
                 $pk->delete(); 
                 
                 $this->checkPkAvailability();
-                
-                // Reload lagi, siapa tahu masih ada data di bulan lain
-                $this->loadPkAutomatic(true);
+                $this->currentPk = null;
+                $this->selectedPkId = '';
             }
         }
     }
@@ -167,6 +173,12 @@ class PengaturanKinerja extends Component
 
     public function render()
     {
-        return view('livewire.pengaturan-kinerja');
+        return view('livewire.pengaturan-kinerja', [
+            'months' => [
+                1 => 'Januari', 2 => 'Februari', 3 => 'Maret', 4 => 'April',
+                5 => 'Mei', 6 => 'Juni', 7 => 'Juli', 8 => 'Agustus',
+                9 => 'September', 10 => 'Oktober', 11 => 'November', 12 => 'Desember'
+            ]
+        ]);
     }
 }

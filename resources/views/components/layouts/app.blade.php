@@ -177,15 +177,16 @@
                                 </div>
                             </div>
 
-                            {{-- NEW: Laporan (Konsolidasi) - KHUSUS ADMIN --}}
+                            {{-- NEW: Laporan (Dropdown) - KHUSUS ADMIN --}}
                             @if(auth()->user()->role == 'admin')
                                 <div class="relative group">
-                                    <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                    <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' ? 'text-blue-700 dark:text-blue-400' : '' }}">
                                         Laporan
                                         <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                     </button>
                                     <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                        <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Laporan Konsolidasi</a>
+                                        <a href="{{ route('laporan.master') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700 transition-colors">Master Data</a>
+                                        <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Laporan Konsolidasi</a>
                                     </div>
                                 </div>
                             @endif
@@ -335,11 +336,12 @@
                         {{-- NEW: Laporan (Konsolidasi) Mobile - KHUSUS ADMIN --}}
                         @if(auth()->user()->role == 'admin')
                             <div x-data="{ expanded: false }">
-                                <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
+                                <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
                                     <span>Laporan</span>
                                     <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                                 </button>
                                 <div x-show="expanded" class="pl-4 space-y-1">
+                                    <a href="{{ route('laporan.master') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Master Data</a>
                                     <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Laporan Konsolidasi</a>
                                 </div>
                             </div>
