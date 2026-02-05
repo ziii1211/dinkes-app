@@ -9,10 +9,23 @@ class LaporanKonsolidasiAnggaran extends Model
 {
     use HasFactory;
 
-    protected $guarded = [];
+    protected $guarded = ['id'];
 
-    public function laporan()
+    // Relasi ke Laporan Konsolidasi
+    public function laporanKonsolidasi()
     {
-        return $this->belongsTo(LaporanKonsolidasi::class, 'laporan_konsolidasi_id');
+        return $this->belongsTo(LaporanKonsolidasi::class);
+    }
+
+    // Relasi ke Program (PENTING: Tambahkan ini)
+    public function program()
+    {
+        return $this->belongsTo(Program::class);
+    }
+
+    // Relasi ke Kegiatan (PENTING: Tambahkan ini untuk fix error)
+    public function kegiatan()
+    {
+        return $this->belongsTo(Kegiatan::class);
     }
 }

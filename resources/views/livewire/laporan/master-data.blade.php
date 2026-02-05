@@ -16,9 +16,25 @@
     <div class="space-y-8 relative z-10 mt-8">
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
 
-            {{-- Header --}}
+            {{-- Header & Show Entries --}}
             <div class="px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
-                <h3 class="font-bold text-gray-800 text-lg">Daftar Laporan Master Data</h3>
+                <div class="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
+                    <h3 class="font-bold text-gray-800 text-lg">Daftar Laporan Master Data</h3>
+                    
+                    {{-- FITUR SHOW ENTRIES --}}
+                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                        <span>Show</span>
+                        <select wire:model.live="perPage" class="border-gray-300 border rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 py-1 px-2">
+                            <option value="5">5</option>
+                            <option value="10">10</option>
+                            <option value="25">25</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                        <span>entries</span>
+                    </div>
+                </div>
+
                 <button wire:click="createProgram" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex justify-center items-center transition-colors shadow-sm">
                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Program
@@ -35,143 +51,157 @@
                                 <th class="p-4 align-middle text-center w-40">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-100 bg-white text-sm text-gray-600">
-                            @forelse($programs as $program)
-                                
-                                {{-- === BARIS PROGRAM === --}}
-                                <tr class="bg-blue-50/40 border-b border-gray-100 group hover:bg-blue-50 transition-colors">
-                                    <td class="p-4 border-r border-gray-100 align-top">
-                                        <div class="flex items-start gap-3">
-                                            <span class="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 mt-1">PROGRAM</span>
-                                            <div class="flex flex-col">
-                                                <span class="font-bold text-gray-800 text-base">{{ $program->kode }}</span>
-                                                <span class="text-gray-700 font-medium leading-relaxed">{{ $program->nama }}</span>
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="p-4 text-center align-middle relative">
-                                        {{-- Dropdown Program --}}
-                                        <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-                                            <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
-                                                Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                            </button>
-                                            <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 animate-fade-in-down">
-                                                <div class="py-1">
-                                                    <button wire:click="createKegiatan({{ $program->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-green-600 hover:bg-green-50">
-                                                        <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                                        Tambah Kegiatan
-                                                    </button>
-                                                </div>
-                                                <div class="py-1">
-                                                    <button wire:click="editProgram({{ $program->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50">
-                                                        <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                        Edit Program
-                                                    </button>
-                                                    <button wire:click="confirmDelete({{ $program->id }}, 'program')" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                                                        <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                        Hapus Program
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
+                        
+                        {{-- LOOPING DI LUAR TBODY --}}
+                        @forelse($programs as $program)
+                        <tbody x-data="{ expanded: false }" class="border-b border-gray-100 group transition-colors">
+                            
+                            {{-- === BARIS PROGRAM === --}}
+                            <tr class="bg-blue-50/40 hover:bg-blue-50 transition-colors">
+                                <td class="p-4 border-r border-gray-100 align-top">
+                                    <div class="flex items-start gap-3">
+                                        {{-- Tombol Toggle Accordion --}}
+                                        <button @click="expanded = !expanded" class="mt-1 text-blue-600 hover:text-blue-800 transition-transform duration-200" :class="{'rotate-90': expanded}">
+                                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                                        </button>
 
-                                {{-- === LOOP KEGIATAN === --}}
-                                @foreach($program->kegiatans as $kegiatan)
-                                <tr class="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                    <td class="p-4 border-r border-gray-100 align-top">
-                                        {{-- Indentasi Level 1 --}}
-                                        <div class="flex items-start gap-3 pl-6 sm:pl-10 border-l-2 border-gray-100 ml-2">
-                                            <span class="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 mt-1">KEGIATAN</span>
-                                            <div class="flex flex-col">
-                                                <span class="font-bold text-gray-800 text-sm">{{ $kegiatan->kode }}</span>
-                                                <span class="text-gray-600 text-sm leading-relaxed">{{ $kegiatan->nama }}</span>
-                                            </div>
+                                        <span class="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-blue-100 text-blue-700 border border-blue-200 mt-1">PROGRAM</span>
+                                        
+                                        {{-- Klik Text juga bisa toggle --}}
+                                        <div class="flex flex-col cursor-pointer select-none" @click="expanded = !expanded">
+                                            <span class="font-bold text-gray-800 text-base">{{ $program->kode }}</span>
+                                            <span class="text-gray-700 font-medium leading-relaxed">{{ $program->nama }}</span>
+                                            <span class="text-xs text-gray-400 mt-1" x-show="!expanded">
+                                                Klik untuk lihat rincian...
+                                            </span>
                                         </div>
-                                    </td>
-                                    <td class="p-4 text-center align-middle relative">
-                                        {{-- Dropdown Kegiatan --}}
-                                        <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-                                            <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-600 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
-                                                Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                            </button>
-                                            <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 animate-fade-in-down">
-                                                <div class="py-1">
-                                                    {{-- Tambah Sub Kegiatan (HIJAU) --}}
-                                                    <button wire:click="createSubKegiatan({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-green-600 hover:bg-green-50">
-                                                        <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                                        Tambah Sub Kegiatan
-                                                    </button>
-                                                </div>
-                                                <div class="py-1">
-                                                    <button wire:click="editKegiatan({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50">
-                                                        <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                        Edit Kegiatan
-                                                    </button>
-                                                    <button wire:click="confirmDelete({{ $kegiatan->id }}, 'kegiatan')" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                                                        <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                        Hapus Kegiatan
-                                                    </button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </td>
-                                </tr>
-
-                                    {{-- === LOOP SUB KEGIATAN === --}}
-                                    @foreach($kegiatan->subKegiatans as $sub)
-                                    <tr class="bg-gray-50/50 border-b border-gray-100 hover:bg-gray-50 transition-colors">
-                                        <td class="p-4 border-r border-gray-100 align-top">
-                                            {{-- Indentasi Level 2 --}}
-                                            <div class="flex items-start gap-3 pl-12 sm:pl-20 border-l-2 border-dashed border-gray-200 ml-4">
-                                                <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200 mt-1 uppercase">SUB</span>
-                                                <div class="flex flex-col">
-                                                    <span class="font-bold text-gray-700 text-sm">{{ $sub->kode }}</span>
-                                                    <span class="text-gray-500 text-sm leading-relaxed">{{ $sub->nama }}</span>
-                                                </div>
-                                            </div>
-                                        </td>
-                                        <td class="p-4 text-center align-middle relative">
-                                            {{-- Dropdown Sub Kegiatan --}}
-                                            <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-                                                <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1 bg-white text-[11px] font-medium text-gray-500 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
-                                                    Menu <svg class="-mr-1 ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-center align-middle relative">
+                                    {{-- Dropdown Program --}}
+                                    <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
+                                        <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
+                                            Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        </button>
+                                        <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 animate-fade-in-down">
+                                            <div class="py-1">
+                                                <button wire:click="createKegiatan({{ $program->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-green-600 hover:bg-green-50">
+                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                    Tambah Kegiatan
                                                 </button>
-                                                <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 animate-fade-in-down">
-                                                    <div class="py-1">
-                                                        {{-- Indikator Kinerja (HIJAU) --}}
-                                                        <button wire:click="openIndikator({{ $sub->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-green-600 hover:bg-green-50">
-                                                            <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
-                                                            Indikator Kinerja
-                                                        </button>
-                                                    </div>
-                                                    <div class="py-1">
-                                                        <button wire:click="editSubKegiatan({{ $sub->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50">
-                                                            <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                            Edit Sub Kegiatan
-                                                        </button>
-                                                        <button wire:click="confirmDelete({{ $sub->id }}, 'sub_kegiatan')" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
-                                                            <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                            Hapus Sub Kegiatan
-                                                        </button>
-                                                    </div>
+                                            </div>
+                                            <div class="py-1">
+                                                <button wire:click="editProgram({{ $program->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50">
+                                                    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                    Edit Program
+                                                </button>
+                                                <button wire:click="confirmDelete({{ $program->id }}, 'program')" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                                                    <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    Hapus Program
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                            {{-- === LOOP KEGIATAN === --}}
+                            @foreach($program->kegiatans as $kegiatan)
+                            <tr x-show="expanded" x-cloak x-transition class="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                <td class="p-4 border-r border-gray-100 align-top">
+                                    {{-- Indentasi Level 1 --}}
+                                    <div class="flex items-start gap-3 pl-6 sm:pl-10 border-l-2 border-gray-100 ml-2">
+                                        <span class="flex-shrink-0 inline-flex items-center px-2.5 py-0.5 rounded-md text-xs font-bold bg-amber-100 text-amber-700 border border-amber-200 mt-1">KEGIATAN</span>
+                                        <div class="flex flex-col">
+                                            <span class="font-bold text-gray-800 text-sm">{{ $kegiatan->kode }}</span>
+                                            <span class="text-gray-600 text-sm leading-relaxed">{{ $kegiatan->nama }}</span>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="p-4 text-center align-middle relative">
+                                    {{-- Dropdown Kegiatan --}}
+                                    <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
+                                        <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-600 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
+                                            Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                        </button>
+                                        <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 animate-fade-in-down">
+                                            <div class="py-1">
+                                                {{-- Tambah Sub Kegiatan (HIJAU) --}}
+                                                <button wire:click="createSubKegiatan({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-green-600 hover:bg-green-50">
+                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                                    Tambah Sub Kegiatan
+                                                </button>
+                                            </div>
+                                            <div class="py-1">
+                                                <button wire:click="editKegiatan({{ $kegiatan->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50">
+                                                    <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                    Edit Kegiatan
+                                                </button>
+                                                <button wire:click="confirmDelete({{ $kegiatan->id }}, 'kegiatan')" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                                                    <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                    Hapus Kegiatan
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+
+                                {{-- === LOOP SUB KEGIATAN === --}}
+                                @foreach($kegiatan->subKegiatans as $sub)
+                                <tr x-show="expanded" x-cloak x-transition class="bg-gray-50/50 border-b border-gray-100 hover:bg-gray-50 transition-colors">
+                                    <td class="p-4 border-r border-gray-100 align-top">
+                                        {{-- Indentasi Level 2 --}}
+                                        <div class="flex items-start gap-3 pl-12 sm:pl-20 border-l-2 border-dashed border-gray-200 ml-4">
+                                            <span class="flex-shrink-0 inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold bg-purple-100 text-purple-700 border border-purple-200 mt-1 uppercase">SUB</span>
+                                            <div class="flex flex-col">
+                                                <span class="font-bold text-gray-700 text-sm">{{ $sub->kode }}</span>
+                                                <span class="text-gray-500 text-sm leading-relaxed">{{ $sub->nama }}</span>
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center align-middle relative">
+                                        {{-- Dropdown Sub Kegiatan --}}
+                                        <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
+                                            <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1 bg-white text-[11px] font-medium text-gray-500 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
+                                                Menu <svg class="-mr-1 ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                            </button>
+                                            <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-56 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50 divide-y divide-gray-100 animate-fade-in-down">
+                                                <div class="py-1">
+                                                    {{-- Indikator Kinerja (HIJAU) --}}
+                                                    <button wire:click="openIndikator({{ $sub->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-green-600 hover:bg-green-50">
+                                                        <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                                                        Indikator Kinerja
+                                                    </button>
+                                                </div>
+                                                <div class="py-1">
+                                                    <button wire:click="editSubKegiatan({{ $sub->id }})" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-blue-600 hover:bg-blue-50">
+                                                        <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                                                        Edit Sub Kegiatan
+                                                    </button>
+                                                    <button wire:click="confirmDelete({{ $sub->id }}, 'sub_kegiatan')" @click="open = false" class="group flex w-full items-center px-4 py-2.5 text-sm text-red-600 hover:bg-red-50">
+                                                        <svg class="mr-3 h-4 w-4 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                        Hapus Sub Kegiatan
+                                                    </button>
                                                 </div>
                                             </div>
-                                        </td>
-                                    </tr>
-                                    @endforeach
-
+                                        </div>
+                                    </td>
+                                </tr>
                                 @endforeach
 
-                            @empty
+                            @endforeach
+
+                        </tbody>
+                        @empty
+                            <tbody>
                                 <tr>
                                     <td colspan="2" class="p-10 text-center text-gray-400 italic bg-white">
                                         Data belum tersedia.
                                     </td>
                                 </tr>
-                            @endforelse
-                        </tbody>
+                            </tbody>
+                        @endforelse
                     </table>
                 </div>
 

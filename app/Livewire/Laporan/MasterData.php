@@ -19,6 +19,9 @@ class MasterData extends Component
     public $isOpenIndikator = false;
     public $isEditMode = false;
     
+    // Properti untuk Show Entries (Default 10)
+    public $perPage = 10; 
+    
     // --- PROPERTI HAPUS ---
     public $deleteTarget = ''; 
     public $deleteId = null;
@@ -53,7 +56,8 @@ class MasterData extends Component
         }])
         ->orderBy('kode', 'asc')
         ->orderBy('id', 'asc')
-        ->paginate(10); // Menampilkan 10 Program per halaman
+        // Gunakan variable $this->perPage agar dinamis
+        ->paginate($this->perPage); 
 
         return view('livewire.laporan.master-data', [
             'programs' => $programs
