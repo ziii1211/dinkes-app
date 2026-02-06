@@ -137,27 +137,84 @@ class InputData extends Component
         $this->targetProgramId = null;
     }
 
+    // --- UPDATE TERBARU: OTOMATIS TARIK SUB KEGIATAN & INDIKATOR ---
     public function addKegiatan()
     {
         $this->validate(['selectedKegiatanId' => 'required']);
 
-        LaporanKonsolidasiAnggaran::updateOrCreate(
-            [
-                'laporan_konsolidasi_id' => $this->laporan->id,
-                'kegiatan_id' => $this->selectedKegiatanId
-            ],
-            [
-                'pagu_anggaran' => 0,
-                'pagu_realisasi' => 0
-            ]
-        );
+        DB::beginTransaction();
 
-        session()->flash('message', 'Kegiatan berhasil ditambahkan.');
+        try {
+            // 1. Simpan Data KEGIATAN ke tabel Anggaran (Header)
+            LaporanKonsolidasiAnggaran::updateOrCreate(
+                [
+                    'laporan_konsolidasi_id' => $this->laporan->id,
+                    'kegiatan_id' => $this->selectedKegiatanId
+                ],
+                [
+                    'pagu_anggaran' => 0,
+                    'pagu_realisasi' => 0
+                ]
+            );
+
+            // 2. TARIK OTOMATIS SUB KEGIATAN DARI MASTER DATA
+            // Cari semua Sub Kegiatan milik Kegiatan yang dipilih
+            $masterSubKegiatans = SubKegiatan::with(['indikators', 'kegiatan.program'])
+                                    ->where('kegiatan_id', $this->selectedKegiatanId)
+                                    ->get();
+
+            foreach($masterSubKegiatans as $sub) {
+                // Cek dulu apakah sub kegiatan ini sudah ada di laporan agar tidak duplikat
+                $exists = DetailLaporanKonsolidasi::where('laporan_konsolidasi_id', $this->laporan->id)
+                            ->where('sub_kegiatan_id', $sub->id)
+                            ->exists();
+
+                if (!$exists) {
+                    // Ambil Indikator untuk mengisi default Sub Output & Satuan
+                    $listIndikator = $sub->indikators;
+                    
+                    // Gabung keterangan/satuan jika ada lebih dari 1 indikator, dipisah enter (\n)
+                    $textOutput = $listIndikator->pluck('keterangan')->join("\n");
+                    $textSatuan = $listIndikator->pluck('satuan')->join("\n");
+
+                    // Jika kosong, beri tanda strip
+                    $textOutput = $textOutput ?: '-';
+                    $textSatuan = $textSatuan ?: '-';
+
+                    // Buat Nama Lengkap untuk history/cache di tabel detail
+                    $namaProgram = $sub->kegiatan->program->nama ?? $sub->kegiatan->program->nama_program ?? '-';
+                    $namaKegiatan = $sub->kegiatan->nama ?? $sub->kegiatan->nama_kegiatan ?? '-';
+                    $namaLengkap = $namaProgram . ' / ' . $namaKegiatan . ' / ' . $sub->nama;
+
+                    DetailLaporanKonsolidasi::create([
+                        'laporan_konsolidasi_id' => $this->laporan->id,
+                        'sub_kegiatan_id'       => $sub->id,
+                        'kode'                  => $sub->kode,
+                        'nama_program_kegiatan' => $namaLengkap,
+                        
+                        // Isi otomatis dari Master Data Indikator
+                        'sub_output'            => $textOutput, 
+                        'satuan_unit'           => $textSatuan,
+                        
+                        'pagu_anggaran'         => 0,
+                        'pagu_realisasi'        => 0
+                    ]);
+                }
+            }
+
+            DB::commit();
+            session()->flash('message', 'Kegiatan dan seluruh Sub Kegiatan berhasil ditambahkan.');
+
+        } catch (\Exception $e) {
+            DB::rollBack();
+            session()->flash('error', 'Gagal menambahkan: ' . $e->getMessage());
+        }
+
         $this->loadData();
         $this->closeKegiatanModal();
     }
 
-    // --- AKSI KEGIATAN ---
+    // --- AKSI KEGIATAN LAINNYA ---
     public function createSubKegiatan($kegiatanId)
     {
         $this->dispatch('alert', ['type' => 'info', 'title' => 'Info', 'message' => 'Fitur Tambah Sub Kegiatan akan dibuat di tahap selanjutnya. ID Kegiatan: ' . $kegiatanId]);

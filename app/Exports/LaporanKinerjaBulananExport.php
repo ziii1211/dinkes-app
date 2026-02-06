@@ -33,14 +33,14 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
 
     public function view(): View
     {
-        // 1. Ambil Tanggal Hari Ini (Zona Waktu WITA / Banjarmasin)
+        // 1. Ambil Tanggal Hari Ini
         $hariIni = Carbon::now('Asia/Makassar')->format('d');
 
         // 2. Ambil data Jabatan & Atasan
         $jabatan = Jabatan::with(['pegawai', 'parent.pegawai'])->find($this->jabatanId);
         $atasan = $jabatan->parent ?? null;
 
-        // --- KHUSUS KEPALA DINAS (MANUAL GUBERNUR) ---
+        // --- KHUSUS KEPALA DINAS ---
         if ($jabatan && stripos($jabatan->nama, 'Kepala Dinas') !== false) {
             $atasan = new stdClass();
             $atasan->nama = 'GUBERNUR KALIMANTAN SELATAN';
@@ -50,63 +50,63 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
             $atasan->pegawai->pangkat = '';
             $atasan->pegawai->golongan = '';
         }
-        // ----------------------------------------------
 
-        // 3. Ambil Penjelasan Kinerja (Tetap Filter Bulan Spesifik)
+        // 3. Penjelasan Kinerja
         $penjelasans = PenjelasanKinerja::where('jabatan_id', $this->jabatanId)
                         ->where('bulan', $this->bulan)
                         ->where('tahun', $this->tahun)
                         ->get();
 
-        // 4. Ambil PK (FIX: LOGIKA SMART PK / EFFECTIVE DATE)
-        // Masalah sebelumnya: where('bulan', $this->bulan) membuat bulan Feb kosong jika PK dibuat Jan.
-        // Solusi: Cari PK yang bulan-nya <= bulan laporan, ambil yang paling baru.
+        // 4. Ambil PK (PERBAIKAN LOGIKA: Effective Date)
+        // Cari PK yang dibuat sebelum atau pada bulan ini, ambil yang paling baru.
         $pk = PerjanjianKinerja::with(['sasarans.indikators'])
                 ->where('jabatan_id', $this->jabatanId)
                 ->where('tahun', $this->tahun)
                 ->where('status_verifikasi', 'disetujui')
-                
-                // [UPDATE PENTING DISINI]
-                ->where('bulan', '<=', $this->bulan) 
-                ->orderBy('bulan', 'desc') // Prioritaskan PK Perubahan (bulan lebih besar)
+                ->where('bulan', '<=', $this->bulan) // Logika Kunci agar Feb tampil
+                ->orderBy('bulan', 'desc') 
                 ->orderBy('id', 'desc')
                 ->first();
 
-        // 5. Ambil Realisasi Indikator
+        // 5. Ambil Realisasi & SIAPKAN TARGET (Mencegah Error di Blade)
         $realisasiData = collect([]);
         if ($pk) {
             $indikatorIds = collect();
+            
+            // Nama kolom target dinamis (contoh: target_2026)
+            $colTarget = 'target_' . $this->tahun;
+
             foreach ($pk->sasarans as $sasaran) {
                 foreach ($sasaran->indikators as $indikator) {
-                    // Inject Target Tahunan yang benar sesuai PK yang terpilih
-                    $colTarget = 'target_' . $this->tahun;
-                    $indikator->target_tahunan = $indikator->$colTarget ?? $indikator->target;
-                    
+                    // [FIX ERROR] Kita set target_tahunan di sini secara eksplisit
+                    // Menggunakan getAttribute() lebih aman daripada akses dinamis properti
+                    $valTarget = $indikator->getAttribute($colTarget) ?? $indikator->target;
+                    $indikator->target_tahunan_fix = $valTarget;
+
                     $indikatorIds->push($indikator->id);
                 }
             }
             
-            // Logic realisasi tetap spesifik bulan ini (karena inputan bulanan)
             $realisasiData = RealisasiKinerja::whereIn('indikator_id', $indikatorIds)
                                 ->where('tahun', $this->tahun)
-                                ->where('bulan', $this->bulan) // Hanya bulan ini
+                                ->where('bulan', $this->bulan)
                                 ->get()
-                                ->keyBy('indikator_id'); // Pakai keyBy agar mudah diakses di view
+                                ->groupBy('indikator_id');
         }
 
-        // 6. Ambil Rencana Aksi (Tetap Filter Bulan Spesifik)
+        // 6. Rencana Aksi
         $rencanaAksis = RencanaAksi::where('jabatan_id', $this->jabatanId)
                             ->where('tahun', $this->tahun)
                             ->where('bulan', $this->bulan) 
                             ->get();
 
-        // 7. Ambil Realisasi Rencana Aksi
+        // 7. Realisasi Rencana Aksi
         $aksiIds = $rencanaAksis->pluck('id');
         $realisasiAksiData = RealisasiRencanaAksi::whereIn('rencana_aksi_id', $aksiIds)
                                 ->where('tahun', $this->tahun)
                                 ->where('bulan', $this->bulan)
                                 ->get()
-                                ->keyBy('rencana_aksi_id');
+                                ->groupBy('rencana_aksi_id');
 
         return view('cetak.laporan-kinerja-bulanan', [
             'jabatan' => $jabatan,
@@ -115,7 +115,7 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
             'tahun' => $this->tahun,
             'penjelasans' => $penjelasans,
             'pk' => $pk,
-            'realisasiData' => $realisasiData, // Dikirim sebagai Keyed Collection
+            'realisasiData' => $realisasiData,
             'rencanaAksis' => $rencanaAksis,
             'realisasiAksiData' => $realisasiAksiData,
             'namaBulan' => $this->getNamaBulan($this->bulan),
@@ -148,11 +148,16 @@ class LaporanKinerjaBulananExport implements FromView, WithStyles, WithColumnWid
         $sheet->getStyle('D6:J'.$lastRow)->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle('B6:C'.$lastRow)->getAlignment()->setWrapText(true);
 
+        // Auto Height logic (Safe version)
         for ($row = 6; $row <= $lastRow; $row++) {
-            $cellValue = (string)$sheet->getCell('A' . $row)->getValue();
+            $cell = $sheet->getCell('A' . $row);
+            $cellValue = (string)$cell->getValue();
+            
+            // Cek substring aman
             if (str_contains($cellValue, 'Upaya :') || str_contains($cellValue, 'Hambatan :') || str_contains($cellValue, 'Rencana Tindak Lanjut :')) {
                 $dataRow = $row + 1;
                 if ($dataRow > $lastRow) continue;
+                
                 $content = $sheet->getCell('A' . $dataRow)->getValue();
                 if (!empty($content)) {
                     $newlines = substr_count($content, "\n");

@@ -171,12 +171,7 @@
                                             Menu <svg class="-mr-1 ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                                         </button>
                                         <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 divide-y divide-gray-100">
-                                            <div class="py-1">
-                                                <button wire:click="createSubKegiatan({{ $kegiatan->id }})" @click="open = false" class="group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-green-50 hover:text-green-700 w-full text-left">
-                                                    <svg class="mr-3 h-4 w-4 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
-                                                    Tambah Sub Kegiatan
-                                                </button>
-                                            </div>
+                                            {{-- PERUBAHAN: Tombol Tambah Sub Kegiatan DIHAPUS --}}
                                             <div class="py-1">
                                                 <button wire:click="editKegiatan({{ $kegiatan->id }})" @click="open = false" class="group flex items-center px-4 py-2 text-xs text-gray-700 hover:bg-blue-50 hover:text-blue-700 w-full text-left">
                                                     <svg class="mr-3 h-4 w-4 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
@@ -253,17 +248,6 @@
                                     {{-- AKSI SUB KEGIATAN --}}
                                     <td class="p-2 text-center align-middle relative">
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
-                                            <button @click="open = !open" type="button" class="inline-flex justify-center w-full rounded-md border border-gray-200 shadow-sm px-2 py-1 bg-white text-[11px] font-medium text-gray-500 hover:bg-gray-50 focus:outline-none">
-                                                Menu <svg class="-mr-1 ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                            </button>
-                                            <div x-show="open" style="display: none;" class="origin-top-right absolute right-0 mt-2 w-40 rounded-md shadow-xl bg-white ring-1 ring-black ring-opacity-5 z-50 divide-y divide-gray-100">
-                                                <div class="py-1">
-                                                    {{-- Edit Sub Kegiatan (Biru) --}}
-                                                    <button wire:click="editSubKegiatan({{ $detail->id }})" @click="open = false" class="group flex items-center px-4 py-2 text-xs text-gray-600 hover:bg-blue-50 hover:text-blue-700 w-full text-left">
-                                                        <svg class="mr-2 h-3.5 w-3.5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                                                        Edit
-                                                    </button>
-                                                    {{-- Hapus Sub Kegiatan (Merah) --}}
                                                     <button wire:click="deleteSubKegiatan({{ $detail->id }})" wire:confirm="Yakin hapus data ini?" @click="open = false" class="group flex items-center px-4 py-2 text-xs text-gray-600 hover:bg-red-50 hover:text-red-700 w-full text-left">
                                                         <svg class="mr-2 h-3.5 w-3.5 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                                         Hapus
