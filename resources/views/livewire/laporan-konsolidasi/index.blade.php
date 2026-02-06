@@ -1,17 +1,4 @@
 <div>
-    {{-- CSS & JS FLATPICKR (KHUSUS HALAMAN INI) --}}
-    @assets
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/style.css">
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-        <script src="https://cdn.jsdelivr.net/npm/flatpickr/dist/plugins/monthSelect/index.js"></script>
-        <style>
-            /* Custom Style Flatpickr agar senada dengan Tailwind */
-            .flatpickr-calendar { border-radius: 0.75rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); border: none; }
-            .flatpickr-month { border-top-left-radius: 0.75rem; border-top-right-radius: 0.75rem; }
-        </style>
-    @endassets
-
     <x-slot:title>
         Laporan Konsolidasi
     </x-slot>
@@ -33,6 +20,7 @@
             <div class="px-6 py-5 border-b border-gray-100 bg-white flex flex-col md:flex-row justify-between items-center gap-4">
                 <h2 class="text-lg font-bold text-gray-800 flex items-center gap-2">
                     Daftar Laporan 
+                </h2>
                     
                 <button wire:click="create" class="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg transition-all shadow-md focus:ring-4 focus:ring-blue-100 transform active:scale-95">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path></svg>
@@ -66,9 +54,16 @@
                 <div class="md:col-span-3">
                     <select wire:model.live="filterTahun" class="w-full border-gray-200 bg-gray-50 rounded-lg text-sm focus:ring-blue-500 focus:border-blue-500 py-2 px-3 shadow-sm cursor-pointer text-gray-600">
                         <option value="">Semua Tahun</option>
-                        @foreach($availableYears as $yr)
-                            <option value="{{ $yr }}">{{ $yr }}</option>
-                        @endforeach
+                        {{-- Pastikan variabel $availableYears dikirim dari component --}}
+                        @if(isset($availableYears))
+                            @foreach($availableYears as $yr)
+                                <option value="{{ $yr }}">{{ $yr }}</option>
+                            @endforeach
+                        @else
+                            @for($i = date('Y'); $i >= 2020; $i--)
+                                <option value="{{ $i }}">{{ $i }}</option>
+                            @endfor
+                        @endif
                     </select>
                 </div>
 
@@ -218,7 +213,7 @@
         </div>
     </div>
 
-    {{-- MODAL POP UP (With AlpineJS + Flatpickr) --}}
+    {{-- MODAL CREATE / EDIT --}}
     @if($isOpen)
     <div class="fixed inset-0 z-[99] overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true">
         <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
@@ -231,7 +226,7 @@
                 <div class="bg-white px-6 pt-6 pb-4 border-b border-gray-100 flex justify-between items-start">
                     <div>
                         <h3 class="text-xl font-bold text-gray-900">{{ $isEdit ? 'Perbarui Laporan' : 'Buat Laporan Baru' }}</h3>
-                        <p class="text-sm text-gray-500 mt-1">Lengkapi informasi dasar laporan.</p>
+                        <p class="text-sm text-gray-500 mt-1">Judul laporan akan dibuat otomatis.</p>
                     </div>
                     <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors bg-gray-50 hover:bg-gray-100 p-1 rounded-full">
                         <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -241,55 +236,47 @@
                 {{-- Modal Body --}}
                 <div class="px-6 py-6 space-y-6">
                     
-                    {{-- Input Judul --}}
-                    <div>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Judul Laporan</label>
-                        <input type="text" wire:model="judul" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-4 transition-colors placeholder-gray-400" placeholder="Contoh: Laporan Kinerja Triwulan I">
-                        @error('judul') <span class="text-red-500 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
-                    </div>
-
-                    {{-- DATEPICKER (Flatpickr) --}}
-                    <div wire:ignore>
-                        <label class="block text-sm font-semibold text-gray-700 mb-2">Periode Laporan (Bulan & Tahun)</label>
-                        <div 
-                            x-data="{ value: @entangle('periode') }" 
-                            x-init="
-                                flatpickr($refs.picker, {
-                                    plugins: [
-                                        new monthSelectPlugin({
-                                            shorthand: true, // Tampilkan singkatan bulan (Jan, Feb)
-                                            dateFormat: 'Y-m', // Format output value
-                                            altFormat: 'F Y', // Format tampilan (Januari 2025)
-                                            theme: 'light' // Tema
-                                        })
-                                    ],
-                                    defaultDate: value,
-                                    onChange: function(selectedDates, dateStr, instance) {
-                                        @this.set('periode', dateStr);
-                                    }
-                                })
-                            "
-                            class="relative"
-                        >
-                            <input 
-                                x-ref="picker" 
-                                type="text" 
-                                class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-4 pl-10 cursor-pointer bg-white" 
-                                placeholder="Pilih Bulan..."
-                            >
-                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400">
-                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
-                            </div>
+                    {{-- Input Bulan & Tahun (Grid) --}}
+                    <div class="grid grid-cols-2 gap-4">
+                        {{-- Input Bulan --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Bulan</label>
+                            <select wire:model="bulan" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3">
+                                <option value="">-- Pilih Bulan --</option>
+                                <option value="Januari">Januari</option>
+                                <option value="Februari">Februari</option>
+                                <option value="Maret">Maret</option>
+                                <option value="April">April</option>
+                                <option value="Mei">Mei</option>
+                                <option value="Juni">Juni</option>
+                                <option value="Juli">Juli</option>
+                                <option value="Agustus">Agustus</option>
+                                <option value="September">September</option>
+                                <option value="Oktober">Oktober</option>
+                                <option value="November">November</option>
+                                <option value="Desember">Desember</option>
+                            </select>
+                            @error('bulan') <span class="text-red-500 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
                         </div>
-                        <p class="text-xs text-gray-400 mt-1.5">Klik kolom di atas untuk memilih bulan dan tahun sekaligus.</p>
+
+                        {{-- Input Tahun --}}
+                        <div>
+                            <label class="block text-sm font-semibold text-gray-700 mb-2">Tahun</label>
+                            <select wire:model="tahun" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm py-2.5 px-3">
+                                <option value="">-- Pilih Tahun --</option>
+                                @for($y = date('Y'); $y >= 2020; $y--)
+                                    <option value="{{ $y }}">{{ $y }}</option>
+                                @endfor
+                            </select>
+                            @error('tahun') <span class="text-red-500 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
+                        </div>
                     </div>
-                    @error('periode') <span class="text-red-500 text-xs mt-1 block font-medium">{{ $message }}</span> @enderror
 
                 </div>
 
                 {{-- Modal Footer --}}
                 <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-gray-100 rounded-b-2xl">
-                    <button wire:click="save" class="inline-flex justify-center items-center rounded-lg shadow-sm px-5 py-2.5 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform active:scale-95">
+                    <button wire:click="store" class="inline-flex justify-center items-center rounded-lg shadow-sm px-5 py-2.5 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all transform active:scale-95">
                         {{ $isEdit ? 'Simpan Perubahan' : 'Simpan Laporan' }}
                     </button>
                     <button wire:click="closeModal" class="inline-flex justify-center items-center rounded-lg border border-gray-300 shadow-sm px-5 py-2.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-200 transition-all">

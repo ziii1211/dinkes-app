@@ -9,7 +9,18 @@ class LaporanKonsolidasiAnggaran extends Model
 {
     use HasFactory;
 
-    protected $guarded = ['id'];
+    protected $table = 'laporan_konsolidasi_anggarans';
+
+    // Menggunakan $fillable agar lebih aman dan memastikan kolom baru bisa diisi
+    protected $fillable = [
+        'laporan_konsolidasi_id',
+        'program_id',
+        'kegiatan_id',
+        'pagu_anggaran',
+        'pagu_realisasi',
+        'target',           // <--- PENTING: Kolom baru agar data tidak hilang
+        'realisasi_fisik'   // <--- PENTING: Kolom baru agar data tidak hilang
+    ];
 
     // Relasi ke Laporan Konsolidasi
     public function laporanKonsolidasi()
@@ -17,13 +28,13 @@ class LaporanKonsolidasiAnggaran extends Model
         return $this->belongsTo(LaporanKonsolidasi::class);
     }
 
-    // Relasi ke Program (PENTING: Tambahkan ini)
+    // Relasi ke Program
     public function program()
     {
         return $this->belongsTo(Program::class);
     }
 
-    // Relasi ke Kegiatan (PENTING: Tambahkan ini untuk fix error)
+    // Relasi ke Kegiatan
     public function kegiatan()
     {
         return $this->belongsTo(Kegiatan::class);

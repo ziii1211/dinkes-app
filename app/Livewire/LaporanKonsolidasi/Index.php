@@ -20,15 +20,9 @@ class Index extends Component
     public $isEdit = false;
     public $laporanId;
     
-    public $judul;
-    public $periode; // Format YYYY-MM untuk Flatpickr
-
-    // Helper: Mapping Bulan
-    protected $monthsMap = [
-        '01' => 'Januari', '02' => 'Februari', '03' => 'Maret', '04' => 'April',
-        '05' => 'Mei', '06' => 'Juni', '07' => 'Juli', '08' => 'Agustus',
-        '09' => 'September', '10' => 'Oktober', '11' => 'November', '12' => 'Desember'
-    ];
+    // Form Input
+    public $bulan;
+    public $tahun;
 
     // Reset pagination saat filter berubah
     public function updatingSearch() { $this->resetPage(); }
@@ -63,7 +57,7 @@ class Index extends Component
     public function create()
     {
         $this->resetInputFields();
-        $this->periode = date('Y-m'); // Default bulan ini
+        $this->tahun = date('Y'); // Default tahun ini
         $this->openModal();
     }
 
@@ -71,42 +65,40 @@ class Index extends Component
     {
         $laporan = LaporanKonsolidasi::findOrFail($id);
         $this->laporanId = $id;
-        $this->judul = $laporan->judul;
-        
-        // Konversi "Januari 2025" dari DB ke "2025-01" untuk Flatpickr
-        $bulanNum = array_search($laporan->bulan, $this->monthsMap) ?: '01'; 
-        $this->periode = $laporan->tahun . '-' . $bulanNum;
+        $this->bulan = $laporan->bulan;
+        $this->tahun = $laporan->tahun;
         
         $this->isEdit = true;
         $this->openModal();
     }
 
-    public function save()
+    public function store() // Fungsi ini dipanggil dari View 'save'
     {
         $this->validate([
-            'judul' => 'required',
-            'periode' => 'required', // Wajib format YYYY-MM
+            'bulan' => 'required',
+            'tahun' => 'required',
         ]);
 
-        // Pecah "2025-05" jadi Tahun & Nama Bulan
-        $parts = explode('-', $this->periode);
-        if(count($parts) == 2){
-            $tahun = $parts[0];
-            $bulanNum = $parts[1];
-            $namaBulan = $this->monthsMap[$bulanNum] ?? 'Januari';
+        // GENERATE JUDUL OTOMATIS (UPDATE SESUAI REQUEST)
+        // Format: "Laporan Konsolidasi Bulan [Bulan] Tahun Anggaran [Tahun]"
+        $judulOtomatis = "Laporan Konsolidasi Bulan " . $this->bulan . " Tahun Anggaran " . $this->tahun;
 
-            LaporanKonsolidasi::updateOrCreate(
-                ['id' => $this->laporanId],
-                [
-                    'judul' => $this->judul,
-                    'bulan' => $namaBulan,
-                    'tahun' => $tahun,
-                ]
-            );
+        LaporanKonsolidasi::updateOrCreate(
+            ['id' => $this->laporanId],
+            [
+                'judul' => $judulOtomatis,
+                'bulan' => $this->bulan,
+                'tahun' => $this->tahun,
+            ]
+        );
 
-            session()->flash('message', $this->laporanId ? 'Laporan berhasil diperbarui.' : 'Laporan berhasil dibuat.');
-            $this->closeModal();
-        }
+        session()->flash('message', $this->laporanId ? 'Laporan berhasil diperbarui.' : 'Laporan berhasil dibuat.');
+        $this->closeModal();
+    }
+
+    // Alias agar sesuai dengan wire:click="save" di view
+    public function save() {
+        $this->store();
     }
 
     public function delete($id)
@@ -125,9 +117,9 @@ class Index extends Component
 
     public function resetInputFields()
     {
-        $this->judul = '';
-        $this->periode = '';
         $this->laporanId = null;
+        $this->bulan = null;
+        $this->tahun = null;
         $this->isEdit = false;
         $this->resetErrorBag();
     }
