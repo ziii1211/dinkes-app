@@ -1,13 +1,13 @@
 <div>
     <x-slot:title>
-        Laporan Konsolidasi
+        Laporan e-monev
     </x-slot>
 
     <x-slot:breadcrumb>
         <div class="overflow-x-auto whitespace-nowrap pb-2">
             <a href="/" class="hover:text-blue-100 transition-colors">Dashboard</a>
             <span class="mx-2">/</span>
-            <span class="font-medium text-white">Laporan Konsolidasi</span>
+            <span class="font-medium text-white">Laporan e-monev</span>
         </div>
     </x-slot>
 

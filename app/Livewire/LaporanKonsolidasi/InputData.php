@@ -119,7 +119,6 @@ class InputData extends Component
 
         if ($type === 'program' || $type === 'kegiatan') {
             // Cari data di tabel Anggaran berdasarkan Program/Kegiatan ID
-            // Catatan: Karena struktur tabel anggaran pakai program_id/kegiatan_id, kita cari record spesifiknya
             
             $column = $type === 'program' ? 'program_id' : 'kegiatan_id';
             
@@ -143,7 +142,7 @@ class InputData extends Component
         $this->dispatch('alert', ['type' => 'success', 'title' => 'Sukses', 'message' => 'Status verifikasi diperbarui.']);
     }
 
-    // --- FITUR SINKRONISASI DATA (BARU & UPDATE LOGIC) ---
+    // --- FITUR SINKRONISASI DATA (UPDATED) ---
     public function syncData()
     {
         DB::beginTransaction();
@@ -158,79 +157,84 @@ class InputData extends Component
                 return;
             }
 
-            // 2. Ambil Data Master terbaru berdasarkan Program yg ada
+            // 2. Ambil Data Master terbaru (Include Indikator agar bisa update teks indikator/satuan)
             $masterPrograms = Program::with(['kegiatans.subKegiatans.indikators'])
                 ->whereIn('id', $existingProgramIds)
                 ->get();
 
             $countAdded = 0;
+            $countUpdated = 0;
 
             foreach ($masterPrograms as $prog) {
-                // Update Pagu/Target Program jika di Master berubah (Opsional, tapi direkomendasikan agar sinkron)
-                /* LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
-                    ->where('program_id', $prog->id)
-                    ->update([
+                // A. UPDATE DATA PROGRAM (Pagu & Target dari Master)
+                LaporanKonsolidasiAnggaran::updateOrCreate(
+                    [
+                        'laporan_konsolidasi_id' => $this->laporan->id,
+                        'program_id' => $prog->id
+                    ],
+                    [
                         'pagu_anggaran' => $prog->pagu ?? 0,
-                        'target' => $prog->target ?? 0
-                    ]); 
-                */
+                        'target'        => $prog->target ?? 0
+                    ]
+                );
 
                 // Loop Kegiatan di Master
                 foreach ($prog->kegiatans as $keg) {
                     
-                    // Cek & Update/Create Kegiatan
+                    // B. UPDATE DATA KEGIATAN (Pagu & Target dari Master)
                     LaporanKonsolidasiAnggaran::updateOrCreate(
                         [
                             'laporan_konsolidasi_id' => $this->laporan->id,
                             'kegiatan_id' => $keg->id
                         ],
                         [
-                            // Jika updateOrCreate: data lama akan tertimpa dengan data Master
-                            // Kita ingin Pagu & Target sinkron, tapi Realisasi tetap aman (0 jika baru)
                             'pagu_anggaran' => $keg->pagu ?? 0, 
-                            'target' => $keg->target ?? 0,
-                            // 'pagu_realisasi' => 0, // JANGAN DI-RESET jika sudah ada isinya! Biarkan database default
+                            'target'        => $keg->target ?? 0,
                         ]
                     );
 
                     // Loop Sub Kegiatan di Master
                     foreach ($keg->subKegiatans as $sub) {
+                        
+                        // Siapkan Data Terbaru dari Master (Nama, Indikator, Satuan)
+                        $listIndikator = $sub->indikators;
+                        $textOutput = $listIndikator->pluck('keterangan')->join("\n") ?: '-';
+                        $textSatuan = $listIndikator->pluck('satuan')->join("\n") ?: '-';
+                        
+                        $namaProgram = $prog->nama ?? $prog->nama_program ?? '-';
+                        $namaKegiatan = $keg->nama ?? $keg->nama_kegiatan ?? '-';
+                        $namaLengkap = $namaProgram . ' / ' . $namaKegiatan . ' / ' . $sub->nama;
+
                         $detail = DetailLaporanKonsolidasi::where('laporan_konsolidasi_id', $this->laporan->id)
                                     ->where('sub_kegiatan_id', $sub->id)
                                     ->first();
 
                         if (!$detail) {
-                            // JIKA BELUM ADA (Data baru di Master), MAKA BUAT
-                            $listIndikator = $sub->indikators;
-                            $textOutput = $listIndikator->pluck('keterangan')->join("\n") ?: '-';
-                            $textSatuan = $listIndikator->pluck('satuan')->join("\n") ?: '-';
-                            
-                            $namaProgram = $prog->nama ?? $prog->nama_program ?? '-';
-                            $namaKegiatan = $keg->nama ?? $keg->nama_kegiatan ?? '-';
-                            $namaLengkap = $namaProgram . ' / ' . $namaKegiatan . ' / ' . $sub->nama;
-
+                            // C. JIKA BELUM ADA -> INSERT BARU
                             DetailLaporanKonsolidasi::create([
                                 'laporan_konsolidasi_id' => $this->laporan->id,
                                 'sub_kegiatan_id'       => $sub->id,
                                 'kode'                  => $sub->kode,
-                                'nama_program_kegiatan' => $namaLengkap,
-                                'sub_output'            => $textOutput, 
-                                'satuan_unit'           => $textSatuan,
-                                
-                                // AMBIL DARI MASTER
+                                'nama_program_kegiatan' => $namaLengkap, // Nama baru
+                                'sub_output'            => $textOutput,  // Indikator baru
+                                'satuan_unit'           => $textSatuan,  // Satuan baru
                                 'pagu_anggaran'         => $sub->pagu ?? 0,
                                 'target'                => $sub->target ?? 0,
-                                
                                 'realisasi_fisik'       => 0,
                                 'pagu_realisasi'        => 0
                             ]);
                             $countAdded++;
                         } else {
-                            // JIKA SUDAH ADA, UPDATE PAGU & TARGET DARI MASTER (Agar Sinkron)
+                            // D. JIKA SUDAH ADA -> UPDATE SEMUA KOLOM MASTER (Nama, Indikator, Satuan, Pagu, Target)
                             $detail->update([
-                                'pagu_anggaran' => $sub->pagu ?? 0,
-                                'target'        => $sub->target ?? 0
+                                'kode'                  => $sub->kode,      // Jaga-jaga kalau kode berubah
+                                'nama_program_kegiatan' => $namaLengkap,  // Update Nama jika ada typo di Master
+                                'sub_output'            => $textOutput,     // Update Indikator jika direvisi di Master
+                                'satuan_unit'           => $textSatuan,     // Update Satuan
+                                'pagu_anggaran'         => $sub->pagu ?? 0, // Update Pagu
+                                'target'                => $sub->target ?? 0 // Update Target
                             ]);
+                            $countUpdated++;
                         }
                     }
                 }
@@ -239,10 +243,14 @@ class InputData extends Component
             DB::commit();
             $this->loadData(); // Reload data agar tampilan update
             
-            if ($countAdded > 0) {
-                $this->dispatch('alert', ['type' => 'success', 'title' => 'Sukses', 'message' => "Sinkronisasi selesai. $countAdded data baru ditambahkan."]);
+            $message = "Sinkronisasi selesai. ";
+            if ($countAdded > 0) $message .= "$countAdded data baru. ";
+            if ($countUpdated > 0) $message .= "$countUpdated data diperbarui.";
+
+            if ($countAdded == 0 && $countUpdated == 0) {
+                 $this->dispatch('alert', ['type' => 'info', 'title' => 'Info', 'message' => 'Data sudah sinkron dengan Master.']);
             } else {
-                $this->dispatch('alert', ['type' => 'info', 'title' => 'Info', 'message' => 'Data berhasil disinkronkan dengan Master.']);
+                 $this->dispatch('alert', ['type' => 'success', 'title' => 'Sukses', 'message' => $message]);
             }
 
         } catch (\Exception $e) {
@@ -475,8 +483,7 @@ class InputData extends Component
         $currentItems = $col->slice(($currentPage - 1) * $this->perPage, $this->perPage)->all();
         $paginatedData = new LengthAwarePaginator($currentItems, $col->count(), $this->perPage, $currentPage, ['path' => Request::url()]);
 
-        // HITUNG TOTAL ANGGARAN & REALISASI (FIX TRIPLE COUNTING: HANYA PROGRAM)
-        // Kita hanya menjumlahkan row yang merupakan PROGRAM agar tidak dobel hitung
+        // HITUNG TOTAL ANGGARAN & REALISASI
         $totalAnggaran = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
                             ->whereNotNull('program_id')
                             ->sum('pagu_anggaran');
