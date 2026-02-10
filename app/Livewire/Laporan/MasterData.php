@@ -31,6 +31,10 @@ class MasterData extends Component
     public $parentId = null; 
     public $dataId = null;   
     public $kode, $nama;
+    
+    // --- PROPERTI BARU (FIX ERROR) ---
+    public $pagu; 
+    public $target;
 
     // --- PROPERTI MODAL INDIKATOR ---
     public $selectedSubKegiatan = null;
@@ -45,7 +49,6 @@ class MasterData extends Component
     public function render()
     {
         // Query Data: Program -> Kegiatan -> Sub Kegiatan
-        // Diurutkan berdasarkan Kode (A-Z) lalu ID (Input Lama ke Baru)
         $programs = Program::with(['kegiatans' => function($q) {
             $q->orderBy('kode', 'asc')
               ->orderBy('id', 'asc')
@@ -56,7 +59,6 @@ class MasterData extends Component
         }])
         ->orderBy('kode', 'asc')
         ->orderBy('id', 'asc')
-        // Gunakan variable $this->perPage agar dinamis
         ->paginate($this->perPage); 
 
         return view('livewire.laporan.master-data', [
@@ -71,6 +73,8 @@ class MasterData extends Component
         // Reset Form Utama
         $this->kode = null;
         $this->nama = null;
+        $this->pagu = null;   // Reset Pagu
+        $this->target = null; // Reset Target
         $this->dataId = null;
         $this->parentId = null;
         $this->isEditMode = false;
@@ -134,12 +138,24 @@ class MasterData extends Component
         $this->kode = $data->kode;
         $this->nama = $data->nama;
         
+        // Load Pagu & Target (Format Rupiah untuk tampilan)
+        $this->pagu = $data->pagu ? number_format($data->pagu, 0, ',', '.') : '';
+        $this->target = $data->target;
+        
         // Set Parent ID sesuai tipe
         if ($type == 'kegiatan') $this->parentId = $data->program_id;
         if ($type == 'sub_kegiatan') $this->parentId = $data->kegiatan_id;
         
         $this->isEditMode = true;
         $this->isOpen = true;
+    }
+
+    // Helper Bersihkan Rupiah
+    private function cleanRupiah($val) {
+        if (is_null($val) || $val === '') return 0;
+        // Hapus semua karakter kecuali angka
+        $clean = preg_replace('/[^0-9]/', '', $val);
+        return (float) $clean;
     }
 
     // Simpan Data Utama
@@ -150,7 +166,15 @@ class MasterData extends Component
             'nama' => 'required'
         ]);
 
-        $data = ['kode' => $this->kode, 'nama' => $this->nama];
+        // Bersihkan format Pagu (Rp 1.000.000 -> 1000000)
+        $paguClean = $this->cleanRupiah($this->pagu);
+
+        $data = [
+            'kode' => $this->kode, 
+            'nama' => $this->nama,
+            'pagu' => $paguClean,
+            'target' => $this->target ?? 0
+        ];
 
         if ($this->formType == 'program') {
             Program::updateOrCreate(['id' => $this->dataId], $data);
@@ -202,7 +226,6 @@ class MasterData extends Component
 
         $this->openIndikator($this->selectedSubKegiatan->id); // Refresh list
         
-        // Reset field input kecil
         $this->indikatorId = null;
         $this->subOutput = null;
         $this->satuan = null;
@@ -227,7 +250,6 @@ class MasterData extends Component
 
     public function delete($id)
     {
-        // Handle format ID jika dikirim sebagai array oleh SweetAlert
         $idToDelete = is_array($id) ? ($id['id'] ?? array_values($id)[0] ?? null) : $id;
 
         if (!$idToDelete) return;

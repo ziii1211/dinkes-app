@@ -18,8 +18,9 @@ class LaporanKonsolidasiAnggaran extends Model
         'kegiatan_id',
         'pagu_anggaran',
         'pagu_realisasi',
-        'target',           // <--- PENTING: Kolom baru agar data tidak hilang
-        'realisasi_fisik'   // <--- PENTING: Kolom baru agar data tidak hilang
+        'target',           
+        'realisasi_fisik',
+        'is_verified'       // <--- PENTING: Tambahan untuk fitur verifikasi
     ];
 
     // Relasi ke Laporan Konsolidasi

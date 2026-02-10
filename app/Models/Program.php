@@ -11,16 +11,16 @@ class Program extends Model
 
     protected $fillable = [
         'kode',
-        'nama'
+        'nama',     // <--- Pastikan ini 'nama', bukan 'nama_program'
+        'pagu',     // <--- Tambahan Baru
+        'target'    // <--- Tambahan Baru
     ];
 
-    // Relasi: Satu Program memiliki banyak Outcome
     public function outcomes()
     {
         return $this->hasMany(Outcome::class);
     }
 
-    // Relasi: Satu Program memiliki banyak Kegiatan (BARU DITAMBAHKAN)
     public function kegiatans()
     {
         return $this->hasMany(Kegiatan::class);

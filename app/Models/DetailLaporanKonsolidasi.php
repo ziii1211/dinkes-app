@@ -21,8 +21,9 @@ class DetailLaporanKonsolidasi extends Model
         'satuan_unit',
         'pagu_anggaran',
         'pagu_realisasi',
-        'target',           // <--- PENTING: Tambahkan ini agar tidak hilang saat simpan
-        'realisasi_fisik'   // <--- PENTING: Tambahkan ini agar tidak hilang saat simpan
+        'target',           
+        'realisasi_fisik',
+        'is_verified'       // <--- PENTING: Tambahan untuk fitur verifikasi
     ];
 
     public function laporan()

@@ -48,6 +48,7 @@
                         <thead>
                             <tr class="bg-gray-50 text-gray-700 text-sm font-bold border-b border-gray-200">
                                 <th class="p-4 border-r border-gray-200 align-middle">Program / Kegiatan / Sub Kegiatan</th>
+                                <th class="p-4 align-middle text-center w-40">Pagu & Target</th>
                                 <th class="p-4 align-middle text-center w-40">Aksi</th>
                             </tr>
                         </thead>
@@ -77,6 +78,13 @@
                                         </div>
                                     </div>
                                 </td>
+                                
+                                {{-- Kolom Pagu & Target (Tampilkan Data) --}}
+                                <td class="p-4 border-r border-gray-100 text-right align-top">
+                                    <div class="text-xs font-bold text-blue-700">Rp {{ number_format($program->pagu, 0, ',', '.') }}</div>
+                                    <div class="text-xs text-gray-500 mt-1">Target: {{ $program->target }}</div>
+                                </td>
+
                                 <td class="p-4 text-center align-middle relative">
                                     {{-- Dropdown Program --}}
                                     <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
@@ -118,6 +126,13 @@
                                         </div>
                                     </div>
                                 </td>
+                                
+                                {{-- Kolom Pagu & Target --}}
+                                <td class="p-4 border-r border-gray-100 text-right align-top">
+                                    <div class="text-xs font-bold text-amber-700">Rp {{ number_format($kegiatan->pagu, 0, ',', '.') }}</div>
+                                    <div class="text-xs text-gray-500 mt-1">Target: {{ $kegiatan->target }}</div>
+                                </td>
+
                                 <td class="p-4 text-center align-middle relative">
                                     {{-- Dropdown Kegiatan --}}
                                     <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
@@ -160,6 +175,13 @@
                                             </div>
                                         </div>
                                     </td>
+                                    
+                                    {{-- Kolom Pagu & Target --}}
+                                    <td class="p-4 border-r border-gray-100 text-right align-top">
+                                        <div class="text-xs font-bold text-purple-700">Rp {{ number_format($sub->pagu, 0, ',', '.') }}</div>
+                                        <div class="text-xs text-gray-500 mt-1">Target: {{ $sub->target }}</div>
+                                    </td>
+
                                     <td class="p-4 text-center align-middle relative">
                                         {{-- Dropdown Sub Kegiatan --}}
                                         <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
@@ -196,7 +218,7 @@
                         @empty
                             <tbody>
                                 <tr>
-                                    <td colspan="2" class="p-10 text-center text-gray-400 italic bg-white">
+                                    <td colspan="3" class="p-10 text-center text-gray-400 italic bg-white">
                                         Data belum tersedia.
                                     </td>
                                 </tr>
@@ -205,15 +227,48 @@
                     </table>
                 </div>
 
-                {{-- === BAGIAN PAGINATION (DITAMBAHKAN) === --}}
                 <div class="mt-4 px-2">
                     {{ $programs->links() }}
                 </div>
-                {{-- ======================================= --}}
 
             </div>
         </div>
     </div>
+
+    {{-- Script Rupiah Helper --}}
+    <script>
+        document.addEventListener('alpine:init', () => {
+            Alpine.data('rupiahInput', (modelName, initialValue) => ({
+                displayValue: '', 
+                modelName: modelName,
+                init() { this.formatInitial(initialValue); },
+                updateWire(e) { 
+                    this.formatCurrency(e); 
+                    this.$wire.set(this.modelName, this.displayValue); 
+                },
+                formatCurrency(e) {
+                    let inputVal = e.target.value;
+                    let numberString = inputVal.replace(/[^,\d]/g, '').toString();
+                    let split = numberString.split(',');
+                    let sisa = split[0].length % 3;
+                    let rupiah = split[0].substr(0, sisa);
+                    let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+                    if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+                    this.displayValue = rupiah ? 'Rp ' + rupiah : '';
+                },
+                formatInitial(val) {
+                    if(!val) { this.displayValue = ''; return; }
+                    let stringVal = val.toString().replace(/[^0-9]/g, '');
+                    if(!stringVal || stringVal == '0') { this.displayValue = ''; return; }
+                    let sisa = stringVal.length % 3;
+                    let rupiah = stringVal.substr(0, sisa);
+                    let ribuan = stringVal.substr(sisa).match(/\d{3}/gi);
+                    if (ribuan) { let separator = sisa ? '.' : ''; rupiah += separator + ribuan.join('.'); }
+                    this.displayValue = 'Rp ' + rupiah;
+                }
+            }));
+        });
+    </script>
 
     {{-- 3. Modal Form (Dinamis: Program / Kegiatan / Sub Kegiatan) --}}
     @if($isOpen)
@@ -233,29 +288,33 @@
             </div>
             
             <div class="space-y-5">
+                {{-- Input Kode --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                        Kode 
-                        @if($formType == 'program') Program
-                        @elseif($formType == 'kegiatan') Kegiatan
-                        @else Sub Kegiatan
-                        @endif
-                        <span class="text-red-500">*</span>
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Kode <span class="text-red-500">*</span></label>
                     <input type="text" wire:model="kode" placeholder="Contoh: 1.02.01" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all">
                     @error('kode') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
+                
+                {{-- Input Nama --}}
                 <div>
-                    <label class="block text-sm font-medium text-gray-700 mb-2">
-                         Nama 
-                        @if($formType == 'program') Program
-                        @elseif($formType == 'kegiatan') Kegiatan
-                        @else Sub Kegiatan
-                        @endif
-                        <span class="text-red-500">*</span>
-                    </label>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Nama <span class="text-red-500">*</span></label>
                     <textarea wire:model="nama" rows="3" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none resize-none transition-all"></textarea>
                     @error('nama') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                </div>
+
+                {{-- Input Pagu & Target (BARU) --}}
+                <div class="grid grid-cols-2 gap-4">
+                    {{-- Pagu Anggaran (Format Rupiah) --}}
+                    <div x-data="rupiahInput('pagu', '{{ $pagu }}')">
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Pagu Anggaran</label>
+                        <input type="text" x-model="displayValue" @input="updateWire" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-right font-mono" placeholder="Rp 0">
+                    </div>
+
+                    {{-- Target Fisik --}}
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-2">Target Fisik</label>
+                        <input type="number" step="any" wire:model="target" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-center" placeholder="0">
+                    </div>
                 </div>
             </div>
 
@@ -267,7 +326,7 @@
     </div>
     @endif
 
-    {{-- MODAL 2: INDIKATOR KINERJA (BARU) --}}
+    {{-- MODAL 2: INDIKATOR KINERJA (TETAP SAMA) --}}
     @if($isOpenIndikator)
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 sm:p-0">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl sm:mx-4 p-6 animate-fade-in-down h-auto max-h-[90vh] overflow-y-auto">

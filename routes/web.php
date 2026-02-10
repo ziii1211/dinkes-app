@@ -46,7 +46,7 @@ use App\Models\PohonKinerja;
 use App\Exports\DokumenRenstraExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
-
+use App\Http\Controllers\LaporanKonsolidasiCetakController;
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -203,5 +203,9 @@ Route::middleware('auth')->group(function () {
         // Route::get('/{id}/edit', LaporanKonsolidasiForm::class)->name('laporan-konsolidasi.edit');
         Route::get('/{id}/input-data', LaporanKonsolidasiInput::class)->name('laporan-konsolidasi.input');
     });
+
+    Route::get('/laporan-konsolidasi/cetak/{id}', [LaporanKonsolidasiCetakController::class, 'cetak'])
+    ->name('laporan-konsolidasi.cetak')
+    ->middleware('auth'); // Pastikan user login
 
 });

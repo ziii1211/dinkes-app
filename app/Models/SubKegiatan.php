@@ -9,29 +9,27 @@ class SubKegiatan extends Model
 {
     use HasFactory;
 
-    // PERBAIKAN: Menambahkan properti fillable agar bisa diinput via create()
     protected $fillable = [
         'kegiatan_id',
-        'output_kegiatan_id', // <--- TAMBAHKAN INI
+        'output_kegiatan_id', 
         'kode',
         'nama',
         'output',
-        'jabatan_id'
+        'jabatan_id',
+        'pagu',       // <--- Tambahan Baru
+        'target'      // <--- Tambahan Baru
     ];
 
-    // Relasi ke Kegiatan (Induk)
     public function kegiatan()
     {
         return $this->belongsTo(Kegiatan::class);
     }
 
-    // Relasi ke Jabatan (Penanggung Jawab)
     public function jabatan()
     {
         return $this->belongsTo(Jabatan::class);
     }
 
-    // Relasi ke Indikator (Anak)
     public function indikators()
     {
         return $this->hasMany(IndikatorSubKegiatan::class, 'sub_kegiatan_id');
