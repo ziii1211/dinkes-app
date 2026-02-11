@@ -9,6 +9,7 @@ use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\IndikatorSubKegiatan;
 use Livewire\Attributes\Title;
+use App\Models\Jabatan;
 
 class MasterData extends Component
 {
@@ -17,23 +18,24 @@ class MasterData extends Component
     // --- PROPERTI UI ---
     public $isOpen = false;
     public $isOpenIndikator = false;
+    public $isOpenPenanggungJawab = false;
     public $isEditMode = false;
-    
+
     // Properti untuk Show Entries (Default 10)
-    public $perPage = 10; 
-    
+    public $perPage = 10;
+
     // --- PROPERTI HAPUS ---
-    public $deleteTarget = ''; 
+    public $deleteTarget = '';
     public $deleteId = null;
 
     // --- PROPERTI FORM UTAMA (Program/Kegiatan/Sub) ---
     public $formType = 'program'; // Opsi: 'program', 'kegiatan', 'sub_kegiatan'
-    public $parentId = null; 
-    public $dataId = null;   
+    public $parentId = null;
+    public $dataId = null;
     public $kode, $nama;
-    
+
     // --- PROPERTI BARU (FIX ERROR) ---
-    public $pagu; 
+    public $pagu;
     public $target;
 
     // --- PROPERTI MODAL INDIKATOR ---
@@ -42,6 +44,10 @@ class MasterData extends Component
     public $indikatorId = null;
     public $subOutput, $satuan;
 
+    // --- PROPERTI PENANGGUNG JAWAB (BARU) ---
+    public $jabatans = [];
+    public $selectedJabatanId = null;
+
     // Listener Event
     protected $listeners = ['deleteConfirmed' => 'delete'];
 
@@ -49,17 +55,18 @@ class MasterData extends Component
     public function render()
     {
         // Query Data: Program -> Kegiatan -> Sub Kegiatan
-        $programs = Program::with(['kegiatans' => function($q) {
+        $programs = Program::with(['kegiatans' => function ($q) {
             $q->orderBy('kode', 'asc')
-              ->orderBy('id', 'asc')
-              ->with(['subKegiatans' => function($sub) {
-                  $sub->orderBy('kode', 'asc')
-                      ->orderBy('id', 'asc');
-              }]);
+                ->orderBy('id', 'asc')
+                ->with(['subKegiatans' => function ($sub) {
+                    $sub->orderBy('kode', 'asc')
+                        ->orderBy('id', 'asc')
+                        ->with('jabatan'); // <--- TAMBAHAN: Eager Load Jabatan
+                }]);
         }])
-        ->orderBy('kode', 'asc')
-        ->orderBy('id', 'asc')
-        ->paginate($this->perPage); 
+            ->orderBy('kode', 'asc')
+            ->orderBy('id', 'asc')
+            ->paginate($this->perPage);
 
         return view('livewire.laporan.master-data', [
             'programs' => $programs
@@ -67,7 +74,7 @@ class MasterData extends Component
     }
 
     // --- HELPER RESET & CLOSE ---
-    
+
     private function resetInput()
     {
         // Reset Form Utama
@@ -78,11 +85,14 @@ class MasterData extends Component
         $this->dataId = null;
         $this->parentId = null;
         $this->isEditMode = false;
-        
+
         // Reset Form Indikator
         $this->indikatorId = null;
         $this->subOutput = null;
         $this->satuan = null;
+
+        // Reset Penanggung Jawab
+        $this->selectedJabatanId = null;
     }
 
     public function closeModal()
@@ -98,19 +108,44 @@ class MasterData extends Component
         $this->resetInput();
     }
 
+    public function closePenanggungJawabModal()
+    {
+        $this->isOpenPenanggungJawab = false;
+        $this->selectedSubKegiatan = null;
+        $this->resetInput();
+    }
+
     // --- LOGIKA FORM UTAMA (CREATE & EDIT) ---
 
     // 1. Program
-    public function createProgram() { $this->setupForm('program'); }
-    public function editProgram($id) { $this->loadForm('program', $id); }
-    
+    public function createProgram()
+    {
+        $this->setupForm('program');
+    }
+    public function editProgram($id)
+    {
+        $this->loadForm('program', $id);
+    }
+
     // 2. Kegiatan
-    public function createKegiatan($parentId) { $this->setupForm('kegiatan', $parentId); }
-    public function editKegiatan($id) { $this->loadForm('kegiatan', $id); }
+    public function createKegiatan($parentId)
+    {
+        $this->setupForm('kegiatan', $parentId);
+    }
+    public function editKegiatan($id)
+    {
+        $this->loadForm('kegiatan', $id);
+    }
 
     // 3. Sub Kegiatan
-    public function createSubKegiatan($parentId) { $this->setupForm('sub_kegiatan', $parentId); }
-    public function editSubKegiatan($id) { $this->loadForm('sub_kegiatan', $id); }
+    public function createSubKegiatan($parentId)
+    {
+        $this->setupForm('sub_kegiatan', $parentId);
+    }
+    public function editSubKegiatan($id)
+    {
+        $this->loadForm('sub_kegiatan', $id);
+    }
 
     // Helper Setup Form Baru
     private function setupForm($type, $parent = null)
@@ -124,34 +159,35 @@ class MasterData extends Component
     // Helper Load Data untuk Edit
     private function loadForm($type, $id)
     {
-        $model = match($type) {
+        $model = match ($type) {
             'program' => Program::class,
             'kegiatan' => Kegiatan::class,
             'sub_kegiatan' => SubKegiatan::class,
         };
-        
+
         $data = $model::findOrFail($id);
-        
+
         $this->resetInput();
         $this->formType = $type;
         $this->dataId = $id;
         $this->kode = $data->kode;
         $this->nama = $data->nama;
-        
+
         // Load Pagu & Target (Format Rupiah untuk tampilan)
         $this->pagu = $data->pagu ? number_format($data->pagu, 0, ',', '.') : '';
         $this->target = $data->target;
-        
+
         // Set Parent ID sesuai tipe
         if ($type == 'kegiatan') $this->parentId = $data->program_id;
         if ($type == 'sub_kegiatan') $this->parentId = $data->kegiatan_id;
-        
+
         $this->isEditMode = true;
         $this->isOpen = true;
     }
 
     // Helper Bersihkan Rupiah
-    private function cleanRupiah($val) {
+    private function cleanRupiah($val)
+    {
         if (is_null($val) || $val === '') return 0;
         // Hapus semua karakter kecuali angka
         $clean = preg_replace('/[^0-9]/', '', $val);
@@ -170,7 +206,7 @@ class MasterData extends Component
         $paguClean = $this->cleanRupiah($this->pagu);
 
         $data = [
-            'kode' => $this->kode, 
+            'kode' => $this->kode,
             'nama' => $this->nama,
             'pagu' => $paguClean,
             'target' => $this->target ?? 0
@@ -188,6 +224,39 @@ class MasterData extends Component
 
         $this->dispatch('alert', ['type' => 'success', 'title' => 'Berhasil!', 'message' => 'Data berhasil disimpan.']);
         $this->closeModal();
+    }
+
+    // --- LOGIKA PENANGGUNG JAWAB (BARU) ---
+
+    public function openPenanggungJawab($subKegiatanId)
+    {
+        $this->resetInput();
+        $this->selectedSubKegiatan = SubKegiatan::findOrFail($subKegiatanId);
+
+        // Ambil ID Jabatan yang sudah tersimpan (jika ada)
+        $this->selectedJabatanId = $this->selectedSubKegiatan->jabatan_id;
+
+        // Ambil list semua jabatan untuk dropdown
+        $this->jabatans = Jabatan::orderBy('nama', 'asc')->get();
+
+        $this->isOpenPenanggungJawab = true;
+    }
+
+    public function savePenanggungJawab()
+    {
+        if ($this->selectedSubKegiatan) {
+            $this->selectedSubKegiatan->update([
+                'jabatan_id' => $this->selectedJabatanId
+            ]);
+
+            $this->dispatch('alert', [
+                'type' => 'success',
+                'title' => 'Berhasil!',
+                'message' => 'Penanggung Jawab berhasil diperbarui.'
+            ]);
+        }
+
+        $this->closePenanggungJawabModal();
     }
 
     // --- LOGIKA INDIKATOR KINERJA ---
@@ -225,7 +294,7 @@ class MasterData extends Component
         );
 
         $this->openIndikator($this->selectedSubKegiatan->id); // Refresh list
-        
+
         $this->indikatorId = null;
         $this->subOutput = null;
         $this->satuan = null;
