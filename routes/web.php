@@ -47,6 +47,7 @@ use App\Exports\DokumenRenstraExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Http\Controllers\LaporanKonsolidasiCetakController;
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -99,12 +100,12 @@ Route::middleware('auth')->group(function () {
 
     // --- MASTER DATA ---
     Route::get('/struktur-organisasi', StrukturOrganisasi::class);
-    
+
     // --- MATRIK RENSTRA ---
     Route::prefix('matrik-renstra')->group(function () {
-        
+
         Route::get('/dokumen', DokumenRenstra::class)->name('matrik.dokumen');
-        
+
         // CETAK PDF RENSTRA
         Route::get('/dokumen/cetak', function () {
             $tujuans = Tujuan::with('pohonKinerja.indikators')->get();
@@ -114,9 +115,14 @@ Route::middleware('auth')->group(function () {
             $sub_kegiatans = SubKegiatan::with('pohonKinerja.indikators')->get();
 
             $header = ['unit_kerja' => 'DINAS KESEHATAN', 'periode' => '2025 - 2029'];
-            
+
             $pdf = Pdf::loadView('cetak.dokumen-renstra', compact(
-                'tujuans', 'sasarans', 'outcomes', 'kegiatans', 'sub_kegiatans', 'header'
+                'tujuans',
+                'sasarans',
+                'outcomes',
+                'kegiatans',
+                'sub_kegiatans',
+                'header'
             ));
 
             $pdf->setPaper('a4', 'landscape');
@@ -151,13 +157,13 @@ Route::middleware('auth')->group(function () {
         Route::get('/perjanjian-kinerja', PerjanjianKinerja::class)->name('perjanjian.kinerja');
         Route::get('/perjanjian-kinerja/{id}', PerjanjianKinerjaDetail::class)->name('perjanjian.kinerja.detail');
         Route::get('/perjanjian-kinerja/lihat/{id}', PerjanjianKinerjaLihat::class)->name('perjanjian.kinerja.lihat');
-        
+
         // CETAK PERJANJIAN KINERJA (UPDATED)
         Route::get('/perjanjian-kinerja/cetak/{id}', function ($id) {
             // 1. Ambil Data PK Lengkap
             $pk = PkModel::with(['jabatan', 'pegawai', 'sasarans.indikators', 'anggarans.subKegiatan'])->findOrFail($id);
             $jabatan = $pk->jabatan;
-            
+
             // 2. Tentukan Logic Kepala Dinas / Atasan
             $is_kepala_dinas = is_null($jabatan->parent_id);
             $atasan_pegawai = null;
@@ -170,7 +176,7 @@ Route::middleware('auth')->group(function () {
                     $atasan_pegawai = Pegawai::where('jabatan_id', $parentJabatan->id)->latest()->first();
                 }
             }
-            
+
             // 3. Load PDF dengan Data Lengkap
             $pdf = Pdf::loadView('cetak.perjanjian-kinerja', [
                 'pk' => $pk,
@@ -195,8 +201,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/pengukuran/{jabatanId}', DetailPengukuranKinerja::class)->name('pengukuran.detail');
     });
 
-  // --- LAPORAN KONSOLIDASI (BARU - SUDAH DIAKTIFKAN) ---
-    Route::middleware('role:admin')->prefix('laporan-konsolidasi')->group(function () {
+    // --- LAPORAN KONSOLIDASI (DIPERBARUI) ---
+    // Middleware 'role:admin' DIHAPUS agar Pegawai bisa akses
+    Route::prefix('laporan-konsolidasi')->group(function () {
         Route::get('/master-data', \App\Livewire\Laporan\MasterData::class)->name('laporan.master');
         Route::get('/', LaporanKonsolidasiIndex::class)->name('laporan-konsolidasi.index');
         // Route::get('/tambah', LaporanKonsolidasiForm::class)->name('laporan-konsolidasi.create');
@@ -205,7 +212,7 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/laporan-konsolidasi/cetak/{id}', [LaporanKonsolidasiCetakController::class, 'cetak'])
-    ->name('laporan-konsolidasi.cetak')
-    ->middleware('auth'); // Pastikan user login
+        ->name('laporan-konsolidasi.cetak')
+        ->middleware('auth'); // Pastikan user login
 
 });

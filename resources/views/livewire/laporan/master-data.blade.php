@@ -35,12 +35,15 @@
                             </div>
                         </div>
 
+                        {{-- HANYA ADMIN YANG BISA TAMBAH PROGRAM --}}
+                        @if(auth()->user()->role == 'admin')
                         <button wire:click="createProgram" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex justify-center items-center transition-colors shadow-sm">
                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
                             </svg>
                             Tambah Program
                         </button>
+                        @endif
                     </div>
 
                     {{-- Table Wrapper --}}
@@ -90,7 +93,8 @@
                                         </td>
 
                                         <td class="p-4 text-center align-middle relative">
-                                            {{-- Dropdown Program --}}
+                                            {{-- HANYA ADMIN YANG BISA EDIT PROGRAM --}}
+                                            @if(auth()->user()->role == 'admin')
                                             <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                                 <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-sm font-medium text-gray-700 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
                                                     Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -122,6 +126,9 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @else
+                                            <span class="text-xs text-gray-400 italic">View Only</span>
+                                            @endif
                                         </td>
                                     </tr>
 
@@ -146,7 +153,8 @@
                                         </td>
 
                                         <td class="p-4 text-center align-middle relative">
-                                            {{-- Dropdown Kegiatan --}}
+                                            {{-- HANYA ADMIN YANG BISA EDIT KEGIATAN --}}
+                                            @if(auth()->user()->role == 'admin')
                                             <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                                 <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1.5 bg-white text-xs font-medium text-gray-600 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
                                                     Menu <svg class="-mr-1 ml-2 h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
@@ -179,6 +187,9 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @else
+                                            <span class="text-xs text-gray-400 italic">View Only</span>
+                                            @endif
                                         </td>
                                     </tr>
 
@@ -213,7 +224,8 @@
                                         </td>
 
                                         <td class="p-4 text-center align-middle relative">
-                                            {{-- Dropdown Sub Kegiatan --}}
+                                            {{-- HANYA ADMIN YANG BISA EDIT SUB KEGIATAN --}}
+                                            @if(auth()->user()->role == 'admin')
                                             <div x-data="{ open: false }" @click.outside="open = false" class="relative inline-block text-left">
                                                 <button @click="open = !open" class="inline-flex justify-center w-full rounded-md border border-gray-200 px-3 py-1 bg-white text-[11px] font-medium text-gray-500 hover:bg-gray-100 focus:outline-none shadow-sm transition-colors">
                                                     Menu <svg class="-mr-1 ml-1 h-3 w-3" viewBox="0 0 20 20" fill="currentColor">
@@ -253,6 +265,9 @@
                                                     </div>
                                                 </div>
                                             </div>
+                                            @else
+                                            <span class="text-xs text-gray-400 italic">View Only</span>
+                                            @endif
                                         </td>
                                     </tr>
                                     @endforeach
