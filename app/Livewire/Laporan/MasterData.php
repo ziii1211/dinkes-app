@@ -61,10 +61,14 @@ class MasterData extends Component
                 ->with(['subKegiatans' => function ($sub) {
                     $sub->orderBy('kode', 'asc')
                         ->orderBy('id', 'asc')
-                        ->with('jabatan'); // <--- TAMBAHAN: Eager Load Jabatan
+                        ->with('jabatan');
                 }]);
         }])
-            ->orderBy('kode', 'asc')
+            // --- BAGIAN INI YANG DI-UPDATE ---
+            // Logika: Kode berawalan 'X' atau 'x' diberi prioritas 0 (Paling Atas), sisanya 1
+            ->orderByRaw("CASE WHEN kode LIKE 'X%' OR kode LIKE 'x%' THEN 0 ELSE 1 END ASC")
+            ->orderBy('kode', 'asc') // Setelah dipisah X dan Angka, baru urutkan lagi sesuai kode
+            // ----------------------------------
             ->orderBy('id', 'asc')
             ->paginate($this->perPage);
 
@@ -202,15 +206,20 @@ class MasterData extends Component
             'nama' => 'required'
         ]);
 
-        // Bersihkan format Pagu (Rp 1.000.000 -> 1000000)
-        $paguClean = $this->cleanRupiah($this->pagu);
-
         $data = [
             'kode' => $this->kode,
             'nama' => $this->nama,
-            'pagu' => $paguClean,
-            'target' => $this->target ?? 0
         ];
+
+        // Set Pagu & Target hanya jika form yang disubmit adalah sub_kegiatan
+        if ($this->formType == 'sub_kegiatan') {
+            $data['pagu'] = $this->cleanRupiah($this->pagu);
+            $data['target'] = $this->target ?? 0;
+        } else {
+            // Untuk Program dan Kegiatan, default ke 0
+            $data['pagu'] = 0;
+            $data['target'] = 0;
+        }
 
         if ($this->formType == 'program') {
             Program::updateOrCreate(['id' => $this->dataId], $data);

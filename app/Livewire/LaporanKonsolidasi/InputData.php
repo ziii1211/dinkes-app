@@ -362,7 +362,7 @@ class InputData extends Component
                 $subKegiatans = SubKegiatan::with(['indikators'])->where('kegiatan_id', $keg->id)->get();
                 foreach ($subKegiatans as $sub) {
                     $exists = DetailLaporanKonsolidasi::where('laporan_konsolidasi_id', $this->laporan->id)
-                                ->where('sub_kegiatan_id', $sub->id)->exists();
+                                    ->where('sub_kegiatan_id', $sub->id)->exists();
                     if (!$exists) {
                         $listIndikator = $sub->indikators;
                         $textOutput = $listIndikator->pluck('keterangan')->join("\n") ?: '-';
@@ -452,7 +452,15 @@ class InputData extends Component
                         ->whereNotNull('program_id')
                         ->pluck('program_id');
         
-        $programsInReport = Program::whereIn('id', $programIds)->orderBy('kode', 'asc')->get();
+        // --- LOGIKA PENGURUTAN (FIX VIP CODE X) ---
+        // 1. Prioritaskan kode yang berawalan 'X' atau 'x' di paling atas (Urutan 0)
+        // 2. Sisanya (Angka) di urutan 1
+        // 3. Setelah dikelompokkan, urutkan berdasarkan kode (agar 1.02.01 urut dengan 1.02.02)
+        $programsInReport = Program::whereIn('id', $programIds)
+            ->orderByRaw("CASE WHEN kode LIKE 'X%' OR kode LIKE 'x%' THEN 0 ELSE 1 END ASC")
+            ->orderBy('kode', 'asc')
+            ->get();
+        // ------------------------------------------
 
         $detailsRaw = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan', 'subKegiatan.indikators'])
                         ->where('laporan_konsolidasi_id', $this->laporan->id)->get();

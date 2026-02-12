@@ -204,12 +204,9 @@
                         </td>
                         <td colspan="2" class="border-r border-gray-200"></td>
 
-                        {{-- Target Program --}}
-                        <td class="p-1.5 border-r border-gray-200 align-top" x-data="numberInput('programInputs.{{ $program->id }}.target', '{{ $progTarget }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire"
-                                class="w-full text-[11px] text-center font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-1 py-1.5 disabled:bg-gray-100 disabled:text-gray-400"
-                                placeholder=""
-                                @if(!$isAdmin) disabled @endif>
+                        {{-- Target Program (DIHILANGKAN/STRIP) --}}
+                        <td class="p-1.5 border-r border-gray-200 align-top text-center">
+                            <span class="text-gray-400">-</span>
                         </td>
 
                         {{-- Pagu Anggaran Program --}}
@@ -236,9 +233,13 @@
                                 @if(!$isAdmin) disabled @endif>
                         </td>
 
-                        {{-- % Capaian --}}
+                        {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuProg, 0) }}%</td>
-                        <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenFisikProg, 0) }}%</td>
+                        
+                        {{-- % Capaian Fisik (DIHILANGKAN/STRIP) --}}
+                        <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">
+                            <span class="text-gray-400">-</span>
+                        </td>
 
                         {{-- AKSI --}}
                         <td class="p-2 text-center align-middle whitespace-nowrap">
@@ -277,8 +278,9 @@
                         </td>
                         <td colspan="2" class="border-r border-gray-200"></td>
 
-                        <td class="p-1.5 border-r border-gray-200 align-top" x-data="numberInput('kegiatanInputs.{{ $kegiatan->id }}.target', '{{ $kegTarget }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="w-full text-[11px] text-center font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 px-1 py-1.5 disabled:bg-gray-100 disabled:text-gray-400" placeholder="" @if(!$isAdmin) disabled @endif>
+                        {{-- Target Kegiatan (DIHILANGKAN/STRIP) --}}
+                        <td class="p-1.5 border-r border-gray-200 align-top text-center">
+                            <span class="text-gray-400">-</span>
                         </td>
 
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="rupiahInput('kegiatanInputs.{{ $kegiatan->id }}.pagu_anggaran', '{{ $kegPagu }}')">
@@ -293,8 +295,13 @@
                             <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="w-full text-[11px] text-right font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400" placeholder="" @if(!$isAdmin) disabled @endif>
                         </td>
 
+                        {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuKeg, 0) }}%</td>
-                        <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenFisikKeg, 0) }}%</td>
+                        
+                        {{-- % Capaian Fisik (DIHILANGKAN/STRIP) --}}
+                        <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">
+                            <span class="text-gray-400">-</span>
+                        </td>
 
                         <td class="p-2 text-center align-middle whitespace-nowrap">
                             @if($isAdmin)
