@@ -219,7 +219,8 @@
                                         {{-- KOLOM AKSI/REALISASI --}}
                                         <td class="px-4 py-4 text-center align-middle">
                                             @if($canEdit)
-                                                <button wire:click="openRealisasi({{ $ind->id }}, '{{ addslashes($ind->nama_indikator) }}', '{{ $ind->target_tahunan }}', '{{ $ind->satuan }}', '{{ $ind->arah ?? '' }}')" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center justify-center gap-1 mx-auto transition-colors">
+                                                {{-- FIX: Hapus parameter lain, hanya kirim ID agar aman dari karakter aneh --}}
+                                                <button wire:click="openRealisasi({{ $ind->id }})" class="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold rounded shadow-sm flex items-center justify-center gap-1 mx-auto transition-colors">
                                                     <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg> 
                                                     {{ $ind->realisasi_bulan ? 'Edit' : 'Isi Realisasi' }}
                                                 </button>

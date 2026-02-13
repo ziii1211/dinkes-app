@@ -23,12 +23,17 @@ class PengukuranBulanan extends Component
     public function updatedSearch() { $this->resetPage(); }
     public function updatedTahun() { $this->resetPage(); }
 
-    public function render()
+   public function render()
     {
-        // QUERY DIBUKA UNTUK SEMUA ROLE (Admin, Pimpinan, Pegawai)
-        // Tidak ada lagi logika "if user->role !== admin" untuk membatasi query.
+        // PERBAIKAN: Gunakan select() untuk membatasi kolom yang diambil
+        // Kita hanya mengambil kolom yang BENAR-BENAR dibutuhkan oleh View.
         
-        $query = Jabatan::query()->with('pegawai');
+        $query = Jabatan::query()
+            ->select('id', 'nama') // <--- AMBIL INI SAJA DARI JABATAN
+            ->with(['pegawai' => function($q) {
+                // Batasi kolom pegawai juga agar lebih ringan & aman
+                $q->select('id', 'jabatan_id', 'nama', 'nip', 'foto', 'status');
+            }]);
 
         // Filter Pencarian
         $query->when($this->search, function($q) {

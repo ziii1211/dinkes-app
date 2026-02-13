@@ -70,7 +70,7 @@
                                             @if($jabatan->pegawai->foto)
                                                 <img src="{{ asset('storage/'.$jabatan->pegawai->foto) }}" class="h-full w-full object-cover">
                                             @else
-                                                {{ substr($jabatan->pegawai->nama ?? 'U', 0, 1) }}
+                                                {{ \Illuminate\Support\Str::substr($jabatan->pegawai->nama ?? 'U', 0, 1) }}
                                             @endif
                                         </div>
                                         
@@ -136,7 +136,6 @@
                     </tbody>
                 </table>
             </div>
-
             <div class="px-6 py-4 border-t border-gray-100 bg-white">
                 {{ $jabatans->links() }}
             </div>
