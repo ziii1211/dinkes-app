@@ -1,7 +1,8 @@
 <div class="space-y-6"
     x-data="{ 
-        totalAnggaran: {{ $totalAnggaran ?? 0 }}, 
-        totalRealisasi: {{ $totalRealisasi ?? 0 }},
+        // MENGGUNAKAN ENTANGLE AGAR SINKRON DENGAN LIVEWIRE/DATABASE
+        totalAnggaran: @entangle('totalAnggaran'), 
+        totalRealisasi: @entangle('totalRealisasi'),
         
         // Fungsi untuk membersihkan format Rupiah jadi float
         parseRupiah(value) {
@@ -33,8 +34,9 @@
             this.totalRealisasi = totalReal;
         }
      }"
-    x-init="updateTotals()" {{-- Hitung awal saat load --}}
-    @input.debounce.500ms="updateTotals()" {{-- Hitung ulang saat ada ketikan (debounce biar ga berat) --}}>
+    {{-- MENGGUNAKAN NEXTTICK AGAR DIHITUNG SETELAH DOM SIAP --}}
+    x-init="$nextTick(() => { updateTotals() })"
+    @input.debounce.500ms="updateTotals()">
 
     {{-- HELPER PHP UNTUK RUMUS DI VIEW --}}
     @php
@@ -101,12 +103,12 @@
         </div>
 
         <div class="flex items-center gap-3">
-            <a href="{{ route('laporan-konsolidasi.cetak', $laporan->id) }}" target="_blank" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95" title="Cetak Laporan PDF">
+            <button wire:click="openPrintModal" class="inline-flex items-center gap-2 px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95" title="Cetak Laporan PDF">
                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
                 </svg>
                 Cetak PDF
-            </a>
+            </button>
 
             @if(auth()->user()->role == 'admin')
             <button wire:click="syncData" wire:loading.attr="disabled" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" title="Tarik data baru dari Master Data">
@@ -157,6 +159,9 @@
                         <th colspan="2" class="px-2 py-1 text-center border-r border-b border-slate-200 align-middle">Realisasi</th>
                         <th colspan="2" class="px-2 py-1 text-center border-r border-b border-slate-200 align-middle">% Capaian</th>
 
+                        {{-- KOLOM BARU: SISA ANGGARAN --}}
+                        <th rowspan="2" class="px-2 py-3 w-32 text-center border-r border-slate-200 align-middle">Sisa<br>Anggaran</th>
+
                         <th rowspan="2" class="px-2 py-3 w-24 text-center align-middle">Aksi</th>
                     </tr>
                     <tr>
@@ -182,6 +187,9 @@
                 // RUMUS PROGRAM
                 $persenKeuProg = $hitungPersen($progRealisasi, $progPagu);
                 $persenFisikProg = $hitungPersen($progFisik, $progTarget);
+
+                // HITUNG SISA PROGRAM
+                $sisaProg = $parseNum($progPagu) - $parseNum($progRealisasi);
                 @endphp
 
                 <tbody wire:key="prog-{{ $program->id }}" x-data="{ expanded: true }" class="border-b border-gray-100 group">
@@ -235,10 +243,15 @@
 
                         {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuProg, 0) }}%</td>
-                        
+
                         {{-- % Capaian Fisik (DIHILANGKAN/STRIP) --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">
                             <span class="text-gray-400">-</span>
+                        </td>
+
+                        {{-- SISA ANGGARAN PROGRAM --}}
+                        <td class="px-2 py-2 text-right font-bold text-gray-800 border-r border-gray-200 align-middle text-[11px]">
+                            Rp {{ number_format($sisaProg, 0, ',', '.') }}
                         </td>
 
                         {{-- AKSI --}}
@@ -266,6 +279,9 @@
 
                     $persenKeuKeg = $hitungPersen($kegRealisasi, $kegPagu);
                     $persenFisikKeg = $hitungPersen($kegFisik, $kegTarget);
+
+                    // HITUNG SISA KEGIATAN
+                    $sisaKeg = $parseNum($kegPagu) - $parseNum($kegRealisasi);
                     @endphp
 
                     <tr x-show="expanded" x-transition class="bg-white border-b border-gray-100 hover:bg-gray-50 transition-colors">
@@ -297,10 +313,15 @@
 
                         {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuKeg, 0) }}%</td>
-                        
+
                         {{-- % Capaian Fisik (DIHILANGKAN/STRIP) --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">
                             <span class="text-gray-400">-</span>
+                        </td>
+
+                        {{-- SISA ANGGARAN KEGIATAN --}}
+                        <td class="px-2 py-2 text-right font-semibold text-gray-700 border-r border-gray-200 align-middle text-[11px]">
+                            Rp {{ number_format($sisaKeg, 0, ',', '.') }}
                         </td>
 
                         <td class="p-2 text-center align-middle whitespace-nowrap">
@@ -324,6 +345,9 @@
 
                     $persenKeuSub = $hitungPersen($subRealisasiKeu, $subPagu);
                     $persenFisikSub = $hitungPersen($subRealisasiFisik, $subTarget);
+
+                    // HITUNG SISA SUB KEGIATAN
+                    $sisaSub = $parseNum($subPagu) - $parseNum($subRealisasiKeu);
 
                     $isPj = false;
                     $userJabatanId = auth()->user()->jabatan_id ?? auth()->user()->pegawai?->jabatan_id;
@@ -372,6 +396,11 @@
                         <td class="px-2 py-2 text-center text-[10px] text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuSub, 0) }}%</td>
                         <td class="px-2 py-2 text-center text-[10px] text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenFisikSub, 0) }}%</td>
 
+                        {{-- SISA ANGGARAN SUB KEGIATAN --}}
+                        <td class="px-2 py-2 text-right text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">
+                            Rp {{ number_format($sisaSub, 0, ',', '.') }}
+                        </td>
+
                         <td class="p-1 text-center align-middle whitespace-nowrap">
                             @php
                             $isVerifiedSub = \App\Models\DetailLaporanKonsolidasi::where('id', $detail->id)->value('is_verified');
@@ -408,7 +437,7 @@
                 @empty
                 <tbody>
                     <tr>
-                        <td colspan="11" class="text-center py-10 text-gray-400">Belum ada data</td>
+                        <td colspan="12" class="text-center py-10 text-gray-400">Belum ada data</td>
                     </tr>
                 </tbody>
                 @endforelse
@@ -516,6 +545,60 @@
                 <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-gray-100">
                     <button wire:click="addProgram" class="inline-flex justify-center items-center rounded-lg shadow-sm px-4 py-2 bg-blue-600 text-sm font-bold text-white hover:bg-blue-700 focus:outline-none transition-all">Tambahkan</button>
                     <button wire:click="closeProgramModal" class="inline-flex justify-center items-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-all">Batal</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- MODAL CETAK PDF --}}
+    @if($isOpenPrintModal)
+    <div class="fixed inset-0 z-[100] overflow-y-auto" role="dialog" aria-modal="true">
+        <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
+            <div class="fixed inset-0 bg-gray-900/60 transition-opacity backdrop-blur-sm" wire:click="closePrintModal"></div>
+            <span class="hidden sm:inline-block sm:align-middle sm:h-screen">&#8203;</span>
+            <div class="inline-block align-bottom bg-white rounded-2xl text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-md w-full">
+                <div class="bg-white px-6 pt-6 pb-4 border-b border-gray-100">
+                    <div class="flex items-center gap-3">
+                        <div class="bg-red-100 p-2 rounded-full">
+                            <svg class="w-6 h-6 text-red-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path>
+                            </svg>
+                        </div>
+                        <h3 class="text-xl font-bold text-gray-900">Cetak Laporan</h3>
+                    </div>
+                    <p class="text-sm text-gray-500 mt-2 ml-11">Pilih filter jabatan untuk hasil cetak, atau biarkan kosong untuk mencetak semua.</p>
+                </div>
+
+                <div class="p-6">
+                    <label class="block text-sm font-semibold text-gray-700 mb-2">Filter Berdasarkan Jabatan / Bidang</label>
+                    <div class="relative">
+                        <select wire:model="selectedJabatanPrint" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm py-2.5 px-3">
+                            <option value="">-- Semua Jabatan (Keseluruhan) --</option>
+                            @foreach($jabatans as $jab)
+                            <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+                            @endforeach
+                        </select>
+                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                            <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-gray-50 px-6 py-4 flex flex-row-reverse gap-3 border-t border-gray-100">
+                    <button wire:click="printLaporan"
+                        class="inline-flex justify-center items-center rounded-lg shadow-sm px-4 py-2 bg-red-600 text-sm font-bold text-white hover:bg-red-700 focus:outline-none transition-all active:scale-95">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
+                        </svg>
+                        Cetak PDF
+                    </button>
+                    <button wire:click="closePrintModal"
+                        class="inline-flex justify-center items-center rounded-lg border border-gray-300 shadow-sm px-4 py-2 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50 focus:outline-none transition-all">
+                        Batal
+                    </button>
                 </div>
             </div>
         </div>

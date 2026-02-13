@@ -7,33 +7,50 @@ use App\Models\LaporanKonsolidasiAnggaran;
 use App\Models\DetailLaporanKonsolidasi;
 use App\Models\Program;
 use App\Models\Kegiatan;
+use App\Models\Jabatan;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
 class LaporanKonsolidasiCetakController extends Controller
 {
-    public function cetak($id)
+    public function cetak(Request $request, $id)
     {
         // 1. Ambil Data Laporan Utama
         $laporan = LaporanKonsolidasi::findOrFail($id);
 
-        // 2. Ambil ID Program yang ada di laporan ini
-        $programIds = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)
-                        ->whereNotNull('program_id')
-                        ->pluck('program_id');
-        
-        $programsInReport = Program::whereIn('id', $programIds)->orderBy('kode', 'asc')->get();
+        // 2. Logic Jabatan (HANYA UNTUK TANDA TANGAN)
+        // Kita ambil data jabatan jika user memilihnya di pop-up
+        $jabatanId = $request->query('jabatan_id');
+        $selectedJabatan = null;
 
-        // 3. Ambil Data Detail (Sub Kegiatan) dan Anggaran (Program/Kegiatan)
+        if ($jabatanId) {
+            $selectedJabatan = Jabatan::find($jabatanId);
+        }
+
+        // 3. AMBIL DATA (FULL - TANPA FILTER JABATAN)
+        // Logika ini dikembalikan seperti semula agar data tabel persis seperti di input
+
+        $programIds = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)
+            ->whereNotNull('program_id')
+            ->pluck('program_id');
+
+        // Urutkan Program
+        $programsInReport = Program::whereIn('id', $programIds)
+            ->orderByRaw("CASE WHEN kode LIKE 'X%' OR kode LIKE 'x%' THEN 0 ELSE 1 END ASC")
+            ->orderBy('kode', 'asc')
+            ->get();
+
+        // Ambil Raw Data Detail & Anggaran
         $detailsRaw = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan', 'subKegiatan.indikators'])
-                        ->where('laporan_konsolidasi_id', $id)->get();
-        
+            ->where('laporan_konsolidasi_id', $id)
+            ->get();
+
         $anggaranRaw = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)->get();
 
-        // 4. Struktur Data untuk View (Grouping)
+        // 4. Grouping Data
         $groupedData = [];
-        foreach($programsInReport as $prog) {
-            // Ambil data anggaran Program
+
+        foreach ($programsInReport as $prog) {
             $progAnggaran = $anggaranRaw->where('program_id', $prog->id)->first();
 
             $groupedData[$prog->id] = [
@@ -41,23 +58,21 @@ class LaporanKonsolidasiCetakController extends Controller
                 'anggaran' => $progAnggaran,
                 'kegiatans' => []
             ];
-            
-            // Ambil ID Kegiatan
+
             $kegiatanIds = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)
-                            ->whereNotNull('kegiatan_id')
-                            ->whereHas('kegiatan', function($q) use ($prog) { 
-                                $q->where('program_id', $prog->id); 
-                            })
-                            ->pluck('kegiatan_id');
-            
+                ->whereNotNull('kegiatan_id')
+                ->whereHas('kegiatan', function ($q) use ($prog) {
+                    $q->where('program_id', $prog->id);
+                })
+                ->pluck('kegiatan_id');
+
             $kegiatans = Kegiatan::whereIn('id', $kegiatanIds)->orderBy('kode', 'asc')->get();
 
-            foreach($kegiatans as $keg) {
-                // Ambil data anggaran Kegiatan
+            foreach ($kegiatans as $keg) {
                 $kegAnggaran = $anggaranRaw->where('kegiatan_id', $keg->id)->first();
 
-                // Filter sub kegiatan
-                $subs = $detailsRaw->filter(function($item) use ($keg) {
+                // Ambil details milik kegiatan ini
+                $subs = $detailsRaw->filter(function ($item) use ($keg) {
                     return $item->subKegiatan?->kegiatan_id == $keg->id;
                 });
 
@@ -70,13 +85,17 @@ class LaporanKonsolidasiCetakController extends Controller
         }
 
         // 5. Generate PDF
+        // Kita kirim $selectedJabatan untuk logika Tanda Tangan di View
         $pdf = Pdf::loadView('cetak.laporan-konsolidasi-pdf', [
             'laporan' => $laporan,
-            'data' => $groupedData
-        ])->setPaper('a4', 'landscape'); // Format Landscape agar muat banyak kolom
+            'data' => $groupedData,
+            'selectedJabatan' => $selectedJabatan
+        ])->setPaper('a4', 'landscape');
 
-        // 6. Nama File Download
-        $fileName = 'Laporan_Konsolidasi_' . $laporan->bulan . '_' . $laporan->tahun . '.pdf';
+        // 6. Nama File
+        $judulFile = $selectedJabatan ? 'Laporan_' . str_replace(' ', '_', $selectedJabatan->nama) : 'Laporan_Konsolidasi';
+        $fileName = $judulFile . '_' . $laporan->bulan . '_' . $laporan->tahun . '.pdf';
+
         return $pdf->stream($fileName);
     }
 }
