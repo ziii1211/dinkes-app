@@ -86,6 +86,7 @@ class InputData extends Component
         foreach ($anggarans as $data) {
             $formattedData = [
                 'target'          => $this->formatNumberDisplay($data->target),
+                // Tampilkan rata-rata fisik yang sudah tersimpan
                 'realisasi_fisik' => $this->formatNumberDisplay($data->realisasi_fisik),
                 'pagu_anggaran'   => $data->pagu_anggaran ? number_format($data->pagu_anggaran, 0, ',', '.') : '',
                 'pagu_realisasi'  => $data->pagu_realisasi ? number_format($data->pagu_realisasi, 0, ',', '.') : ''
@@ -102,8 +103,10 @@ class InputData extends Component
     // Helper untuk tampilan (menghilangkan .00 jika bulat, dan kosong jika 0)
     private function formatNumberDisplay($val)
     {
-        if (!$val || $val == 0) return '';
-        return (float)$val == (int)$val ? (int)$val : str_replace('.', ',', $val);
+        if (!$val && $val !== 0) return '';
+        if ($val == 0) return '0';
+        // Tampilkan desimal maksimal 2 digit jika ada koma
+        return (float)$val == (int)$val ? (int)$val : str_replace('.', ',', round($val, 2));
     }
 
     // --- FUNGSI PEMBERSIH FORMAT RUPIAH ---
@@ -121,6 +124,102 @@ class InputData extends Component
         $val = str_replace('.', '', $val);
         $val = str_replace(',', '.', $val);
         return (float) $val;
+    }
+
+    // --- FUNGSI HITUNG OTOMATIS (UPDATED: FISIK RATA-RATA) ---
+    private function recalculateProgramKegiatanAnggaran()
+    {
+        // Ambil semua detail sub kegiatan pada laporan ini
+        $details = DetailLaporanKonsolidasi::with('subKegiatan.kegiatan')
+            ->where('laporan_konsolidasi_id', $this->laporan->id)
+            ->get();
+
+        $kegiatanStats = [];
+        $programStats = [];
+
+        // Loop untuk menghitung total dan rata-rata
+        foreach ($details as $detail) {
+            $sub = $detail->subKegiatan;
+            if ($sub && $sub->kegiatan) {
+                $kegId = $sub->kegiatan_id;
+                $progId = $sub->kegiatan->program_id;
+
+                // Inisialisasi Array jika belum ada
+                if (!isset($kegiatanStats[$kegId])) {
+                    $kegiatanStats[$kegId] = [
+                        'pagu' => 0, 
+                        'realisasi' => 0,
+                        'total_persen_fisik' => 0,
+                        'count_sub' => 0
+                    ];
+                }
+                if (!isset($programStats[$progId])) {
+                    $programStats[$progId] = [
+                        'pagu' => 0, 
+                        'realisasi' => 0,
+                        'total_persen_fisik' => 0,
+                        'count_sub' => 0
+                    ];
+                }
+
+                // 1. Hitung Keuangan (SUM)
+                $kegiatanStats[$kegId]['pagu'] += $detail->pagu_anggaran;
+                $kegiatanStats[$kegId]['realisasi'] += $detail->pagu_realisasi;
+
+                $programStats[$progId]['pagu'] += $detail->pagu_anggaran;
+                $programStats[$progId]['realisasi'] += $detail->pagu_realisasi;
+
+                // 2. Hitung Persentase Fisik Sub Kegiatan Ini
+                $targetSub = $detail->target > 0 ? $detail->target : 0;
+                $fisikSub = $detail->realisasi_fisik > 0 ? $detail->realisasi_fisik : 0;
+                
+                $persenFisik = 0;
+                if ($targetSub > 0) {
+                    $persenFisik = ($fisikSub / $targetSub) * 100;
+                    // Batasi maksimal 100% (opsional, jika ingin > 100 hapus baris ini)
+                    $persenFisik = min($persenFisik, 100); 
+                }
+
+                // Akumulasi Persen Fisik untuk Rata-rata
+                $kegiatanStats[$kegId]['total_persen_fisik'] += $persenFisik;
+                $kegiatanStats[$kegId]['count_sub']++;
+
+                $programStats[$progId]['total_persen_fisik'] += $persenFisik;
+                $programStats[$progId]['count_sub']++;
+            }
+        }
+
+        // Update otomatis ke tabel Anggaran untuk Kegiatan
+        foreach ($kegiatanStats as $kegId => $stats) {
+            // Hitung Rata-rata Fisik
+            $avgFisik = $stats['count_sub'] > 0 ? ($stats['total_persen_fisik'] / $stats['count_sub']) : 0;
+
+            LaporanKonsolidasiAnggaran::updateOrCreate(
+                ['laporan_konsolidasi_id' => $this->laporan->id, 'kegiatan_id' => $kegId],
+                [
+                    'pagu_anggaran' => $stats['pagu'],
+                    'pagu_realisasi' => $stats['realisasi'],
+                    'realisasi_fisik' => $avgFisik, // Simpan Rata-rata %
+                    'target' => 100 // Target parent dianggap 100% untuk referensi
+                ]
+            );
+        }
+
+        // Update otomatis ke tabel Anggaran untuk Program
+        foreach ($programStats as $progId => $stats) {
+            // Hitung Rata-rata Fisik
+            $avgFisik = $stats['count_sub'] > 0 ? ($stats['total_persen_fisik'] / $stats['count_sub']) : 0;
+
+            LaporanKonsolidasiAnggaran::updateOrCreate(
+                ['laporan_konsolidasi_id' => $this->laporan->id, 'program_id' => $progId],
+                [
+                    'pagu_anggaran' => $stats['pagu'],
+                    'pagu_realisasi' => $stats['realisasi'],
+                    'realisasi_fisik' => $avgFisik, // Simpan Rata-rata %
+                    'target' => 100 // Target parent dianggap 100% untuk referensi
+                ]
+            );
+        }
     }
 
     public function toggleVerification($id, $type)
@@ -168,27 +267,15 @@ class InputData extends Component
             $countUpdated = 0;
 
             foreach ($masterPrograms as $prog) {
-                LaporanKonsolidasiAnggaran::updateOrCreate(
-                    [
-                        'laporan_konsolidasi_id' => $this->laporan->id,
-                        'program_id' => $prog->id
-                    ],
-                    [
-                        'pagu_anggaran' => $prog->pagu ?? 0,
-                        'target'        => $prog->target ?? 0
-                    ]
+                // Buat/Update Program (Placeholder)
+                LaporanKonsolidasiAnggaran::firstOrCreate(
+                    ['laporan_konsolidasi_id' => $this->laporan->id, 'program_id' => $prog->id]
                 );
 
                 foreach ($prog->kegiatans as $keg) {
-                    LaporanKonsolidasiAnggaran::updateOrCreate(
-                        [
-                            'laporan_konsolidasi_id' => $this->laporan->id,
-                            'kegiatan_id' => $keg->id
-                        ],
-                        [
-                            'pagu_anggaran' => $keg->pagu ?? 0,
-                            'target'        => $keg->target ?? 0,
-                        ]
+                    // Buat/Update Kegiatan (Placeholder)
+                    LaporanKonsolidasiAnggaran::firstOrCreate(
+                        ['laporan_konsolidasi_id' => $this->laporan->id, 'kegiatan_id' => $keg->id]
                     );
 
                     foreach ($keg->subKegiatans as $sub) {
@@ -219,6 +306,7 @@ class InputData extends Component
                             ]);
                             $countAdded++;
                         } else {
+                            // Hanya update data master, jangan timpa realisasi inputan user
                             $detail->update([
                                 'kode'                  => $sub->kode,
                                 'nama_program_kegiatan' => $namaLengkap,
@@ -232,6 +320,9 @@ class InputData extends Component
                     }
                 }
             }
+
+            // Hitung otomatis semua (termasuk fisik) sebelum commit
+            $this->recalculateProgramKegiatanAnggaran();
 
             DB::commit();
             $this->loadData();
@@ -256,39 +347,7 @@ class InputData extends Component
     {
         DB::beginTransaction();
         try {
-            // 1. Simpan Program Inputs
-            foreach ($this->programInputs as $progId => $data) {
-                LaporanKonsolidasiAnggaran::updateOrCreate(
-                    [
-                        'laporan_konsolidasi_id' => $this->laporan->id,
-                        'program_id' => $progId
-                    ],
-                    [
-                        'target'          => $this->cleanNumber($data['target'] ?? 0),
-                        'realisasi_fisik' => $this->cleanNumber($data['realisasi_fisik'] ?? 0),
-                        'pagu_anggaran'   => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
-                        'pagu_realisasi'  => $this->cleanRupiah($data['pagu_realisasi'] ?? '0')
-                    ]
-                );
-            }
-
-            // 2. Simpan Kegiatan Inputs
-            foreach ($this->kegiatanInputs as $kegId => $data) {
-                LaporanKonsolidasiAnggaran::updateOrCreate(
-                    [
-                        'laporan_konsolidasi_id' => $this->laporan->id,
-                        'kegiatan_id' => $kegId
-                    ],
-                    [
-                        'target'          => $this->cleanNumber($data['target'] ?? 0),
-                        'realisasi_fisik' => $this->cleanNumber($data['realisasi_fisik'] ?? 0),
-                        'pagu_anggaran'   => $this->cleanRupiah($data['pagu_anggaran'] ?? '0'),
-                        'pagu_realisasi'  => $this->cleanRupiah($data['pagu_realisasi'] ?? '0')
-                    ]
-                );
-            }
-
-            // 3. Simpan Detail Sub Kegiatan Inputs
+            // 1. Simpan Detail Sub Kegiatan Inputs TERLEBIH DAHULU
             foreach ($this->inputs as $detailId => $data) {
                 $detail = DetailLaporanKonsolidasi::find($detailId);
                 if ($detail) {
@@ -303,12 +362,35 @@ class InputData extends Component
                 }
             }
 
+            // 2. HITUNG OTOMATIS PAGU & FISIK PROGRAM DAN KEGIATAN
+            $this->recalculateProgramKegiatanAnggaran();
+
+            // 3. Simpan Program/Kegiatan (Optional, karena sudah dihandle di recalculate, tapi kita simpan targetnya saja)
+            foreach ($this->programInputs as $progId => $data) {
+                // Hanya update target manual jika ada, sisanya otomatis
+                LaporanKonsolidasiAnggaran::where([
+                    'laporan_konsolidasi_id' => $this->laporan->id,
+                    'program_id' => $progId
+                ])->update([
+                    'target' => $this->cleanNumber($data['target'] ?? 0)
+                ]);
+            }
+
+            foreach ($this->kegiatanInputs as $kegId => $data) {
+                LaporanKonsolidasiAnggaran::where([
+                    'laporan_konsolidasi_id' => $this->laporan->id,
+                    'kegiatan_id' => $kegId
+                ])->update([
+                    'target' => $this->cleanNumber($data['target'] ?? 0)
+                ]);
+            }
+
             DB::commit();
 
             // Reload data agar inputan menampilkan format angka yang benar kembali
             $this->loadData();
 
-            session()->flash('message', 'Semua data berhasil disimpan dan dikalkulasi.');
+            session()->flash('message', 'Semua data berhasil disimpan dan dikalkulasi secara otomatis.');
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Gagal menyimpan: ' . $e->getMessage());
@@ -365,26 +447,19 @@ class InputData extends Component
             // Ambil Master Program
             $progMaster = Program::find($this->selectedProgramId);
 
-            LaporanKonsolidasiAnggaran::updateOrCreate(
+            // Create Program Record
+            LaporanKonsolidasiAnggaran::firstOrCreate(
                 ['laporan_konsolidasi_id' => $this->laporan->id, 'program_id' => $this->selectedProgramId],
-                [
-                    'pagu_anggaran' => $progMaster->pagu ?? 0,   // AMBIL MASTER
-                    'target'        => $progMaster->target ?? 0, // AMBIL MASTER
-                    'pagu_realisasi' => 0,
-                    'realisasi_fisik' => 0
-                ]
+                // Default values jika baru dibuat
+                ['pagu_anggaran' => 0, 'pagu_realisasi' => 0, 'realisasi_fisik' => 0]
             );
 
             $kegiatans = Kegiatan::with(['program'])->where('program_id', $this->selectedProgramId)->get();
             foreach ($kegiatans as $keg) {
-                LaporanKonsolidasiAnggaran::updateOrCreate(
+                // Create Kegiatan Record
+                LaporanKonsolidasiAnggaran::firstOrCreate(
                     ['laporan_konsolidasi_id' => $this->laporan->id, 'kegiatan_id' => $keg->id],
-                    [
-                        'pagu_anggaran' => $keg->pagu ?? 0,   // AMBIL MASTER
-                        'target'        => $keg->target ?? 0, // AMBIL MASTER
-                        'pagu_realisasi' => 0,
-                        'realisasi_fisik' => 0
-                    ]
+                    ['pagu_anggaran' => 0, 'pagu_realisasi' => 0, 'realisasi_fisik' => 0]
                 );
 
                 $subKegiatans = SubKegiatan::with(['indikators'])->where('kegiatan_id', $keg->id)->get();
@@ -416,8 +491,12 @@ class InputData extends Component
                     }
                 }
             }
+            
+            // Hitung otomatis sebelum commit
+            $this->recalculateProgramKegiatanAnggaran();
+            
             DB::commit();
-            session()->flash('message', 'Program ditambahkan (Data Pagu & Target diambil dari Master).');
+            session()->flash('message', 'Program ditambahkan (Pagu & Fisik otomatis dijumlahkan dari Sub Kegiatan).');
         } catch (\Exception $e) {
             DB::rollBack();
             session()->flash('error', 'Gagal: ' . $e->getMessage());

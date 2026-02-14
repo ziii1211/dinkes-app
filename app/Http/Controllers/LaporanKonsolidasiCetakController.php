@@ -18,8 +18,7 @@ class LaporanKonsolidasiCetakController extends Controller
         // 1. Ambil Data Laporan Utama
         $laporan = LaporanKonsolidasi::findOrFail($id);
 
-        // 2. Logic Jabatan (HANYA UNTUK TANDA TANGAN)
-        // Kita ambil data jabatan jika user memilihnya di pop-up
+        // 2. Logic Filter Jabatan
         $jabatanId = $request->query('jabatan_id');
         $selectedJabatan = null;
 
@@ -27,65 +26,76 @@ class LaporanKonsolidasiCetakController extends Controller
             $selectedJabatan = Jabatan::find($jabatanId);
         }
 
-        // 3. AMBIL DATA (FULL - TANPA FILTER JABATAN)
-        // Logika ini dikembalikan seperti semula agar data tabel persis seperti di input
+        // 3. AMBIL DATA (DENGAN FILTER JABATAN JIKA ADA)
+        
+        // Mulai query untuk mengambil Detail (Sub Kegiatan)
+        $detailsQuery = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan', 'subKegiatan.indikators'])
+            ->where('laporan_konsolidasi_id', $id);
 
-        $programIds = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)
-            ->whereNotNull('program_id')
-            ->pluck('program_id');
+        // JIKA ADA FILTER JABATAN, maka ambil HANYA Sub Kegiatan yang jabatan_id-nya cocok
+        if ($jabatanId) {
+            $detailsQuery->whereHas('subKegiatan', function ($q) use ($jabatanId) {
+                $q->where('jabatan_id', $jabatanId);
+            });
+        }
 
-        // Urutkan Program
-        $programsInReport = Program::whereIn('id', $programIds)
+        $detailsRaw = $detailsQuery->get();
+
+        // Cari ID Kegiatan dan Program yang valid (yang memiliki Sub Kegiatan terkait PJ)
+        $validKegiatanIds = $detailsRaw->pluck('subKegiatan.kegiatan_id')->unique()->filter();
+        $validProgramIds = Kegiatan::whereIn('id', $validKegiatanIds)->pluck('program_id')->unique()->filter();
+
+        // Urutkan Program yang hanya masuk dalam filter
+        $programsInReport = Program::whereIn('id', $validProgramIds)
             ->orderByRaw("CASE WHEN kode LIKE 'X%' OR kode LIKE 'x%' THEN 0 ELSE 1 END ASC")
             ->orderBy('kode', 'asc')
             ->get();
 
-        // Ambil Raw Data Detail & Anggaran
-        $detailsRaw = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan', 'subKegiatan.indikators'])
-            ->where('laporan_konsolidasi_id', $id)
-            ->get();
-
         $anggaranRaw = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)->get();
 
-        // 4. Grouping Data
+        // 4. Grouping Data (Bentuk Hirarki)
         $groupedData = [];
 
         foreach ($programsInReport as $prog) {
             $progAnggaran = $anggaranRaw->where('program_id', $prog->id)->first();
 
-            $groupedData[$prog->id] = [
-                'program' => $prog,
-                'anggaran' => $progAnggaran,
-                'kegiatans' => []
-            ];
+            // Cari Kegiatan untuk Program ini yang ada di dalam filter
+            $kegiatans = Kegiatan::whereIn('id', $validKegiatanIds)
+                ->where('program_id', $prog->id)
+                ->orderBy('kode', 'asc')
+                ->get();
 
-            $kegiatanIds = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)
-                ->whereNotNull('kegiatan_id')
-                ->whereHas('kegiatan', function ($q) use ($prog) {
-                    $q->where('program_id', $prog->id);
-                })
-                ->pluck('kegiatan_id');
-
-            $kegiatans = Kegiatan::whereIn('id', $kegiatanIds)->orderBy('kode', 'asc')->get();
+            $kegiatansGrouped = [];
 
             foreach ($kegiatans as $keg) {
                 $kegAnggaran = $anggaranRaw->where('kegiatan_id', $keg->id)->first();
 
-                // Ambil details milik kegiatan ini
+                // Ambil Sub Kegiatan yang cuma milik kegiatan ini
                 $subs = $detailsRaw->filter(function ($item) use ($keg) {
                     return $item->subKegiatan?->kegiatan_id == $keg->id;
                 });
 
-                $groupedData[$prog->id]['kegiatans'][$keg->id] = [
-                    'kegiatan' => $keg,
-                    'anggaran' => $kegAnggaran,
-                    'details' => $subs
+                // Pastikan kegiatan ini punya isi sebelum dimasukkan
+                if ($subs->count() > 0) {
+                    $kegiatansGrouped[$keg->id] = [
+                        'kegiatan' => $keg,
+                        'anggaran' => $kegAnggaran,
+                        'details' => $subs
+                    ];
+                }
+            }
+
+            // Pastikan program ini punya kegiatan sebelum dimasukkan
+            if (count($kegiatansGrouped) > 0) {
+                $groupedData[$prog->id] = [
+                    'program' => $prog,
+                    'anggaran' => $progAnggaran,
+                    'kegiatans' => $kegiatansGrouped
                 ];
             }
         }
 
         // 5. Generate PDF
-        // Kita kirim $selectedJabatan untuk logika Tanda Tangan di View
         $pdf = Pdf::loadView('cetak.laporan-konsolidasi-pdf', [
             'laporan' => $laporan,
             'data' => $groupedData,

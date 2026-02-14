@@ -35,7 +35,10 @@ class Index extends Component
 
         // Pencarian
         if (!empty($this->search)) {
-            $query->where('judul', 'like', '%' . $this->search . '%');
+            $query->where(function($q) {
+                $q->where('judul', 'like', '%' . $this->search . '%')
+                  ->orWhere('tahun', 'like', '%' . $this->search . '%');
+            });
         }
 
         // Filter Tahun
@@ -43,11 +46,32 @@ class Index extends Component
             $query->where('tahun', $this->filterTahun);
         }
 
+        // --- UPDATE: LOGIKA PENGURUTAN KRONOLOGIS ---
+        $laporans = $query->orderBy('tahun', 'asc')
+            ->orderByRaw("
+                CASE 
+                    WHEN bulan = 'Januari' THEN 1
+                    WHEN bulan = 'Februari' THEN 2
+                    WHEN bulan = 'Maret' THEN 3
+                    WHEN bulan = 'April' THEN 4
+                    WHEN bulan = 'Mei' THEN 5
+                    WHEN bulan = 'Juni' THEN 6
+                    WHEN bulan = 'Juli' THEN 7
+                    WHEN bulan = 'Agustus' THEN 8
+                    WHEN bulan = 'September' THEN 9
+                    WHEN bulan = 'Oktober' THEN 10
+                    WHEN bulan = 'November' THEN 11
+                    WHEN bulan = 'Desember' THEN 12
+                    ELSE 13
+                END ASC
+            ")
+            ->paginate($this->perPage);
+
         // Data Tahun untuk Dropdown Filter
         $availableYears = LaporanKonsolidasi::select('tahun')->distinct()->orderBy('tahun', 'desc')->pluck('tahun');
 
         return view('livewire.laporan-konsolidasi.index', [
-            'laporans' => $query->latest()->paginate($this->perPage),
+            'laporans' => $laporans,
             'availableYears' => $availableYears
         ]);
     }
@@ -79,9 +103,9 @@ class Index extends Component
             'tahun' => 'required',
         ]);
 
-        // GENERATE JUDUL OTOMATIS (UPDATE SESUAI REQUEST)
-        // Format: "Laporan Konsolidasi Bulan [Bulan] Tahun Anggaran [Tahun]"
-        $judulOtomatis = "Laporan Konsolidasi Bulan " . $this->bulan . " Tahun Anggaran " . $this->tahun;
+        // GENERATE JUDUL OTOMATIS (DIPERBAIKI SESUAI JUDUL BARU)
+        // Format: "Laporan Realisasi Keuangan dan Fisik Bulan [Bulan] Tahun Anggaran [Tahun]"
+        $judulOtomatis = "Laporan Realisasi Keuangan dan Fisik Bulan " . $this->bulan . " Tahun Anggaran " . $this->tahun;
 
         LaporanKonsolidasi::updateOrCreate(
             ['id' => $this->laporanId],
@@ -103,8 +127,11 @@ class Index extends Component
 
     public function delete($id)
     {
-        LaporanKonsolidasi::find($id)->delete();
-        session()->flash('message', 'Laporan berhasil dihapus.');
+        $laporan = LaporanKonsolidasi::find($id);
+        if ($laporan) {
+            $laporan->delete();
+            session()->flash('message', 'Laporan berhasil dihapus.');
+        }
     }
 
     public function openModal() { $this->isOpen = true; }

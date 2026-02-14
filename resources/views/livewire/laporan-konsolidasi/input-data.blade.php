@@ -1,8 +1,10 @@
 <div class="space-y-6"
+
     x-data="{ 
         // MENGGUNAKAN ENTANGLE AGAR SINKRON DENGAN LIVEWIRE/DATABASE
         totalAnggaran: @entangle('totalAnggaran'), 
         totalRealisasi: @entangle('totalRealisasi'),
+        totalPersentase: 0, // TAMBAHAN BARU UNTUK PERSENTASE
         
         // Fungsi untuk membersihkan format Rupiah jadi float
         parseRupiah(value) {
@@ -32,25 +34,56 @@
 
             this.totalAnggaran = totalAng;
             this.totalRealisasi = totalReal;
+
+            // RUMUS PERSENTASE (Realisasi / Anggaran x 100)
+            if (totalAng > 0) {
+                this.totalPersentase = (totalReal / totalAng) * 100;
+                // Pastikan mentok di 100% jika realisasi melebihi anggaran (opsional)
+                if(this.totalPersentase > 100) this.totalPersentase = 100; 
+            } else {
+                this.totalPersentase = 0;
+            }
         }
      }"
     {{-- MENGGUNAKAN NEXTTICK AGAR DIHITUNG SETELAH DOM SIAP --}}
     x-init="$nextTick(() => { updateTotals() })"
     @input.debounce.500ms="updateTotals()">
-
+    <x-slot:title>
+        Laporan e-monev
+        </x-slot>
+     <x-slot:breadcrumb>
+            <div class="overflow-x-auto whitespace-nowrap pb-2">
+                <a href="/" class="hover:text-blue-100 transition-colors">Dashboard</a>
+                <span class="mx-2">/</span>
+                <span class="font-medium text-white">Laporan e-monev</span>
+            </div>
+            </x-slot>
     {{-- HELPER PHP UNTUK RUMUS DI VIEW --}}
     @php
-    $parseNum = function($val) {
-    if(is_numeric($val)) return (float)$val;
-    return (float) preg_replace('/[^0-9]/', '', $val ?? '0');
-    };
+        $parseNum = function($val) {
+            // Jika sudah berbentuk angka murni
+            if(is_int($val) || is_float($val)) return (float)$val;
+            
+            $strVal = (string)($val ?? '0');
+            
+            // Hapus TITIK sebagai pemisah ribuan (Misal: 500.000 jadi 500000)
+            $strVal = str_replace('.', '', $strVal);
+            
+            // Ganti KOMA jadi TITIK untuk desimal (Misal: 99,5 jadi 99.5 untuk target fisik)
+            $strVal = str_replace(',', '.', $strVal);
+            
+            // Hapus karakter aneh selain angka dan titik desimal
+            $clean = preg_replace('/[^0-9\.]/', '', $strVal);
+            
+            return (float) ($clean ?: 0);
+        };
 
-    $hitungPersen = function($pembilang, $penyebut) use ($parseNum) {
-    $a = $parseNum($pembilang);
-    $b = $parseNum($penyebut);
-    $hasil = ($b > 0) ? ($a / $b) * 100 : 0;
-    return min($hasil, 100);
-    };
+        $hitungPersen = function($pembilang, $penyebut) use ($parseNum) {
+            $a = $parseNum($pembilang);
+            $b = $parseNum($penyebut);
+            $hasil = ($b > 0) ? ($a / $b) * 100 : 0;
+            return min($hasil, 100);
+        };
     @endphp
 
     {{-- HEADER & INFO TOTAL --}}
@@ -68,7 +101,7 @@
             </div>
         </div>
 
-        <div class="flex gap-6 items-center bg-gray-50 px-5 py-3 rounded-xl border border-gray-200 shadow-inner">
+        <div class="flex gap-4 md:gap-6 items-center bg-gray-50 px-5 py-3 rounded-xl border border-gray-200 shadow-inner">
             <div class="text-right">
                 <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Total Anggaran</p>
                 <p class="text-lg font-bold text-gray-800">Rp <span x-text="formatRupiah(totalAnggaran)">0</span></p>
@@ -77,6 +110,11 @@
             <div class="text-right">
                 <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Total Realisasi</p>
                 <p class="text-lg font-bold text-green-600">Rp <span x-text="formatRupiah(totalRealisasi)">0</span></p>
+            </div>
+            <div class="w-px h-10 bg-gray-300"></div>
+            <div class="text-right">
+                <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Total Persentase%</p>
+                <p class="text-lg font-bold text-blue-600"><span x-text="totalPersentase.toFixed(1)">0</span>%</p>
             </div>
         </div>
     </div>
@@ -134,7 +172,7 @@
                 <svg wire:loading.remove wire:target="saveAll" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
                 </svg>
-                <svg wire:loading class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <svg wire:loading wire:target="saveAll" class="w-5 h-5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
@@ -197,11 +235,7 @@
                     {{-- === BARIS PROGRAM === --}}
                     <tr class="bg-gray-50 hover:bg-gray-100 transition-colors">
                         <td class="px-2 py-3 font-bold text-gray-800 border-r border-gray-200 font-mono text-center align-top">
-                            <button @click="expanded = !expanded" class="mr-1 text-blue-600 hover:text-blue-800">
-                                <svg class="w-4 h-4 transition-transform duration-200" :class="{'rotate-90': expanded}" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                                </svg>
-                            </button>
+                            {{-- TOMBOL PANAH SUDAH DIHAPUS --}}
                             {{ $program->kode }}
                         </td>
                         <td class="px-4 py-3 border-r border-gray-200 align-top text-left">
@@ -212,39 +246,36 @@
                         </td>
                         <td colspan="2" class="border-r border-gray-200"></td>
 
-                        {{-- Target Program (DIHILANGKAN/STRIP) --}}
-                        <td class="p-1.5 border-r border-gray-200 align-top text-center">
-                            <span class="text-gray-400">-</span>
+                        {{-- Target Program --}}
+                        <td class="p-1.5 border-r border-gray-200 align-middle text-center">
+                            <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
 
                         {{-- Pagu Anggaran Program --}}
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="rupiahInput('programInputs.{{ $program->id }}.pagu_anggaran', '{{ $progPagu }}')">
                             <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire"
-                                class="input-pagu w-full text-[11px] text-right font-bold text-blue-800 bg-white border border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400"
+                                class="w-full text-[11px] text-right font-bold text-blue-800 bg-gray-100 border border-gray-300 rounded shadow-sm px-2 py-1.5 disabled:text-gray-500 cursor-not-allowed"
                                 placeholder="0"
-                                @if(!$isAdmin) disabled @endif>
+                                disabled title="Dihitung otomatis dari Sub Kegiatan">
                         </td>
 
                         {{-- Realisasi Keuangan Program --}}
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="rupiahInput('programInputs.{{ $program->id }}.pagu_realisasi', '{{ $progRealisasi }}')">
                             <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire"
-                                class="input-realisasi w-full text-[11px] text-right font-bold text-green-800 bg-white border border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400"
+                                class="w-full text-[11px] text-right font-bold text-green-800 bg-gray-100 border border-gray-300 rounded shadow-sm px-2 py-1.5 disabled:text-gray-500 cursor-not-allowed"
                                 placeholder="0"
-                                @if(!$isAdmin) disabled @endif>
+                                disabled title="Dihitung otomatis dari Sub Kegiatan">
                         </td>
 
                         {{-- Realisasi Fisik Program --}}
-                        <td class="p-1.5 border-r border-gray-200 align-top" x-data="numberInput('programInputs.{{ $program->id }}.realisasi_fisik', '{{ $progFisik }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire"
-                                class="w-full text-[11px] text-right font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400"
-                                placeholder=""
-                                @if(!$isAdmin) disabled @endif>
+                        <td class="p-1.5 border-r border-gray-200 align-middle text-center">
+                            <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
 
                         {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuProg, 0) }}%</td>
 
-                        {{-- % Capaian Fisik (DIHILANGKAN/STRIP) --}}
+                        {{-- % Capaian Fisik --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">
                             <span class="text-gray-400">-</span>
                         </td>
@@ -257,7 +288,7 @@
                         {{-- AKSI --}}
                         <td class="p-2 text-center align-middle whitespace-nowrap">
                             @if($isAdmin)
-                            <button wire:click="deleteProgram({{ $program->id }})" wire:confirm="Yakin hapus?" class="text-red-400 hover:text-red-600 p-1" title="Hapus">
+                            <button wire:click="deleteProgram({{ $program->id }})" wire:confirm="Yakin hapus Program beserta seluruh Kegiatan dan Sub Kegiatannya?" class="text-red-400 hover:text-red-600 p-1" title="Hapus">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -294,27 +325,34 @@
                         </td>
                         <td colspan="2" class="border-r border-gray-200"></td>
 
-                        {{-- Target Kegiatan (DIHILANGKAN/STRIP) --}}
-                        <td class="p-1.5 border-r border-gray-200 align-top text-center">
-                            <span class="text-gray-400">-</span>
+                        {{-- Target Kegiatan --}}
+                        <td class="p-1.5 border-r border-gray-200 align-middle text-center">
+                            <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
 
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="rupiahInput('kegiatanInputs.{{ $kegiatan->id }}.pagu_anggaran', '{{ $kegPagu }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="input-pagu w-full text-[11px] text-right font-semibold text-gray-700 bg-white border border-gray-300 rounded shadow-sm focus:border-amber-500 focus:ring-1 focus:ring-amber-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400" placeholder="0" @if(!$isAdmin) disabled @endif>
+                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" 
+                                class="w-full text-[11px] text-right font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded shadow-sm px-2 py-1.5 disabled:text-gray-500 cursor-not-allowed" 
+                                placeholder="0" 
+                                disabled title="Dihitung otomatis dari Sub Kegiatan">
                         </td>
 
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="rupiahInput('kegiatanInputs.{{ $kegiatan->id }}.pagu_realisasi', '{{ $kegRealisasi }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="input-realisasi w-full text-[11px] text-right font-semibold text-gray-700 bg-white border border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400" placeholder="0" @if(!$isAdmin) disabled @endif>
+                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" 
+                                class="w-full text-[11px] text-right font-semibold text-gray-700 bg-gray-100 border border-gray-300 rounded shadow-sm px-2 py-1.5 disabled:text-gray-500 cursor-not-allowed" 
+                                placeholder="0" 
+                                disabled title="Dihitung otomatis dari Sub Kegiatan">
                         </td>
 
-                        <td class="p-1.5 border-r border-gray-200 align-top" x-data="numberInput('kegiatanInputs.{{ $kegiatan->id }}.realisasi_fisik', '{{ $kegFisik }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="w-full text-[11px] text-right font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400" placeholder="" @if(!$isAdmin) disabled @endif>
+                        {{-- Realisasi Fisik Kegiatan --}}
+                        <td class="p-1.5 border-r border-gray-200 align-middle text-center">
+                            <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
 
                         {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuKeg, 0) }}%</td>
 
-                        {{-- % Capaian Fisik (DIHILANGKAN/STRIP) --}}
+                        {{-- % Capaian Fisik --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">
                             <span class="text-gray-400">-</span>
                         </td>
@@ -326,7 +364,7 @@
 
                         <td class="p-2 text-center align-middle whitespace-nowrap">
                             @if($isAdmin)
-                            <button wire:click="deleteKegiatan({{ $kegiatan->id }})" wire:confirm="Yakin hapus?" class="text-red-400 hover:text-red-600 p-1" title="Hapus">
+                            <button wire:click="deleteKegiatan({{ $kegiatan->id }})" wire:confirm="Yakin hapus Kegiatan beserta Sub Kegiatannya?" class="text-red-400 hover:text-red-600 p-1" title="Hapus">
                                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                 </svg>
@@ -457,14 +495,40 @@
         </div>
     </div>
 
-    {{-- Script Alpine (SAMA SEPERTI SEBELUMNYA) --}}
+    {{-- Script Alpine: UPDATE BESAR DI SINI AGAR SINKRON DENGAN LIVEWIRE SAAT SAVE --}}
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('rupiahInput', (modelName, initialValue) => ({
                 displayValue: '',
                 modelName: modelName,
                 init() {
+                    // Set nilai awal saat pertama render
                     this.formatInitial(initialValue);
+                    
+                    // SINKRONISASI: Dengarkan perubahan langsung dari backend Livewire (misal setelah klik Simpan)
+                    if (this.$wire) {
+                        // Untuk Livewire v3
+                        if (typeof this.$wire.$watch === 'function') {
+                            this.$wire.$watch(this.modelName, (value) => {
+                                let currentRaw = this.displayValue.toString().replace(/[^0-9]/g, '');
+                                let newRaw = value ? value.toString().replace(/[^0-9]/g, '') : '';
+                                // Update form field jika nilainya benar-benar berubah dari backend
+                                if (currentRaw !== newRaw) {
+                                    this.formatInitial(value);
+                                }
+                            });
+                        } 
+                        // Fallback jika menggunakan Livewire v2
+                        else {
+                            this.$watch('$wire.' + this.modelName, (value) => {
+                                let currentRaw = this.displayValue.toString().replace(/[^0-9]/g, '');
+                                let newRaw = value ? value.toString().replace(/[^0-9]/g, '') : '';
+                                if (currentRaw !== newRaw) {
+                                    this.formatInitial(value);
+                                }
+                            });
+                        }
+                    }
                 },
                 updateWire(e) {
                     this.formatCurrency(e);
@@ -508,10 +572,31 @@
                 displayValue: '',
                 modelName: modelName,
                 init() {
-                    if (!initialValue || initialValue == 0 || initialValue == '0') {
+                    // Set nilai awal
+                    this.setInitial(initialValue);
+                    
+                    // SINKRONISASI: Dengarkan perubahan langsung dari backend Livewire
+                    if (this.$wire) {
+                        if (typeof this.$wire.$watch === 'function') {
+                            this.$wire.$watch(this.modelName, (value) => {
+                                if (this.displayValue != value) {
+                                    this.setInitial(value);
+                                }
+                            });
+                        } else {
+                            this.$watch('$wire.' + this.modelName, (value) => {
+                                if (this.displayValue != value) {
+                                    this.setInitial(value);
+                                }
+                            });
+                        }
+                    }
+                },
+                setInitial(val) {
+                    if (!val || val == 0 || val == '0') {
                         this.displayValue = '';
                     } else {
-                        this.displayValue = initialValue;
+                        this.displayValue = val;
                     }
                 },
                 updateWire(e) {
