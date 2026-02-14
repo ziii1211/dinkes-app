@@ -60,19 +60,13 @@
             </x-slot>
     {{-- HELPER PHP UNTUK RUMUS DI VIEW --}}
     @php
+        // Helper Parsing Angka (PENTING UNTUK KONSISTENSI)
         $parseNum = function($val) {
-            // Jika sudah berbentuk angka murni
             if(is_int($val) || is_float($val)) return (float)$val;
             
             $strVal = (string)($val ?? '0');
-            
-            // Hapus TITIK sebagai pemisah ribuan (Misal: 500.000 jadi 500000)
-            $strVal = str_replace('.', '', $strVal);
-            
-            // Ganti KOMA jadi TITIK untuk desimal (Misal: 99,5 jadi 99.5 untuk target fisik)
-            $strVal = str_replace(',', '.', $strVal);
-            
-            // Hapus karakter aneh selain angka dan titik desimal
+            $strVal = str_replace('.', '', $strVal); // Hapus ribuan
+            $strVal = str_replace(',', '.', $strVal); // Ubah koma jadi titik
             $clean = preg_replace('/[^0-9\.]/', '', $strVal);
             
             return (float) ($clean ?: 0);
@@ -83,6 +77,11 @@
             $b = $parseNum($penyebut);
             $hasil = ($b > 0) ? ($a / $b) * 100 : 0;
             return min($hasil, 100);
+        };
+        
+        // Helper format angka bersih (100.00 -> 100)
+        $formatClean = function($val) {
+            return (float)number_format($val, 2);
         };
     @endphp
 
@@ -216,15 +215,37 @@
                 $program = $group['program'];
                 $isAdmin = auth()->user()->role == 'admin';
 
+                // --- LOGIKA BARU: HITUNG RATA-RATA PERSENTASE CAPAIAN FISIK PROGRAM (SYNC DENGAN PDF) ---
+                $totalPersenFisikSub_Prog = 0;
+                $jumlahSub_Prog = 0;
+
+                // Loop tembus ke dalam kegiatan -> sub kegiatan
+                foreach($group['kegiatans'] as $kegLoop) {
+                    foreach($kegLoop['details'] as $detailLoop) {
+                        // GUNAKAN $parseNum UNTUK MEMASTIKAN ANGKA DARI INPUT TERBACA BENAR (MISAL 2,5)
+                        $targetSub = $parseNum($inputs[$detailLoop->id]['target'] ?? 0);
+                        $realisasiSub = $parseNum($inputs[$detailLoop->id]['realisasi_fisik'] ?? 0);
+                        
+                        // Hitung Persentase per Sub Kegiatan
+                        $persenSub = ($targetSub > 0) ? ($realisasiSub / $targetSub) * 100 : 0;
+                        $persenSub = min($persenSub, 100); // Batasi maks 100%
+
+                        $totalPersenFisikSub_Prog += $persenSub;
+                        $jumlahSub_Prog++;
+                    }
+                }
+                // Rumus Rata-rata Persentase Program
+                $rataFisikProg = $jumlahSub_Prog > 0 ? $totalPersenFisikSub_Prog / $jumlahSub_Prog : 0;
+                // -----------------------------------------------------------------------------------
+
                 // INPUT PROGRAM
                 $progTarget = $programInputs[$program->id]['target'] ?? 0;
-                $progFisik = $programInputs[$program->id]['realisasi_fisik'] ?? 0;
                 $progPagu = $programInputs[$program->id]['pagu_anggaran'] ?? 0;
                 $progRealisasi = $programInputs[$program->id]['pagu_realisasi'] ?? 0;
 
                 // RUMUS PROGRAM
                 $persenKeuProg = $hitungPersen($progRealisasi, $progPagu);
-                $persenFisikProg = $hitungPersen($progFisik, $progTarget);
+                $persenFisikProg = $rataFisikProg; // MENGGUNAKAN RATA-RATA PERSENTASE
 
                 // HITUNG SISA PROGRAM
                 $sisaProg = $parseNum($progPagu) - $parseNum($progRealisasi);
@@ -235,7 +256,6 @@
                     {{-- === BARIS PROGRAM === --}}
                     <tr class="bg-gray-50 hover:bg-gray-100 transition-colors">
                         <td class="px-2 py-3 font-bold text-gray-800 border-r border-gray-200 font-mono text-center align-top">
-                            {{-- TOMBOL PANAH SUDAH DIHAPUS --}}
                             {{ $program->kode }}
                         </td>
                         <td class="px-4 py-3 border-r border-gray-200 align-top text-left">
@@ -267,7 +287,7 @@
                                 disabled title="Dihitung otomatis dari Sub Kegiatan">
                         </td>
 
-                        {{-- Realisasi Fisik Program --}}
+                        {{-- Realisasi Fisik Program (KEMBALI KE STRIP) --}}
                         <td class="p-1.5 border-r border-gray-200 align-middle text-center">
                             <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
@@ -275,9 +295,9 @@
                         {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuProg, 0) }}%</td>
 
-                        {{-- % Capaian Fisik --}}
+                        {{-- % Capaian Fisik (RATA-RATA PERSENTASE) --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">
-                            <span class="text-gray-400">-</span>
+                            <span class="text-gray-800">{{ $formatClean($persenFisikProg) }}%</span>
                         </td>
 
                         {{-- SISA ANGGARAN PROGRAM --}}
@@ -303,13 +323,32 @@
                     $kegiatan = $kegData['kegiatan'];
                     $details = $kegData['details'];
 
+                    // --- LOGIKA BARU: HITUNG RATA-RATA PERSENTASE FISIK KEGIATAN (SYNC DENGAN PDF) ---
+                    $totalPersenFisikSub_Keg = 0;
+                    $jumlahSub_Keg = 0;
+
+                    foreach($details as $detailLoop) {
+                        // GUNAKAN $parseNum DISINI JUGA
+                        $targetSub = $parseNum($inputs[$detailLoop->id]['target'] ?? 0);
+                        $realisasiSub = $parseNum($inputs[$detailLoop->id]['realisasi_fisik'] ?? 0);
+                        
+                        // Hitung Persentase per Sub Kegiatan
+                        $persenSub = ($targetSub > 0) ? ($realisasiSub / $targetSub) * 100 : 0;
+                        $persenSub = min($persenSub, 100);
+
+                        $totalPersenFisikSub_Keg += $persenSub;
+                        $jumlahSub_Keg++;
+                    }
+                    // Rumus Rata-rata Kegiatan
+                    $rataFisikKeg = $jumlahSub_Keg > 0 ? $totalPersenFisikSub_Keg / $jumlahSub_Keg : 0;
+                    // -----------------------------------------------------------------------------------
+
                     $kegTarget = $kegiatanInputs[$kegiatan->id]['target'] ?? 0;
-                    $kegFisik = $kegiatanInputs[$kegiatan->id]['realisasi_fisik'] ?? 0;
                     $kegPagu = $kegiatanInputs[$kegiatan->id]['pagu_anggaran'] ?? 0;
                     $kegRealisasi = $kegiatanInputs[$kegiatan->id]['pagu_realisasi'] ?? 0;
 
                     $persenKeuKeg = $hitungPersen($kegRealisasi, $kegPagu);
-                    $persenFisikKeg = $hitungPersen($kegFisik, $kegTarget);
+                    $persenFisikKeg = $rataFisikKeg; // MENGGUNAKAN RATA-RATA PERSENTASE
 
                     // HITUNG SISA KEGIATAN
                     $sisaKeg = $parseNum($kegPagu) - $parseNum($kegRealisasi);
@@ -344,7 +383,7 @@
                                 disabled title="Dihitung otomatis dari Sub Kegiatan">
                         </td>
 
-                        {{-- Realisasi Fisik Kegiatan --}}
+                        {{-- Realisasi Fisik Kegiatan (KEMBALI KE STRIP) --}}
                         <td class="p-1.5 border-r border-gray-200 align-middle text-center">
                             <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
@@ -352,9 +391,9 @@
                         {{-- % Capaian Keu --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuKeg, 0) }}%</td>
 
-                        {{-- % Capaian Fisik --}}
+                        {{-- % Capaian Fisik (RATA-RATA PERSENTASE) --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">
-                            <span class="text-gray-400">-</span>
+                            <span class="text-gray-700">{{ $formatClean($persenFisikKeg) }}%</span>
                         </td>
 
                         {{-- SISA ANGGARAN KEGIATAN --}}

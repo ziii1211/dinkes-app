@@ -88,6 +88,11 @@
             $hasil = ($b > 0) ? ($a / $b) * 100 : 0;
             return min($hasil, 100);
         };
+
+        // HELPER FORMAT ANGKA TANPA .00
+        $formatClean = function($val) {
+            return (float)number_format($val, 2);
+        };
     @endphp
 
     {{-- HEADER LAPORAN --}}
@@ -146,6 +151,27 @@
             
             $persenKeuProg = ($paguProg > 0) ? ($realisasiProg / $paguProg * 100) : 0;
             $sisaProg = $paguProg - $realisasiProg;
+
+            // --- HITUNG RATA-RATA FISIK PROGRAM (LOGIKA SAMA DENGAN INPUT DATA) ---
+            $totalPersenFisik_Prog = 0;
+            $jumlahSub_Prog = 0;
+
+            foreach($group['kegiatans'] as $kegDataLoop) {
+                if(isset($kegDataLoop['details'])) {
+                    foreach($kegDataLoop['details'] as $detailLoop) {
+                        $tf = $detailLoop->target ?? 0;
+                        $rf = $detailLoop->realisasi_fisik ?? 0;
+                        // Hitung % per sub kegiatan
+                        $pf = ($tf > 0) ? ($rf / $tf * 100) : 0;
+                        $pf = min($pf, 100); // Mentok 100%
+
+                        $totalPersenFisik_Prog += $pf;
+                        $jumlahSub_Prog++;
+                    }
+                }
+            }
+            $avgFisikProg = ($jumlahSub_Prog > 0) ? ($totalPersenFisik_Prog / $jumlahSub_Prog) : 0;
+            // --------------------------------------
             @endphp
 
             {{-- BARIS PROGRAM --}}
@@ -159,9 +185,15 @@
                 <td class="text-center align-middle">-</td>
                 <td class="text-right align-middle">{{ number_format($paguProg, 0, ',', '.') }}</td>
                 <td class="text-right align-middle">{{ number_format($realisasiProg, 0, ',', '.') }}</td>
+                
+                {{-- Realisasi Fisik Program: Tetap Strip --}}
                 <td class="text-center align-middle">-</td>
+                
                 <td class="text-center align-middle">{{ number_format($persenKeuProg, 0) }}%</td>
-                <td class="text-center align-middle">-</td>
+                
+                {{-- % Capaian Fisik Program: Tampilkan Rata-rata --}}
+                <td class="text-center align-middle">{{ $formatClean($avgFisikProg) }}%</td>
+                
                 <td class="text-right align-middle">{{ number_format($sisaProg, 0, ',', '.') }}</td>
             </tr>
 
@@ -176,6 +208,24 @@
 
             $persenKeuKeg = ($paguKeg > 0) ? ($realisasiKeg / $paguKeg * 100) : 0;
             $sisaKeg = $paguKeg - $realisasiKeg;
+
+            // --- HITUNG RATA-RATA FISIK KEGIATAN ---
+            $totalPersenFisik_Keg = 0;
+            $jumlahSub_Keg = 0;
+
+            if(isset($kegData['details'])) {
+                foreach($kegData['details'] as $detailLoop) {
+                    $tf = $detailLoop->target ?? 0;
+                    $rf = $detailLoop->realisasi_fisik ?? 0;
+                    $pf = ($tf > 0) ? ($rf / $tf * 100) : 0;
+                    $pf = min($pf, 100);
+
+                    $totalPersenFisik_Keg += $pf;
+                    $jumlahSub_Keg++;
+                }
+            }
+            $avgFisikKeg = ($jumlahSub_Keg > 0) ? ($totalPersenFisik_Keg / $jumlahSub_Keg) : 0;
+            // ---------------------------------------
             @endphp
 
             {{-- BARIS KEGIATAN --}}
@@ -189,9 +239,15 @@
                 <td class="text-center align-middle">-</td>
                 <td class="text-right align-middle">{{ number_format($paguKeg, 0, ',', '.') }}</td>
                 <td class="text-right align-middle">{{ number_format($realisasiKeg, 0, ',', '.') }}</td>
+                
+                {{-- Realisasi Fisik Kegiatan: Tetap Strip --}}
                 <td class="text-center align-middle">-</td>
+                
                 <td class="text-center align-middle">{{ number_format($persenKeuKeg, 0) }}%</td>
-                <td class="text-center align-middle">-</td>
+                
+                {{-- % Capaian Fisik Kegiatan: Tampilkan Rata-rata --}}
+                <td class="text-center align-middle">{{ $formatClean($avgFisikKeg) }}%</td>
+                
                 <td class="text-right align-middle">{{ number_format($sisaKeg, 0, ',', '.') }}</td>
             </tr>
 
@@ -207,6 +263,8 @@
 
             $persenKeuSub = ($paguSub > 0) ? ($realisasiKeuSub / $paguSub * 100) : 0;
             $persenFisikSub = ($targetSub > 0) ? ($realisasiFisikSub / $targetSub * 100) : 0;
+            $persenFisikSub = min($persenFisikSub, 100); // Mentok 100%
+
             $sisaSub = $paguSub - $realisasiKeuSub;
 
             $namaSub = $sub->subKegiatan->nama ?? 'Sub Kegiatan';
@@ -221,9 +279,15 @@
                 <td class="text-center align-middle">{{ $targetSub }}</td>
                 <td class="text-right align-middle">{{ number_format($paguSub, 0, ',', '.') }}</td>
                 <td class="text-right align-middle">{{ number_format($realisasiKeuSub, 0, ',', '.') }}</td>
+                
+                {{-- Realisasi Fisik Sub Kegiatan: Tampilkan Nilai --}}
                 <td class="text-center align-middle">{{ $realisasiFisikSub }}</td>
+                
                 <td class="text-center align-middle">{{ number_format($persenKeuSub, 0) }}%</td>
-                <td class="text-center align-middle">{{ number_format($persenFisikSub, 0) }}%</td>
+                
+                {{-- % Capaian Fisik Sub Kegiatan --}}
+                <td class="text-center align-middle">{{ $formatClean($persenFisikSub) }}%</td>
+                
                 <td class="text-right align-middle">{{ number_format($sisaSub, 0, ',', '.') }}</td>
             </tr>
             @endforeach
@@ -300,11 +364,10 @@
                 <td class="text-center align-middle">-</td>
                 
                 {{-- % Capaian Keuangan (RATA-RATA PROGRAM) --}}
-                <td class="text-center align-middle" style="font-size: 10px;">{{ number_format($avgPersenKeu, 1) }}%</td>
+                <td class="text-center align-middle" style="font-size: 10px;">{{ $formatClean($avgPersenKeu) }}%</td>
                 
                 {{-- % Capaian Fisik (RATA-RATA SUB KEGIATAN) --}}
-                {{-- INI SUDAH DIPERBAIKI: Mengambil rata-rata dari seluruh Sub Kegiatan --}}
-                <td class="text-center align-middle" style="font-size: 10px;">{{ number_format($avgPersenFisik, 1) }}%</td>
+                <td class="text-center align-middle" style="font-size: 10px;">{{ $formatClean($avgPersenFisik) }}%</td>
                 
                 {{-- Sisa Anggaran (SUM) --}}
                 <td class="text-right align-middle" style="font-size: 10px;">{{ number_format($sumSisa, 0, ',', '.') }}</td>
