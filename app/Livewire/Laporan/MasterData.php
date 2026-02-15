@@ -22,7 +22,7 @@ class MasterData extends Component
     public $isEditMode = false;
 
     // Properti untuk Show Entries (Default 10)
-    public $perPage = 1;
+    public $perPage = 10;
 
     // --- PROPERTI HAPUS ---
     public $deleteTarget = '';
