@@ -21,7 +21,8 @@ class Login extends Component
         'login_id' => 'required|string',
         'password' => 'required',
         'periode'  => 'required',
-        'role'     => 'required|in:admin,pegawai,pimpinan',
+        // [UPDATE] Tambahkan 'verifikator' ke dalam validasi in:
+        'role'     => 'required|in:admin,pegawai,pimpinan,verifikator',
     ];
 
     protected $messages = [
@@ -43,8 +44,7 @@ class Login extends Component
             ]);
         }
 
-        // 2. Bersihkan Input (Trim Spasi) - PENTING!
-        // Seringkali copy-paste NIP membawa spasi di awal/akhir
+        // 2. Bersihkan Input (Trim Spasi)
         $cleanLoginId = trim($this->login_id); 
 
         // 3. Tentukan Username Target Utama
@@ -55,9 +55,17 @@ class Login extends Component
             if (!str_ends_with($cleanLoginId, '.pimpinan')) {
                 $primaryUsername = $cleanLoginId . '.pimpinan';
             }
-        } elseif ($this->role === 'pegawai') {
-            // Target Utama: Harus NIP polos
-            $primaryUsername = str_replace('.pimpinan', '', $cleanLoginId);
+        } 
+        // [BARU] Logika untuk Verifikator
+        elseif ($this->role === 'verifikator') {
+            // Target Utama: Harus ada .verifikator
+            if (!str_ends_with($cleanLoginId, '.verifikator')) {
+                $primaryUsername = $cleanLoginId . '.verifikator';
+            }
+        }
+        elseif ($this->role === 'pegawai') {
+            // Target Utama: Harus NIP polos (hapus suffix jika user iseng ngetik)
+            $primaryUsername = str_replace(['.pimpinan', '.verifikator'], '', $cleanLoginId);
         }
 
         // 4. PROSES LOGIN (Smart Try)
@@ -67,12 +75,10 @@ class Login extends Component
         if (Auth::attempt(['username' => $primaryUsername, 'password' => $this->password], $this->remember)) {
             $loginSuccess = true;
         } 
-        // Percobaan 2: Fallback (Khusus Pimpinan)
-        // Jika gagal login pakai nip.pimpinan, coba login pakai NIP polos saja.
-        // Ini mengatasi akun Kepala Dinas yang mungkin dibuat sebelum sistem update.
-        elseif ($this->role === 'pimpinan') {
-            $fallbackUsername = str_replace('.pimpinan', '', $cleanLoginId);
-            if (Auth::attempt(['username' => $fallbackUsername, 'password' => $this->password], $this->remember)) {
+        // Percobaan 2: Fallback (Khusus Pimpinan & Verifikator jika user mengetik manual lengkap tapi gagal)
+        // Kadang user mengetik '12345.verifikator' tapi sistem menganggapnya NIP biasa, jadi kita coba login apa adanya
+        elseif (in_array($this->role, ['pimpinan', 'verifikator'])) {
+            if (Auth::attempt(['username' => $cleanLoginId, 'password' => $this->password], $this->remember)) {
                 $loginSuccess = true;
             }
         }
@@ -86,18 +92,18 @@ class Login extends Component
             $user = Auth::user();
 
             // Validasi Role (Security Check)
-            // Pastikan User yang login role-nya BENAR-BENAR sesuai dropdown
             if ($user->role !== $this->role) {
                 Auth::logout();
-                $this->addError('role', 'Akun ditemukan, tetapi Role tidak sesuai. Pastikan Anda memilih Role yang benar (Admin/Pimpinan/Pegawai).');
+                $this->addError('role', 'Akun ditemukan, tetapi Role tidak sesuai. Pastikan Anda memilih Role yang benar.');
                 return;
             }
 
             // Redirect
             return match ($user->role) {
-                'admin'     => redirect()->route('admin.dashboard'),
-                'pimpinan'  => redirect()->route('pimpinan.dashboard'),
-                default     => redirect()->route('dashboard'),
+                'admin'       => redirect()->route('admin.dashboard'),
+                'pimpinan'    => redirect()->route('pimpinan.dashboard'),
+                'verifikator' => redirect()->route('dashboard'), // Verifikator diarahkan ke dashboard utama
+                default       => redirect()->route('dashboard'),
             };
         }
 

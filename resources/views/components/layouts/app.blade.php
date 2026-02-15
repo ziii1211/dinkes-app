@@ -206,8 +206,8 @@
                             </div>
                         </div>
 
-                        {{-- MODIFIKASI: Menu Laporan (Admin & Pegawai) --}}
-                        @if(auth()->user()->role == 'admin' || auth()->user()->role == 'pegawai')
+                        {{-- MODIFIKASI: Menu Laporan (Admin, Pegawai & Verifikator) --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
                         <div class="relative group">
                             <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' ? 'text-blue-700 dark:text-blue-400' : '' }}">
                                 Laporan
@@ -382,8 +382,8 @@
                         </div>
                     </div>
 
-                    {{-- MODIFIKASI: Menu Laporan Mobile (Admin & Pegawai) --}}
-                    @if(auth()->user()->role == 'admin' || auth()->user()->role == 'pegawai')
+                    {{-- MODIFIKASI: Menu Laporan Mobile (Admin, Pegawai & Verifikator) --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
                     <div x-data="{ expanded: false }">
                         <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
                             <span>Laporan</span>

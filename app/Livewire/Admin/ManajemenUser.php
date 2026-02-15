@@ -79,6 +79,7 @@ class ManajemenUser extends Component
             'stats' => [
                 'pimpinan' => User::where('role', 'pimpinan')->count(),
                 'pegawai' => User::where('role', 'pegawai')->count(),
+                'verifikator' => User::where('role', 'verifikator')->count(), // [BARU] Hitung Verifikator
                 'admin' => User::where('role', 'admin')->count()
             ]
         ]);
@@ -94,7 +95,8 @@ class ManajemenUser extends Component
     public function store()
     {
         $rules = [
-            'role' => 'required|in:admin,pegawai,pimpinan',
+            // [UPDATE] Tambahkan 'verifikator' ke validasi in:
+            'role' => 'required|in:admin,pegawai,pimpinan,verifikator', 
             'password' => 'required|min:6',
         ];
 
@@ -113,8 +115,14 @@ class ManajemenUser extends Component
                 }),
             ];
             
-            // Generate Username Otomatis
-            $usernameToSave = ($this->role == 'pimpinan') ? $this->nip . '.pimpinan' : $this->nip;
+            // [UPDATE] Generate Username Otomatis
+            if ($this->role == 'pimpinan') {
+                $usernameToSave = $this->nip . '.pimpinan';
+            } elseif ($this->role == 'verifikator') {
+                $usernameToSave = $this->nip . '.verifikator'; // Format: NIP.verifikator
+            } else {
+                $usernameToSave = $this->nip; // Format: NIP
+            }
         }
 
         $this->validate($rules, [
@@ -178,7 +186,8 @@ class ManajemenUser extends Component
     public function update()
     {
         $rules = [
-            'role' => 'required|in:admin,pegawai,pimpinan',
+            // [UPDATE] Tambahkan 'verifikator'
+            'role' => 'required|in:admin,pegawai,pimpinan,verifikator', 
         ];
 
         if ($this->role == 'admin') {
@@ -197,8 +206,14 @@ class ManajemenUser extends Component
                 }),
             ];
             
-            // Generate Username Otomatis
-            $usernameToSave = ($this->role == 'pimpinan') ? $this->nip . '.pimpinan' : $this->nip;
+            // [UPDATE] Generate Username Otomatis
+            if ($this->role == 'pimpinan') {
+                $usernameToSave = $this->nip . '.pimpinan';
+            } elseif ($this->role == 'verifikator') {
+                $usernameToSave = $this->nip . '.verifikator';
+            } else {
+                $usernameToSave = $this->nip;
+            }
         }
 
         if (!empty($this->password)) {

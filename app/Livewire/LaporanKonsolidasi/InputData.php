@@ -41,7 +41,7 @@ class InputData extends Component
     public $isOpenPrintModal = false;
     public $selectedJabatanPrint = '';
 
-    public $perPage = 10;
+    public $perPage = 1;
 
     // Array untuk menampung inputan
     public $inputs = [];         // Untuk Sub Kegiatan
@@ -224,6 +224,16 @@ class InputData extends Component
 
     public function toggleVerification($id, $type)
     {
+        // --- UPDATE: Pengecekan Role (Admin & Verifikator) ---
+        $user = auth()->user();
+        
+        // Izinkan jika role adalah admin ATAU verifikator
+        if ($user->role !== 'admin' && $user->role !== 'verifikator') {
+            $this->dispatch('alert', ['type' => 'error', 'title' => 'Akses Ditolak', 'message' => 'Anda tidak memiliki izin verifikasi.']);
+            return;
+        }
+        // -----------------------------------------------------
+
         if ($type === 'program' || $type === 'kegiatan') {
             $column = $type === 'program' ? 'program_id' : 'kegiatan_id';
 
@@ -562,6 +572,7 @@ class InputData extends Component
 
     public function render()
     {
+        // 1. Ambil Program ID yang ada di laporan ini
         $programIds = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
             ->whereNotNull('program_id')
             ->pluck('program_id');
@@ -573,9 +584,11 @@ class InputData extends Component
             ->get();
         // ------------------------------------------
 
+        // 2. Ambil semua detail sub kegiatan (Eager Loading)
         $detailsRaw = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan', 'subKegiatan.indikators'])
             ->where('laporan_konsolidasi_id', $this->laporan->id)->get();
 
+        // 3. Grouping Data (Program -> Kegiatan -> Sub Kegiatan)
         $groupedData = [];
         foreach ($programsInReport as $prog) {
             $groupedData[$prog->id] = ['program' => $prog, 'kegiatans' => []];
@@ -597,13 +610,29 @@ class InputData extends Component
             }
         }
 
-        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        // --- PERBAIKAN UTAMA: PAGINATION MANUAL LIVEWIRE ---
+        // Gunakan $this->getPage() agar sinkron dengan tombol Next/Prev Livewire
+        $currentPage = $this->getPage(); 
+        
         $col = collect($groupedData);
+        
+        // Slice data berdasarkan halaman aktif
         $currentItems = $col->slice(($currentPage - 1) * $this->perPage, $this->perPage)->all();
-        $paginatedData = new LengthAwarePaginator($currentItems, $col->count(), $this->perPage, $currentPage, ['path' => Request::url()]);
+        
+        // Buat Paginator dengan konfigurasi yang benar untuk Livewire
+        $paginatedData = new LengthAwarePaginator(
+            $currentItems, 
+            $col->count(), 
+            $this->perPage, 
+            $currentPage, 
+            [
+                'path' => LengthAwarePaginator::resolveCurrentPath(),
+                'pageName' => 'page' // Wajib didefinisikan agar Livewire tahu ini page utama
+            ]
+        );
+        // ---------------------------------------------------
 
         // HITUNG TOTAL ANGGARAN & REALISASI (SIMPAN KE PUBLIC PROPERTY)
-        // INI PERBAIKANNYA: Pakai $this->... agar tersimpan di Livewire state
         $this->totalAnggaran = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
             ->whereNotNull('program_id')
             ->sum('pagu_anggaran');
@@ -620,7 +649,7 @@ class InputData extends Component
             'jabatans' => $jabatans,
             'kegiatanOptions' => [],
             'reportData' => $paginatedData,
-            // Total tidak perlu dipassing di sini lagi karena sudah ada public property
         ]);
     }
+
 }

@@ -147,6 +147,7 @@
                 Cetak PDF
             </button>
 
+            {{-- HANYA ADMIN YANG BISA SINKRON & TAMBAH DATA --}}
             @if(auth()->user()->role == 'admin')
             <button wire:click="syncData" wire:loading.attr="disabled" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-500 hover:bg-amber-600 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed" title="Tarik data baru dari Master Data">
                 <svg wire:loading.remove wire:target="syncData" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -167,6 +168,8 @@
             </button>
             @endif
 
+            {{-- TOMBOL SIMPAN (VERIFIKATOR TIDAK PERLU TOMBOL SIMPAN, TAPI BISA DIBIARKAN JIKA INGIN) --}}
+            @if(auth()->user()->role != 'verifikator')
             <button wire:click="saveAll" wire:loading.attr="disabled" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold rounded-lg shadow-md transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed">
                 <svg wire:loading.remove wire:target="saveAll" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4"></path>
@@ -177,6 +180,7 @@
                 </svg>
                 Simpan
             </button>
+            @endif
         </div>
     </div>
 
@@ -426,16 +430,26 @@
                     // HITUNG SISA SUB KEGIATAN
                     $sisaSub = $parseNum($subPagu) - $parseNum($subRealisasiKeu);
 
+                    // --- LOGIKA PERMISSION USER DI-UPDATE DISINI ---
+                    $currentUser = auth()->user();
                     $isPj = false;
-                    $userJabatanId = auth()->user()->jabatan_id ?? auth()->user()->pegawai?->jabatan_id;
+                    $userJabatanId = $currentUser->jabatan_id ?? $currentUser->pegawai?->jabatan_id;
                     $subJabatanId = $detail->subKegiatan?->jabatan_id;
 
                     if ($userJabatanId && $subJabatanId && $userJabatanId == $subJabatanId) {
-                    $isPj = true;
+                        $isPj = true;
                     }
+                    
+                    // Cek Role
+                    $isAdmin = $currentUser->role == 'admin';
+                    $isVerifikator = $currentUser->role == 'verifikator'; 
 
-                    $canEditTarget = $isAdmin;
-                    $canEditRealisasi = $isAdmin || $isPj;
+                    // LOGIKA AKSES INPUT (Verifikator TIDAK BOLEH edit angka)
+                    // Jika Verifikator, maka $canEditRealisasi jadi false
+                    $canEditRealisasi = ($isAdmin || $isPj) && !$isVerifikator;
+
+                    // LOGIKA AKSES TOMBOL CENTANG (Hanya Admin dan Verifikator yang boleh)
+                    $canVerify = $isAdmin || $isVerifikator;
                     @endphp
 
                     <tr x-show="expanded" x-transition class="hover:bg-gray-50 transition-colors group border-b border-gray-100 bg-white">
@@ -454,12 +468,24 @@
                         <td class="px-2 py-2 border-r border-gray-200 align-top text-[10px] text-gray-600 text-left">{!! nl2br(e($detail->sub_output ?? '-')) !!}</td>
                         <td class="px-2 py-2 border-r border-gray-200 align-top text-center text-[10px] text-gray-600">{!! nl2br(e($detail->satuan_unit ?? '-')) !!}</td>
 
+                        {{-- TARGET SUB KEGIATAN (DISABLED) --}}
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="numberInput('inputs.{{ $detail->id }}.target', '{{ $subTarget }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="w-full text-[11px] text-center font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-1 py-1.5 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="" @if(!$canEditTarget) disabled @endif>
+                            <input type="text" 
+                                x-model="displayValue" 
+                                class="w-full text-[11px] text-center font-bold text-gray-500 bg-gray-100 border border-gray-300 rounded shadow-sm px-1 py-1.5 cursor-not-allowed" 
+                                placeholder="" 
+                                disabled 
+                                title="Target terkunci (Read Only)">
                         </td>
 
+                        {{-- PAGU ANGGARAN SUB KEGIATAN (DISABLED) --}}
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="rupiahInput('inputs.{{ $detail->id }}.pagu_anggaran', '{{ $subPagu }}')">
-                            <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="input-pagu w-full text-[11px] text-right font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="Rp 0" @if(!$canEditTarget) disabled @endif>
+                            <input type="text" 
+                                x-model="displayValue" 
+                                class="input-pagu w-full text-[11px] text-right font-bold text-gray-500 bg-gray-100 border border-gray-300 rounded shadow-sm px-2 py-1.5 cursor-not-allowed" 
+                                placeholder="Rp 0" 
+                                disabled 
+                                title="Pagu Anggaran terkunci (Read Only)">
                         </td>
 
                         <td class="p-1.5 border-r border-gray-200 align-top" x-data="rupiahInput('inputs.{{ $detail->id }}.pagu_realisasi', '{{ $subRealisasiKeu }}')">
@@ -482,24 +508,56 @@
                             @php
                             $isVerifiedSub = \App\Models\DetailLaporanKonsolidasi::where('id', $detail->id)->value('is_verified');
                             @endphp
+                            
                             <div class="flex items-center justify-center gap-1">
-                                <button wire:click="toggleVerification({{ $detail->id }}, 'sub_kegiatan')" class="transition-all active:scale-95 focus:outline-none" title="Verifikasi Data" @if(!$isAdmin) disabled style="cursor: default" @endif>
+                                
+                                {{-- KONDISI 1: JIKA USER ADALAH VERIFIKATOR ATAU ADMIN --}}
+                                @if($isAdmin || $isVerifikator)
+                                    <button wire:click="toggleVerification({{ $detail->id }}, 'sub_kegiatan')" 
+                                        class="transition-all active:scale-95 focus:outline-none" 
+                                        title="{{ $isVerifiedSub ? 'Batalkan Verifikasi' : 'Verifikasi Data' }}">
+                                        
+                                        @if($isVerifiedSub)
+                                            {{-- Icon Terverifikasi (Hijau dengan Centang) --}}
+                                            <div class="bg-green-100 text-green-600 border border-green-200 p-1.5 rounded-md shadow-sm hover:bg-green-200 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                            </div>
+                                        @else
+                                            {{-- Icon Belum Verifikasi (Putih/Abu) --}}
+                                            <div class="bg-white text-gray-300 border border-gray-200 p-1.5 rounded-md shadow-sm hover:bg-blue-50 hover:text-blue-500 hover:border-blue-300 transition-colors">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
+                                                </svg>
+                                            </div>
+                                        @endif
+                                    </button>
+                                
+                                {{-- KONDISI 2: JIKA USER ADALAH PEGAWAI (USER BIASA) --}}
+                                @else
                                     @if($isVerifiedSub)
-                                    <div class="bg-green-100 text-green-600 border border-green-200 p-1 rounded-md shadow-sm hover:bg-green-200">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
+                                        {{-- Badge Status: SUDAH DIVERIFIKASI --}}
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-green-100 text-green-700 border border-green-200 shadow-sm">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"></path>
+                                            </svg>
+                                            Terverifikasi
+                                        </span>
                                     @else
-                                    <div class="bg-white text-gray-400 border border-gray-200 p-1 rounded-md shadow-sm hover:bg-blue-50 hover:text-blue-500 hover:border-blue-200">
-                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path>
-                                        </svg>
-                                    </div>
+                                        {{-- Badge Status: BELUM DIVERIFIKASI --}}
+                                        <span class="inline-flex items-center px-2 py-1 rounded text-[10px] font-bold bg-gray-100 text-gray-500 border border-gray-200 shadow-sm">
+                                            <svg class="w-3 h-3 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                            </svg>
+                                            Belum Verif
+                                        </span>
                                     @endif
-                                </button>
+                                @endif
+
+                                {{-- TOMBOL HAPUS (HANYA ADMIN) --}}
                                 @if($isAdmin)
-                                <button wire:click="deleteSubKegiatan({{ $detail->id }})" wire:confirm="Hapus sub kegiatan ini?" class="text-gray-300 hover:text-red-500 p-1 transition-colors" title="Hapus">
+                                <button wire:click="deleteSubKegiatan({{ $detail->id }})" wire:confirm="Hapus sub kegiatan ini?" class="ml-1 text-gray-300 hover:text-red-500 p-1 transition-colors" title="Hapus">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path>
                                     </svg>

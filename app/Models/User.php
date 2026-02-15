@@ -65,4 +65,11 @@ class User extends Authenticatable
     {
         return $this->belongsTo(Pegawai::class, 'nip', 'nip');
     }
+
+    // File: app/Models/User.php
+
+public function isVerifikator()
+{
+    return $this->role === 'verifikator';
+}
 }

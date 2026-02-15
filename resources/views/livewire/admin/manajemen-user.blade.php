@@ -69,8 +69,13 @@
                 </button>
             </div>
 
-            {{-- Stats Cards --}}
-            @foreach(['pimpinan' => ['orange', 'Pimpinan', '21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'], 'pegawai' => ['emerald', 'Pegawai', '17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'], 'admin' => ['purple', 'Admin', '12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z']] as $key => $data)
+            {{-- Stats Cards (DIUPDATE: Ditambahkan Verifikator) --}}
+            @foreach([
+                'pimpinan' => ['orange', 'Pimpinan', '21 13.255A23.931 23.931 0 0112 15c-3.183 0-6.22-.62-9-1.745M16 6V4a2 2 0 00-2-2h-4a2 2 0 00-2 2v2m4 6h.01M5 20h14a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z'],
+                'verifikator' => ['blue', 'Verifikator', '9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z'],
+                'pegawai' => ['emerald', 'Pegawai', '17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z'], 
+                'admin' => ['purple', 'Admin', '12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z']
+            ] as $key => $data)
             <div class="bg-white dark:bg-slate-800 p-5 rounded-3xl border border-gray-100 dark:border-slate-700 shadow-lg shadow-gray-200/50 dark:shadow-none relative overflow-hidden group animate-enter hover:-translate-y-1 transition-transform duration-300" style="animation-delay: 0.{{ $loop->iteration + 1 }}s">
                 <div class="absolute right-0 top-0 w-24 h-24 bg-{{ $data[0] }}-50 dark:bg-{{ $data[0] }}-900/10 rounded-bl-[80px] -mr-4 -mt-4 transition-all duration-500 group-hover:bg-{{ $data[0] }}-100 dark:group-hover:bg-{{ $data[0] }}-900/20"></div>
                 <div class="relative z-10">
@@ -106,10 +111,12 @@
                     </button>
                 </div>
 
+                {{-- Filter Role (DIUPDATE) --}}
                 <div class="w-full md:w-56 relative group">
                     <select wire:model.live="filterRole" class="block w-full py-4 pl-5 pr-10 border-none bg-gray-50 dark:bg-slate-900/50 rounded-2xl text-gray-700 dark:text-slate-200 focus:ring-2 focus:ring-blue-500/30 focus:bg-white dark:focus:bg-slate-800 transition-all text-sm font-bold cursor-pointer shadow-sm appearance-none">
                         <option value="">Semua Role</option>
                         <option value="pimpinan">👔 Pimpinan</option>
+                        <option value="verifikator">✅ Verifikator</option> {{-- TAMBAHAN --}}
                         <option value="pegawai">👨‍💼 Pegawai</option>
                         <option value="admin">🛠️ Admin</option>
                     </select>
@@ -140,6 +147,7 @@
                                                 $avatarBg = match($user->role) {
                                                     'admin' => 'bg-gradient-to-br from-purple-500 to-purple-700',
                                                     'pimpinan' => 'bg-gradient-to-br from-orange-400 to-orange-600',
+                                                    'verifikator' => 'bg-gradient-to-br from-blue-400 to-blue-600', // Warna Verifikator
                                                     default => 'bg-gradient-to-br from-emerald-400 to-teal-600',
                                                 };
                                                 $avatarInitial = strtoupper(substr($user->name, 0, 1));
@@ -163,6 +171,11 @@
                                 @if($user->role == 'pimpinan')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-orange-100 text-orange-700 border border-orange-200 dark:bg-orange-900/30 dark:text-orange-300 dark:border-orange-800">
                                         <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> PIMPINAN
+                                    </span>
+                                @elseif($user->role == 'verifikator')
+                                    {{-- BADGE VERIFIKATOR (BARU) --}}
+                                    <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-blue-100 text-blue-700 border border-blue-200 dark:bg-blue-900/30 dark:text-blue-300 dark:border-blue-800">
+                                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg> VERIFIKATOR
                                     </span>
                                 @elseif($user->role == 'admin')
                                     <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[11px] font-bold bg-purple-100 text-purple-700 border border-purple-200 dark:bg-purple-900/30 dark:text-purple-300 dark:border-purple-800">
@@ -215,11 +228,11 @@
                     
                     <div class="px-4 py-6 sm:px-8 sm:py-6 space-y-5">
                         
-                        {{-- Pilih Role --}}
+                        {{-- Pilih Role (DIUPDATE: Ditambahkan Verifikator & Grid Layout) --}}
                         <div>
                             <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Role Akses</label>
-                            <div class="grid grid-cols-3 gap-3"> 
-                                @foreach(['pegawai' => '👨‍💼', 'pimpinan' => '👔', 'admin' => '🛠️'] as $val => $icon)
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3"> 
+                                @foreach(['pegawai' => '👨‍💼', 'verifikator' => '✅', 'pimpinan' => '👔', 'admin' => '🛠️'] as $val => $icon)
                                 <label class="cursor-pointer relative">
                                     <input type="radio" wire:model.live="role" value="{{ $val }}" class="peer sr-only">
                                     <div class="rounded-xl border border-gray-200 dark:border-slate-600 p-3 text-center hover:bg-gray-50 dark:hover:bg-slate-700 peer-checked:border-blue-500 peer-checked:bg-blue-50 dark:peer-checked:bg-blue-900/20 transition-all">

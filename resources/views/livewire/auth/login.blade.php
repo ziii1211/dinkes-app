@@ -1,6 +1,6 @@
 <div class="relative min-h-screen flex items-center justify-center overflow-hidden bg-[#030712] font-sans selection:bg-indigo-500 selection:text-white">
     
-    {{-- CUSTOM CSS & ANIMATIONS --}}
+    {{-- CUSTOM CSS & ANIMATIONS (Biarkan tetap sama) --}}
     <style>
         /* Floating Animation Background */
         @keyframes blob {
@@ -46,17 +46,12 @@
         }
     </style>
 
-    {{-- BACKGROUND LAYERS --}}
+    {{-- BACKGROUND LAYERS (Biarkan tetap sama) --}}
     <div class="absolute inset-0 z-0">
-        {{-- Base Gradient --}}
         <div class="absolute inset-0 bg-gradient-to-b from-[#0f172a] to-[#020617]"></div>
-        
-        {{-- Animated Blobs (Orbs) --}}
         <div class="absolute top-0 -left-4 w-96 h-96 bg-indigo-600/30 rounded-full mix-blend-screen filter blur-[100px] animate-blob"></div>
         <div class="absolute top-0 -right-4 w-96 h-96 bg-blue-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob delay-2000"></div>
         <div class="absolute -bottom-32 left-20 w-96 h-96 bg-teal-500/20 rounded-full mix-blend-screen filter blur-[100px] animate-blob delay-4000"></div>
-
-        {{-- Noise Texture --}}
         <div class="absolute inset-0 bg-noise opacity-30 mix-blend-soft-light pointer-events-none"></div>
     </div>
 
@@ -72,21 +67,11 @@
                 
                 {{-- HEADER: LOGO & TITLE --}}
                 <div class="text-center mb-10">
-                    
-                    {{-- WADAH LOGO DENGAN ANIMASI --}}
                     <div class="relative inline-block mb-6 group/logo">
-                        {{-- 1. Animasi Gradient Berputar di Belakang Logo --}}
                         <div class="absolute -inset-1 rounded-full bg-gradient-to-r from-indigo-500 via-purple-500 to-cyan-500 opacity-75 blur-md animate-spin-slow group-hover/logo:opacity-100 transition duration-1000"></div>
-                        
-                        {{-- 2. Wadah Putih Transparan (Capsule) --}}
                         <div class="relative bg-slate-900/80 backdrop-blur-xl rounded-full p-2 border border-white/10 shadow-2xl flex items-center justify-center gap-5 px-8 py-4">
-                            {{-- Logo Pemprov --}}
                             <img src="{{ asset('logo pemprov.png') }}" class="h-20 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Pemprov Kalsel">
-                            
-                            {{-- Separator --}}
                             <div class="h-12 w-px bg-white/20 rounded-full"></div>
-                            
-                            {{-- Logo GERMAS --}}
                             <img src="{{ asset('Logo GERMAS (Gerakan Masyarakat Hidup Sehat).png') }}" class="h-16 w-auto drop-shadow-md filter hover:brightness-110 transition-all duration-300" alt="Germas">
                         </div>
                     </div>
@@ -108,7 +93,7 @@
                 {{-- LOGIN FORM --}}
                 <form wire:submit="login" class="space-y-6 animate-enter" style="animation-delay: 0.2s">
 
-                    {{-- [BARU] Input Role Selector (Dropdown) --}}
+                    {{-- [UPDATE] Input Role Selector (Dropdown) --}}
                     <div class="group relative">
                         <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2 ml-1 group-focus-within:text-indigo-400 transition-colors">
                             Masuk Sebagai
@@ -119,6 +104,7 @@
                             </div>
                             <select wire:model="role" class="w-full pl-11 pr-10 py-3.5 bg-slate-900/60 border border-slate-700/50 rounded-2xl text-slate-200 appearance-none focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/10 focus:bg-slate-900/90 transition-all duration-300 text-sm font-medium cursor-pointer">
                                 <option value="pegawai" class="bg-slate-900">Pegawai</option>
+                                <option value="verifikator" class="bg-slate-900">Verifikator</option> {{-- TAMBAHAN --}}
                                 <option value="pimpinan" class="bg-slate-900">Pimpinan</option>
                                 <option value="admin" class="bg-slate-900">Administrator</option>
                             </select>
