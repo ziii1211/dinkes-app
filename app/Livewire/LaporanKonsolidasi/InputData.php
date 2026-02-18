@@ -12,7 +12,7 @@ use App\Models\LaporanKonsolidasiAnggaran;
 use App\Models\Program;
 use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
-use App\Models\Jabatan; // Tambahan Baru
+use App\Models\Jabatan; 
 use Illuminate\Support\Facades\DB;
 
 class InputData extends Component
@@ -34,7 +34,7 @@ class InputData extends Component
     public $editSatuan;
     public $subKegiatanOptions = [];
 
-    // --- TAMBAHAN BARU: MODAL CETAK & TOTAL ---
+    // --- PROPERTI MODAL CETAK & TOTAL ---
     public $totalAnggaran = 0;
     public $totalRealisasi = 0;
 
@@ -59,7 +59,44 @@ class InputData extends Component
         $this->resetPage();
     }
 
-    // --- FUNGSI LOAD DATA (Agar data muncul kembali setelah simpan) ---
+    // --- HELPER SORTING JABATAN (HIRARKI) ---
+    private function sortJabatanTree($elements, $parentId = null)
+    {
+        $branch = collect();
+        // Kita urutkan berdasarkan ID agar sama persis dengan menu Struktur Organisasi
+        $children = $elements->where('parent_id', $parentId)->sortBy('id');
+
+        foreach ($children as $child) {
+            $branch->push($child);
+            $grandChildren = $this->sortJabatanTree($elements, $child->id);
+            if ($grandChildren->isNotEmpty()) {
+                $branch = $branch->merge($grandChildren);
+            }
+        }
+        return $branch;
+    }
+
+    // --- HELPER FORMAT PERSEN (BARU: 2 ANGKA BELAKANG KOMA) ---
+    // Contoh: 6.7321 -> 6,73
+    private function formatPersen($val)
+    {
+        if ($val === null || $val === '') return '0,00';
+        return number_format((float)$val, 2, ',', '.');
+    }
+
+    // --- HELPER HITUNG CAPAIAN (BARU) ---
+    private function hitungCapaian($realisasi, $target)
+    {
+        $realisasi = $this->cleanNumber($realisasi);
+        $target = $this->cleanNumber($target);
+
+        if ($target <= 0) return 0; // Cegah division by zero
+        
+        $hasil = ($realisasi / $target) * 100;
+        return min($hasil, 100); // Batasi maksimal 100%
+    }
+
+    // --- FUNGSI LOAD DATA (UPDATED: HITUNG CAPAIAN & FORMAT) ---
     public function loadData()
     {
         // 1. Load Detail (Sub Kegiatan)
@@ -67,6 +104,10 @@ class InputData extends Component
 
         $this->inputs = [];
         foreach ($details as $detail) {
+            // Hitung Capaian Otomatis untuk ditampilkan di View
+            $capaianFisik = $this->hitungCapaian($detail->realisasi_fisik, $detail->target);
+            $capaianKeu = $this->hitungCapaian($detail->pagu_realisasi, $detail->pagu_anggaran);
+
             $this->inputs[$detail->id] = [
                 'sub_output'      => $detail->sub_output,
                 'satuan_unit'     => $detail->satuan_unit,
@@ -74,6 +115,10 @@ class InputData extends Component
                 'realisasi_fisik' => $this->formatNumberDisplay($detail->realisasi_fisik),
                 'pagu_anggaran'   => $detail->pagu_anggaran ? number_format($detail->pagu_anggaran, 0, ',', '.') : '',
                 'pagu_realisasi'  => $detail->pagu_realisasi ? number_format($detail->pagu_realisasi, 0, ',', '.') : '',
+                
+                // DATA CAPAIAN (FORMAT 2 DESIMAL)
+                'persen_fisik'    => $this->formatPersen($capaianFisik),
+                'persen_keuangan' => $this->formatPersen($capaianKeu),
             ];
         }
 
@@ -84,12 +129,20 @@ class InputData extends Component
         $this->kegiatanInputs = [];
 
         foreach ($anggarans as $data) {
+            // Hitung Capaian Keuangan Program/Kegiatan
+            $capaianKeu = $this->hitungCapaian($data->pagu_realisasi, $data->pagu_anggaran);
+            
+            // Untuk Program/Kegiatan, 'realisasi_fisik' di DB sudah berupa Persentase Rata-rata
+            $persenFisik = $data->realisasi_fisik; 
+
             $formattedData = [
                 'target'          => $this->formatNumberDisplay($data->target),
-                // Tampilkan rata-rata fisik yang sudah tersimpan
-                'realisasi_fisik' => $this->formatNumberDisplay($data->realisasi_fisik),
+                'realisasi_fisik' => $this->formatPersen($persenFisik), // Tampilkan 2 desimal
                 'pagu_anggaran'   => $data->pagu_anggaran ? number_format($data->pagu_anggaran, 0, ',', '.') : '',
-                'pagu_realisasi'  => $data->pagu_realisasi ? number_format($data->pagu_realisasi, 0, ',', '.') : ''
+                'pagu_realisasi'  => $data->pagu_realisasi ? number_format($data->pagu_realisasi, 0, ',', '.') : '',
+                
+                // DATA CAPAIAN KEUANGAN
+                'persen_keuangan' => $this->formatPersen($capaianKeu),
             ];
 
             if ($data->program_id) {
@@ -100,12 +153,11 @@ class InputData extends Component
         }
     }
 
-    // Helper untuk tampilan (menghilangkan .00 jika bulat, dan kosong jika 0)
+    // Helper untuk tampilan
     private function formatNumberDisplay($val)
     {
         if (!$val && $val !== 0) return '';
         if ($val == 0) return '0';
-        // Tampilkan desimal maksimal 2 digit jika ada koma
         return (float)$val == (int)$val ? (int)$val : str_replace('.', ',', round($val, 2));
     }
 
@@ -126,7 +178,7 @@ class InputData extends Component
         return (float) $val;
     }
 
-    // --- FUNGSI HITUNG OTOMATIS (UPDATED: FISIK RATA-RATA) ---
+    // --- FUNGSI HITUNG OTOMATIS (UPDATED: PRESISI TINGGI) ---
     private function recalculateProgramKegiatanAnggaran()
     {
         // Ambil semua detail sub kegiatan pada laporan ini
@@ -169,16 +221,8 @@ class InputData extends Component
                 $programStats[$progId]['pagu'] += $detail->pagu_anggaran;
                 $programStats[$progId]['realisasi'] += $detail->pagu_realisasi;
 
-                // 2. Hitung Persentase Fisik Sub Kegiatan Ini
-                $targetSub = $detail->target > 0 ? $detail->target : 0;
-                $fisikSub = $detail->realisasi_fisik > 0 ? $detail->realisasi_fisik : 0;
-                
-                $persenFisik = 0;
-                if ($targetSub > 0) {
-                    $persenFisik = ($fisikSub / $targetSub) * 100;
-                    // Batasi maksimal 100% (opsional, jika ingin > 100 hapus baris ini)
-                    $persenFisik = min($persenFisik, 100); 
-                }
+                // 2. Hitung Persentase Fisik Sub Kegiatan Ini Menggunakan Helper
+                $persenFisik = $this->hitungCapaian($detail->realisasi_fisik, $detail->target);
 
                 // Akumulasi Persen Fisik untuk Rata-rata
                 $kegiatanStats[$kegId]['total_persen_fisik'] += $persenFisik;
@@ -199,8 +243,8 @@ class InputData extends Component
                 [
                     'pagu_anggaran' => $stats['pagu'],
                     'pagu_realisasi' => $stats['realisasi'],
-                    'realisasi_fisik' => $avgFisik, // Simpan Rata-rata %
-                    'target' => 100 // Target parent dianggap 100% untuk referensi
+                    'realisasi_fisik' => $avgFisik, // Simpan nilai float asli
+                    'target' => 100 
                 ]
             );
         }
@@ -215,8 +259,8 @@ class InputData extends Component
                 [
                     'pagu_anggaran' => $stats['pagu'],
                     'pagu_realisasi' => $stats['realisasi'],
-                    'realisasi_fisik' => $avgFisik, // Simpan Rata-rata %
-                    'target' => 100 // Target parent dianggap 100% untuk referensi
+                    'realisasi_fisik' => $avgFisik, // Simpan nilai float asli
+                    'target' => 100 
                 ]
             );
         }
@@ -227,35 +271,26 @@ class InputData extends Component
         // --- UPDATE: Pengecekan Role (Admin & Verifikator) ---
         $user = auth()->user();
         
-        // Izinkan jika role adalah admin ATAU verifikator
         if ($user->role !== 'admin' && $user->role !== 'verifikator') {
             $this->dispatch('alert', ['type' => 'error', 'title' => 'Akses Ditolak', 'message' => 'Anda tidak memiliki izin verifikasi.']);
             return;
         }
-        // -----------------------------------------------------
 
         if ($type === 'program' || $type === 'kegiatan') {
             $column = $type === 'program' ? 'program_id' : 'kegiatan_id';
-
             $data = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
-                ->where($column, $id)
-                ->first();
-
-            if ($data) {
-                $data->update(['is_verified' => !$data->is_verified]);
-            }
+                ->where($column, $id)->first();
+            if ($data) $data->update(['is_verified' => !$data->is_verified]);
         } elseif ($type === 'sub_kegiatan') {
             $data = DetailLaporanKonsolidasi::find($id);
-            if ($data) {
-                $data->update(['is_verified' => !$data->is_verified]);
-            }
+            if ($data) $data->update(['is_verified' => !$data->is_verified]);
         }
 
         $this->loadData();
         $this->dispatch('alert', ['type' => 'success', 'title' => 'Sukses', 'message' => 'Status verifikasi diperbarui.']);
     }
 
-    // --- FITUR SINKRONISASI DATA (UPDATED) ---
+    // --- FITUR SINKRONISASI DATA ---
     public function syncData()
     {
         DB::beginTransaction();
@@ -277,13 +312,11 @@ class InputData extends Component
             $countUpdated = 0;
 
             foreach ($masterPrograms as $prog) {
-                // Buat/Update Program (Placeholder)
                 LaporanKonsolidasiAnggaran::firstOrCreate(
                     ['laporan_konsolidasi_id' => $this->laporan->id, 'program_id' => $prog->id]
                 );
 
                 foreach ($prog->kegiatans as $keg) {
-                    // Buat/Update Kegiatan (Placeholder)
                     LaporanKonsolidasiAnggaran::firstOrCreate(
                         ['laporan_konsolidasi_id' => $this->laporan->id, 'kegiatan_id' => $keg->id]
                     );
@@ -292,6 +325,9 @@ class InputData extends Component
                         $listIndikator = $sub->indikators;
                         $textOutput = $listIndikator->pluck('keterangan')->join("\n") ?: '-';
                         $textSatuan = $listIndikator->pluck('satuan')->join("\n") ?: '-';
+                        
+                        // AMBIL TARGET DARI TOTAL INDIKATOR
+                        $totalTarget = $listIndikator->sum('target');
 
                         $namaProgram = $prog->nama ?? $prog->nama_program ?? '-';
                         $namaKegiatan = $keg->nama ?? $keg->nama_kegiatan ?? '-';
@@ -310,20 +346,19 @@ class InputData extends Component
                                 'sub_output'            => $textOutput,
                                 'satuan_unit'           => $textSatuan,
                                 'pagu_anggaran'         => $sub->pagu ?? 0,
-                                'target'                => $sub->target ?? 0,
+                                'target'                => $totalTarget,
                                 'realisasi_fisik'       => 0,
                                 'pagu_realisasi'        => 0
                             ]);
                             $countAdded++;
                         } else {
-                            // Hanya update data master, jangan timpa realisasi inputan user
                             $detail->update([
                                 'kode'                  => $sub->kode,
                                 'nama_program_kegiatan' => $namaLengkap,
                                 'sub_output'            => $textOutput,
                                 'satuan_unit'           => $textSatuan,
                                 'pagu_anggaran'         => $sub->pagu ?? 0,
-                                'target'                => $sub->target ?? 0
+                                'target'                => $totalTarget
                             ]);
                             $countUpdated++;
                         }
@@ -331,7 +366,6 @@ class InputData extends Component
                 }
             }
 
-            // Hitung otomatis semua (termasuk fisik) sebelum commit
             $this->recalculateProgramKegiatanAnggaran();
 
             DB::commit();
@@ -357,7 +391,6 @@ class InputData extends Component
     {
         DB::beginTransaction();
         try {
-            // 1. Simpan Detail Sub Kegiatan Inputs TERLEBIH DAHULU
             foreach ($this->inputs as $detailId => $data) {
                 $detail = DetailLaporanKonsolidasi::find($detailId);
                 if ($detail) {
@@ -372,12 +405,9 @@ class InputData extends Component
                 }
             }
 
-            // 2. HITUNG OTOMATIS PAGU & FISIK PROGRAM DAN KEGIATAN
             $this->recalculateProgramKegiatanAnggaran();
 
-            // 3. Simpan Program/Kegiatan (Optional, karena sudah dihandle di recalculate, tapi kita simpan targetnya saja)
             foreach ($this->programInputs as $progId => $data) {
-                // Hanya update target manual jika ada, sisanya otomatis
                 LaporanKonsolidasiAnggaran::where([
                     'laporan_konsolidasi_id' => $this->laporan->id,
                     'program_id' => $progId
@@ -396,10 +426,7 @@ class InputData extends Component
             }
 
             DB::commit();
-
-            // Reload data agar inputan menampilkan format angka yang benar kembali
             $this->loadData();
-
             session()->flash('message', 'Semua data berhasil disimpan dan dikalkulasi secara otomatis.');
         } catch (\Exception $e) {
             DB::rollBack();
@@ -418,7 +445,6 @@ class InputData extends Component
         $this->selectedProgramId = null;
     }
 
-    // --- TAMBAHAN BARU: ACTION MODAL CETAK ---
     public function openPrintModal()
     {
         $this->isOpenPrintModal = true;
@@ -432,41 +458,48 @@ class InputData extends Component
 
     public function printLaporan()
     {
-        // 1. SIMPAN DULU DATA KE DATABASE
+        // 1. Simpan dulu perubahan terakhir
         $this->saveAll();
 
-        // 2. Siapkan Parameter
         $params = ['id' => $this->laporan->id];
 
+        // Pastikan Jabatan dipilih (karena dropdwon required)
         if ($this->selectedJabatanPrint) {
-            $params['jabatan_id'] = $this->selectedJabatanPrint;
+            $jabatan = Jabatan::find($this->selectedJabatanPrint);
+
+            // LOGIKA KHUSUS: KEPALA DINAS = CETAK SEMUA
+            // Jika jabatan tidak punya parent (Root/Kepala Dinas)
+            if ($jabatan && $jabatan->parent_id == null) {
+                // Kita kirim parameter 'ttd_id' 
+                // Asumsinya: Controller akan menampilkan SEMUA data jika 'jabatan_id' tidak ada,
+                // tapi akan mengambil TTD dari 'ttd_id'.
+                $params['ttd_id'] = $this->selectedJabatanPrint;
+            } else {
+                // Jika jabatan lain (Kabid/Kasi), kirim 'jabatan_id'
+                // Asumsinya: Controller akan memfilter data HANYA untuk jabatan ini
+                $params['jabatan_id'] = $this->selectedJabatanPrint;
+            }
         }
 
         $this->closePrintModal();
 
-        // 3. Redirect ke PDF (Sekarang data di DB sudah terbaru)
         return redirect()->route('laporan-konsolidasi.cetak', $params);
     }
 
-    // === UPDATE: ADD PROGRAM (AMBIL DARI MASTER) ===
     public function addProgram()
     {
         $this->validate(['selectedProgramId' => 'required']);
         DB::beginTransaction();
         try {
-            // Ambil Master Program
             $progMaster = Program::find($this->selectedProgramId);
 
-            // Create Program Record
             LaporanKonsolidasiAnggaran::firstOrCreate(
                 ['laporan_konsolidasi_id' => $this->laporan->id, 'program_id' => $this->selectedProgramId],
-                // Default values jika baru dibuat
                 ['pagu_anggaran' => 0, 'pagu_realisasi' => 0, 'realisasi_fisik' => 0]
             );
 
             $kegiatans = Kegiatan::with(['program'])->where('program_id', $this->selectedProgramId)->get();
             foreach ($kegiatans as $keg) {
-                // Create Kegiatan Record
                 LaporanKonsolidasiAnggaran::firstOrCreate(
                     ['laporan_konsolidasi_id' => $this->laporan->id, 'kegiatan_id' => $keg->id],
                     ['pagu_anggaran' => 0, 'pagu_realisasi' => 0, 'realisasi_fisik' => 0]
@@ -480,6 +513,8 @@ class InputData extends Component
                         $listIndikator = $sub->indikators;
                         $textOutput = $listIndikator->pluck('keterangan')->join("\n") ?: '-';
                         $textSatuan = $listIndikator->pluck('satuan')->join("\n") ?: '-';
+                        $totalTarget = $listIndikator->sum('target');
+
                         $namaProgram = $keg->program->nama ?? $keg->program->nama_program ?? '-';
                         $namaKegiatan = $keg->nama ?? $keg->nama_kegiatan ?? '-';
                         $namaLengkap = $namaProgram . ' / ' . $namaKegiatan . ' / ' . $sub->nama;
@@ -491,10 +526,8 @@ class InputData extends Component
                             'nama_program_kegiatan' => $namaLengkap,
                             'sub_output'            => $textOutput,
                             'satuan_unit'           => $textSatuan,
-
-                            'pagu_anggaran'         => $sub->pagu ?? 0,   // AMBIL MASTER
-                            'target'                => $sub->target ?? 0, // AMBIL MASTER
-
+                            'pagu_anggaran'         => $sub->pagu ?? 0,
+                            'target'                => $totalTarget, 
                             'realisasi_fisik'       => 0,
                             'pagu_realisasi'        => 0
                         ]);
@@ -502,7 +535,6 @@ class InputData extends Component
                 }
             }
             
-            // Hitung otomatis sebelum commit
             $this->recalculateProgramKegiatanAnggaran();
             
             DB::commit();
@@ -572,23 +604,18 @@ class InputData extends Component
 
     public function render()
     {
-        // 1. Ambil Program ID yang ada di laporan ini
         $programIds = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
             ->whereNotNull('program_id')
             ->pluck('program_id');
 
-        // --- LOGIKA PENGURUTAN (FIX VIP CODE X) ---
         $programsInReport = Program::whereIn('id', $programIds)
             ->orderByRaw("CASE WHEN kode LIKE 'X%' OR kode LIKE 'x%' THEN 0 ELSE 1 END ASC")
             ->orderBy('kode', 'asc')
             ->get();
-        // ------------------------------------------
 
-        // 2. Ambil semua detail sub kegiatan (Eager Loading)
         $detailsRaw = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan', 'subKegiatan.indikators'])
             ->where('laporan_konsolidasi_id', $this->laporan->id)->get();
 
-        // 3. Grouping Data (Program -> Kegiatan -> Sub Kegiatan)
         $groupedData = [];
         foreach ($programsInReport as $prog) {
             $groupedData[$prog->id] = ['program' => $prog, 'kegiatans' => []];
@@ -610,16 +637,10 @@ class InputData extends Component
             }
         }
 
-        // --- PERBAIKAN UTAMA: PAGINATION MANUAL LIVEWIRE ---
-        // Gunakan $this->getPage() agar sinkron dengan tombol Next/Prev Livewire
         $currentPage = $this->getPage(); 
-        
         $col = collect($groupedData);
-        
-        // Slice data berdasarkan halaman aktif
         $currentItems = $col->slice(($currentPage - 1) * $this->perPage, $this->perPage)->all();
         
-        // Buat Paginator dengan konfigurasi yang benar untuk Livewire
         $paginatedData = new LengthAwarePaginator(
             $currentItems, 
             $col->count(), 
@@ -627,12 +648,10 @@ class InputData extends Component
             $currentPage, 
             [
                 'path' => LengthAwarePaginator::resolveCurrentPath(),
-                'pageName' => 'page' // Wajib didefinisikan agar Livewire tahu ini page utama
+                'pageName' => 'page' 
             ]
         );
-        // ---------------------------------------------------
 
-        // HITUNG TOTAL ANGGARAN & REALISASI (SIMPAN KE PUBLIC PROPERTY)
         $this->totalAnggaran = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $this->laporan->id)
             ->whereNotNull('program_id')
             ->sum('pagu_anggaran');
@@ -641,15 +660,15 @@ class InputData extends Component
             ->whereNotNull('program_id')
             ->sum('pagu_realisasi');
 
-        // --- TAMBAHAN BARU: AMBIL DATA JABATAN UNTUK DROPDOWN ---
-        $jabatans = Jabatan::orderBy('nama', 'asc')->get();
+        // AMBIL SEMUA JABATAN & SORTIR SESUAI HIRARKI POHON
+        $allJabatans = Jabatan::all();
+        $jabatans = $this->sortJabatanTree($allJabatans);
 
         return view('livewire.laporan-konsolidasi.input-data', [
             'programs' => Program::all(),
-            'jabatans' => $jabatans,
+            'jabatans' => $jabatans, 
             'kegiatanOptions' => [],
             'reportData' => $paginatedData,
         ]);
     }
-
 }

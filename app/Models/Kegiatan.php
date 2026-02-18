@@ -9,15 +9,17 @@ class Kegiatan extends Model
 {
     use HasFactory;
 
-    protected $fillable = [
-        'program_id', 
-        'outcome_id', 
-        'kode',       
-        'nama',       // <--- Tetap 'nama'
-        'jabatan_id',
-        'pagu',       // <--- Tambahan Baru
-        'target'      // <--- Tambahan Baru
-    ];
+   protected $fillable = [
+    'program_id',
+    'jabatan_id',
+    'outcome_id',
+    'kode',
+    'nama',
+    'nama_kegiatan',
+    'tahun', // <--- TAMBAHKAN INI
+    'pagu',
+    'realisasi'
+];
 
     public function program()
     {

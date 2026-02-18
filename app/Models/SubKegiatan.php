@@ -10,15 +10,17 @@ class SubKegiatan extends Model
     use HasFactory;
 
     protected $fillable = [
-        'kegiatan_id',
-        'output_kegiatan_id', 
-        'kode',
-        'nama',
-        'output',
-        'jabatan_id',
-        'pagu',       // <--- Tambahan Baru
-        'target'      // <--- Tambahan Baru
-    ];
+    'kegiatan_id',
+    'output_kegiatan_id',
+    'jabatan_id',
+    'kode',
+    'nama',
+    'tahun', 
+    'pagu',
+    'target',
+    'kinerja',
+    'satuan'
+];
 
     public function kegiatan()
     {

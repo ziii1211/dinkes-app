@@ -21,8 +21,12 @@ class MasterData extends Component
     public $isOpenPenanggungJawab = false;
     public $isEditMode = false;
 
-    // Properti untuk Show Entries (Default 10)
-    public $perPage = 1;
+    // Properti untuk Show Entries (Default ganti ke 10 biar lebih rapi)
+    public $perPage = 10;
+
+    // --- PROPERTI FILTER TAHUN (BARU) ---
+    public $tahun; 
+    public $tahunOptions = [];
 
     // --- PROPERTI HAPUS ---
     public $deleteTarget = '';
@@ -34,9 +38,9 @@ class MasterData extends Component
     public $dataId = null;
     public $kode, $nama;
 
-    // --- PROPERTI BARU (FIX ERROR) ---
+    // --- PROPERTI TAMBAHAN ---
     public $pagu;
-    public $target;
+    public $target; 
 
     // --- PROPERTI MODAL INDIKATOR ---
     public $selectedSubKegiatan = null;
@@ -44,31 +48,41 @@ class MasterData extends Component
     public $indikatorId = null;
     public $subOutput, $satuan;
 
-    // --- PROPERTI PENANGGUNG JAWAB (BARU) ---
+    // --- PROPERTI PENANGGUNG JAWAB ---
     public $jabatans = [];
     public $selectedJabatanId = null;
 
     // Listener Event
     protected $listeners = ['deleteConfirmed' => 'delete'];
 
+    // --- INITIALIZE (BARU) ---
+    public function mount()
+    {
+        // Set Default Tahun ke 2026 (sesuai data yang ada)
+        $this->tahun = 2026; 
+        
+        // Opsi Tahun untuk Dropdown
+        $this->tahunOptions = [2025, 2026, 2027, 2028, 2029, 2030];
+    }
+
     #[Title('Master Data Laporan')]
     public function render()
     {
         // Query Data: Program -> Kegiatan -> Sub Kegiatan
-        $programs = Program::with(['kegiatans' => function ($q) {
-            $q->orderBy('kode', 'asc')
-                ->orderBy('id', 'asc')
-                ->with(['subKegiatans' => function ($sub) {
-                    $sub->orderBy('kode', 'asc')
-                        ->orderBy('id', 'asc')
-                        ->with('jabatan');
-                }]);
-        }])
-            // --- BAGIAN INI YANG DI-UPDATE ---
+        // DITAMBAHKAN: Filter where('tahun', $this->tahun)
+        $programs = Program::where('tahun', $this->tahun) 
+            ->with(['kegiatans' => function ($q) {
+                $q->orderBy('kode', 'asc')
+                    ->orderBy('id', 'asc')
+                    ->with(['subKegiatans' => function ($sub) {
+                        $sub->orderBy('kode', 'asc')
+                            ->orderBy('id', 'asc')
+                            ->with('jabatan');
+                    }]);
+            }])
             // Logika: Kode berawalan 'X' atau 'x' diberi prioritas 0 (Paling Atas), sisanya 1
             ->orderByRaw("CASE WHEN kode LIKE 'X%' OR kode LIKE 'x%' THEN 0 ELSE 1 END ASC")
-            ->orderBy('kode', 'asc') // Setelah dipisah X dan Angka, baru urutkan lagi sesuai kode
-            // ----------------------------------
+            ->orderBy('kode', 'asc') 
             ->orderBy('id', 'asc')
             ->paginate($this->perPage);
 
@@ -84,8 +98,8 @@ class MasterData extends Component
         // Reset Form Utama
         $this->kode = null;
         $this->nama = null;
-        $this->pagu = null;   // Reset Pagu
-        $this->target = null; // Reset Target
+        $this->pagu = null;
+        $this->target = null; 
         $this->dataId = null;
         $this->parentId = null;
         $this->isEditMode = false;
@@ -177,10 +191,9 @@ class MasterData extends Component
         $this->kode = $data->kode;
         $this->nama = $data->nama;
 
-        // Load Pagu & Target (Format Rupiah untuk tampilan)
+        // Load Pagu (Format Rupiah untuk tampilan)
         $this->pagu = $data->pagu ? number_format($data->pagu, 0, ',', '.') : '';
-        $this->target = $data->target;
-
+        
         // Set Parent ID sesuai tipe
         if ($type == 'kegiatan') $this->parentId = $data->program_id;
         if ($type == 'sub_kegiatan') $this->parentId = $data->kegiatan_id;
@@ -193,7 +206,6 @@ class MasterData extends Component
     private function cleanRupiah($val)
     {
         if (is_null($val) || $val === '') return 0;
-        // Hapus semua karakter kecuali angka
         $clean = preg_replace('/[^0-9]/', '', $val);
         return (float) $clean;
     }
@@ -209,16 +221,14 @@ class MasterData extends Component
         $data = [
             'kode' => $this->kode,
             'nama' => $this->nama,
+            'tahun' => $this->tahun, // <--- DITAMBAHKAN: Simpan Tahun
         ];
 
-        // Set Pagu & Target hanya jika form yang disubmit adalah sub_kegiatan
+        // Set Pagu hanya jika form yang disubmit adalah sub_kegiatan
         if ($this->formType == 'sub_kegiatan') {
             $data['pagu'] = $this->cleanRupiah($this->pagu);
-            $data['target'] = $this->target ?? 0;
         } else {
-            // Untuk Program dan Kegiatan, default ke 0
             $data['pagu'] = 0;
-            $data['target'] = 0;
         }
 
         if ($this->formType == 'program') {
@@ -231,23 +241,18 @@ class MasterData extends Component
             SubKegiatan::updateOrCreate(['id' => $this->dataId], $data);
         }
 
-        $this->dispatch('alert', ['type' => 'success', 'title' => 'Berhasil!', 'message' => 'Data berhasil disimpan.']);
+        $this->dispatch('alert', ['type' => 'success', 'title' => 'Berhasil!', 'message' => 'Data berhasil disimpan untuk tahun ' . $this->tahun]);
         $this->closeModal();
     }
 
-    // --- LOGIKA PENANGGUNG JAWAB (BARU) ---
+    // --- LOGIKA PENANGGUNG JAWAB ---
 
     public function openPenanggungJawab($subKegiatanId)
     {
         $this->resetInput();
         $this->selectedSubKegiatan = SubKegiatan::findOrFail($subKegiatanId);
-
-        // Ambil ID Jabatan yang sudah tersimpan (jika ada)
         $this->selectedJabatanId = $this->selectedSubKegiatan->jabatan_id;
-
-        // Ambil list semua jabatan untuk dropdown
         $this->jabatans = Jabatan::orderBy('nama', 'asc')->get();
-
         $this->isOpenPenanggungJawab = true;
     }
 
@@ -284,6 +289,7 @@ class MasterData extends Component
         $this->indikatorId = $id;
         $this->subOutput = $indikator->keterangan;
         $this->satuan = $indikator->satuan;
+        $this->target = $indikator->target; 
     }
 
     public function saveIndikator()
@@ -291,6 +297,7 @@ class MasterData extends Component
         $this->validate([
             'subOutput' => 'required',
             'satuan' => 'required',
+            'target' => 'required',
         ]);
 
         IndikatorSubKegiatan::updateOrCreate(
@@ -298,7 +305,9 @@ class MasterData extends Component
             [
                 'sub_kegiatan_id' => $this->selectedSubKegiatan->id,
                 'keterangan' => $this->subOutput,
-                'satuan' => $this->satuan
+                'satuan' => $this->satuan,
+                'target' => $this->target,
+                'tahun' => $this->tahun // <--- DITAMBAHKAN: Simpan Tahun Indikator
             ]
         );
 
@@ -307,6 +316,7 @@ class MasterData extends Component
         $this->indikatorId = null;
         $this->subOutput = null;
         $this->satuan = null;
+        $this->target = null;
 
         $this->dispatch('alert', ['type' => 'success', 'title' => 'Berhasil!', 'message' => 'Indikator berhasil disimpan.']);
     }

@@ -755,12 +755,14 @@
                 <div class="p-6">
                     <label class="block text-sm font-semibold text-gray-700 mb-2">Filter Berdasarkan Jabatan / Bidang</label>
                     <div class="relative">
-                        <select wire:model="selectedJabatanPrint" class="block w-full rounded-lg border-gray-300 shadow-sm focus:border-red-500 focus:ring-red-500 sm:text-sm py-2.5 px-3">
-                            <option value="">-- Semua Jabatan (Keseluruhan) --</option>
-                            @foreach($jabatans as $jab)
-                            <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
-                            @endforeach
-                        </select>
+                       <select wire:model="selectedJabatanPrint" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none appearance-none bg-white">
+    <option value="" disabled>-- Pilih Penandatangan --</option> {{-- Placeholder disabled --}}
+    @foreach($jabatans as $jabatan)
+        <option value="{{ $jabatan->id }}">
+            {{ str_repeat('-', $jabatan->level) }} {{ $jabatan->nama }}
+        </option>
+    @endforeach
+</select>
                         <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>

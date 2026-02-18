@@ -14,7 +14,10 @@ class IndikatorSubKegiatan extends Model
         'sub_kegiatan_id',
         'keterangan',
         'satuan',
-        // Target
+        'target', // <--- TAMBAHKAN INI AGAR BISA DISIMPAN
+        'tahun',
+        
+        // Target Tahunan (Renstra)
         'target_2025', 'pagu_2025',
         'target_2026', 'pagu_2026',
         'target_2027', 'pagu_2027',

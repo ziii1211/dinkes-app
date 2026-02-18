@@ -16,34 +16,54 @@
     <div class="space-y-8 relative z-10 mt-8">
         <div class="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden">
 
-            {{-- Header & Show Entries --}}
+            {{-- Header & Filters --}}
             <div class="px-4 py-4 sm:px-6 sm:py-5 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white">
-                <div class="flex flex-col sm:flex-row sm:items-center gap-4 w-full sm:w-auto">
+                
+                {{-- JUDUL & FILTER TAHUN --}}
+                <div class="flex flex-col gap-2">
                     <h3 class="font-bold text-gray-800 text-lg">Daftar Laporan Master Data</h3>
+                    
+                    {{-- DROPDOWN TAHUN (BARU) --}}
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm text-gray-600 font-medium">Tahun Anggaran:</span>
+                        <div class="relative">
+                            <select wire:model.live="tahun" class="appearance-none bg-blue-50 border border-blue-200 text-blue-800 text-sm font-bold rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-24 p-2 pr-8 cursor-pointer shadow-sm hover:bg-blue-100 transition-colors">
+                                @foreach($tahunOptions as $opt)
+                                    <option value="{{ $opt }}">{{ $opt }}</option>
+                                @endforeach
+                            </select>
+                            <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-blue-700">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    {{-- FITUR SHOW ENTRIES --}}
-                    <div class="flex items-center gap-2 text-sm text-gray-600">
+                {{-- GROUP TOMBOL KANAN --}}
+                <div class="flex flex-col sm:flex-row items-center gap-3 w-full sm:w-auto">
+                    
+                    {{-- SHOW ENTRIES --}}
+                    <div class="flex items-center gap-2 text-sm text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200">
                         <span>Show</span>
-                        <select wire:model.live="perPage" class="border-gray-300 border rounded-md text-sm focus:ring-blue-500 focus:border-blue-500 py-1 px-2">
+                        <select wire:model.live="perPage" class="border-gray-300 border-none bg-transparent text-sm focus:ring-0 font-bold py-0 pl-0 pr-6 cursor-pointer">
                             <option value="5">5</option>
                             <option value="10">10</option>
                             <option value="25">25</option>
                             <option value="50">50</option>
                             <option value="100">100</option>
                         </select>
-                        <span>entries</span>
                     </div>
-                </div>
 
-                {{-- HANYA ADMIN YANG BISA TAMBAH PROGRAM --}}
-                @if(auth()->user()->role == 'admin')
-                <button wire:click="createProgram" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex justify-center items-center transition-colors shadow-sm">
-                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
-                    </svg>
-                    Tambah Program
-                </button>
-                @endif
+                    {{-- TOMBOL TAMBAH PROGRAM --}}
+                    @if(auth()->user()->role == 'admin')
+                    <button wire:click="createProgram" class="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium flex justify-center items-center transition-colors shadow-sm h-[38px]">
+                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path>
+                        </svg>
+                        Tambah Program
+                    </button>
+                    @endif
+                </div>
             </div>
 
             {{-- Table Wrapper --}}
@@ -82,7 +102,7 @@
                                         return $keg->subKegiatans->sum('pagu');
                                     });
                                     @endphp
-                                    {{-- HANYA MENAMPILKAN PAGU (Tanpa Target) --}}
+                                    {{-- HANYA MENAMPILKAN PAGU --}}
                                     <div class="text-xs font-bold text-blue-700">Rp {{ number_format($totalPaguProgram, 0, ',', '.') }}</div>
                                 </td>
 
@@ -145,7 +165,7 @@
                                     @php
                                     $totalPaguKegiatan = $kegiatan->subKegiatans->sum('pagu');
                                     @endphp
-                                    {{-- HANYA MENAMPILKAN PAGU (Tanpa Target) --}}
+                                    {{-- HANYA MENAMPILKAN PAGU --}}
                                     <div class="text-xs font-bold text-amber-700">Rp {{ number_format($totalPaguKegiatan, 0, ',', '.') }}</div>
                                 </td>
 
@@ -201,7 +221,7 @@
                                             <span class="font-bold text-gray-700 text-sm">{{ $sub->kode }}</span>
                                             <span class="text-gray-500 text-sm leading-relaxed">{{ $sub->nama }}</span>
 
-                                            {{-- KETERANGAN PENANGGUNG JAWAB (BARU) --}}
+                                            {{-- KETERANGAN PENANGGUNG JAWAB --}}
                                             @if($sub->jabatan)
                                             <div class="flex items-center gap-1.5 mt-2 text-purple-700 bg-purple-100/50 px-2 py-1 rounded-md w-fit border border-purple-100">
                                                 <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -217,7 +237,6 @@
                                 {{-- Kolom Pagu & Target --}}
                                 <td class="p-4 border-r border-gray-100 text-right align-top">
                                     <div class="text-xs font-bold text-purple-700">Rp {{ number_format($sub->pagu, 0, ',', '.') }}</div>
-                                    <div class="text-xs text-gray-500 mt-1">Target: {{ $sub->target }}</div>
                                 </td>
 
                                 <td class="p-4 text-center align-middle relative">
@@ -276,7 +295,7 @@
                         <tbody>
                             <tr>
                                 <td colspan="3" class="p-10 text-center text-gray-400 italic bg-white">
-                                    Data belum tersedia.
+                                    Data belum tersedia untuk tahun {{ $tahun }}.
                                 </td>
                             </tr>
                         </tbody>
@@ -307,7 +326,7 @@
         </div>
     </div>
 
-    {{-- Script Rupiah Helper --}}
+    {{-- Script Rupiah Helper (TETAP SAMA) --}}
     <script>
         document.addEventListener('alpine:init', () => {
             Alpine.data('rupiahInput', (modelName, initialValue) => ({
@@ -367,6 +386,7 @@
                     @elseif($formType == 'kegiatan') Kegiatan
                     @else Sub Kegiatan
                     @endif
+                    <span class="text-blue-600">({{ $tahun }})</span> {{-- INFO TAHUN DI MODAL --}}
                 </h3>
                 <button wire:click="closeModal" class="text-gray-400 hover:text-gray-600 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -390,19 +410,13 @@
                     @error('nama') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                 </div>
 
-                {{-- Input Pagu & Target HANYA UNTUK SUB KEGIATAN --}}
+                {{-- Input Pagu HANYA UNTUK SUB KEGIATAN --}}
                 @if($formType == 'sub_kegiatan')
-                <div class="grid grid-cols-2 gap-4">
+                <div class="mt-4">
                     {{-- Pagu Anggaran (Format Rupiah) --}}
                     <div x-data="rupiahInput('pagu', '{{ $pagu }}')">
                         <label class="block text-sm font-medium text-gray-700 mb-2">Pagu Anggaran</label>
                         <input type="text" x-model="displayValue" @input="updateWire" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-right font-mono" placeholder="Rp 0">
-                    </div>
-
-                    {{-- Target Fisik --}}
-                    <div>
-                        <label class="block text-sm font-medium text-gray-700 mb-2">Target Fisik</label>
-                        <input type="number" step="any" wire:model="target" class="w-full border border-gray-300 rounded-lg px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all text-center" placeholder="0">
                     </div>
                 </div>
                 @endif
@@ -416,7 +430,7 @@
     </div>
     @endif
 
-    {{-- MODAL 2: INDIKATOR KINERJA (TETAP SAMA) --}}
+    {{-- MODAL 2: INDIKATOR KINERJA (TETAP SAMA TAPI DENGAN KOLOM TARGET) --}}
     @if($isOpenIndikator)
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 sm:p-0">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-4xl sm:mx-4 p-6 animate-fade-in-down h-auto max-h-[90vh] overflow-y-auto">
@@ -435,13 +449,18 @@
             {{-- Form Tambah/Edit Indikator --}}
             <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 mb-6">
                 <div class="grid grid-cols-1 sm:grid-cols-12 gap-4 items-end">
-                    <div class="sm:col-span-8">
+                    <div class="sm:col-span-6">
                         <label class="block text-xs font-bold text-gray-700 mb-1">Sub Output <span class="text-red-500">*</span></label>
-                        <input type="text" wire:model="subOutput" placeholder="Masukkan Sub Output / Tolok Ukur" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                        <input type="text" wire:model="subOutput" placeholder="Masukkan Sub Output" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
                     </div>
                     <div class="sm:col-span-2">
-                        <label class="block text-xs font-bold text-gray-700 mb-1">Satuan Unit <span class="text-red-500">*</span></label>
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Satuan <span class="text-red-500">*</span></label>
                         <input type="text" wire:model="satuan" placeholder="Contoh: Dokumen" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none">
+                    </div>
+                    {{-- TARGET (INPUT BARU) --}}
+                    <div class="sm:col-span-2">
+                        <label class="block text-xs font-bold text-gray-700 mb-1">Target <span class="text-red-500">*</span></label>
+                        <input type="number" step="any" wire:model="target" placeholder="0" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-1 focus:ring-blue-500 outline-none text-center">
                     </div>
                     <div class="sm:col-span-2">
                         <button wire:click="saveIndikator" class="w-full bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded text-sm font-medium transition-colors h-[38px]">
@@ -451,6 +470,7 @@
                 </div>
                 @error('subOutput') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
                 @error('satuan') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
+                @error('target') <span class="text-red-500 text-xs mt-1 block">{{ $message }}</span> @enderror
             </div>
 
             {{-- Tabel Indikator --}}
@@ -460,7 +480,8 @@
                         <tr class="bg-gray-100 text-gray-700 text-xs font-bold uppercase border-b border-gray-200">
                             <th class="p-3 border-r border-gray-200 w-10 text-center">No</th>
                             <th class="p-3 border-r border-gray-200">Sub Output</th>
-                            <th class="p-3 border-r border-gray-200 w-32 text-center">Satuan Unit</th>
+                            <th class="p-3 border-r border-gray-200 w-24 text-center">Satuan</th>
+                            <th class="p-3 border-r border-gray-200 w-24 text-center">Target</th>
                             <th class="p-3 text-center w-24">Aksi</th>
                         </tr>
                     </thead>
@@ -471,6 +492,7 @@
                             <td class="p-3 border-r border-gray-100 text-center">{{ $index + 1 }}</td>
                             <td class="p-3 border-r border-gray-100">{{ $indikator->keterangan }}</td>
                             <td class="p-3 border-r border-gray-100 text-center">{{ $indikator->satuan }}</td>
+                            <td class="p-3 border-r border-gray-100 text-center font-bold">{{ $indikator->target }}</td>
                             <td class="p-3 text-center">
                                 <div class="flex justify-center gap-2">
                                     <button wire:click="editIndikator({{ $indikator->id }})" class="text-blue-500 hover:text-blue-700" title="Edit">
@@ -489,7 +511,7 @@
                         @endforeach
                         @else
                         <tr>
-                            <td colspan="4" class="p-6 text-center text-gray-400 italic">Belum ada indikator kinerja.</td>
+                            <td colspan="5" class="p-6 text-center text-gray-400 italic">Belum ada indikator kinerja.</td>
                         </tr>
                         @endif
                     </tbody>
@@ -499,7 +521,7 @@
     </div>
     @endif
 
-    {{-- MODAL 3: PENANGGUNG JAWAB (BARU) --}}
+    {{-- MODAL 3: PENANGGUNG JAWAB (TETAP SAMA) --}}
     @if($isOpenPenanggungJawab)
     <div class="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm p-4 sm:p-0">
         <div class="bg-white rounded-xl shadow-2xl w-full max-w-lg sm:mx-4 p-6 animate-fade-in-down h-auto max-h-[90vh] overflow-y-auto">

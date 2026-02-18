@@ -10,11 +10,13 @@ class Program extends Model
     use HasFactory;
 
     protected $fillable = [
-        'kode',
-        'nama',     // <--- Pastikan ini 'nama', bukan 'nama_program'
-        'pagu',     // <--- Tambahan Baru
-        'target'    // <--- Tambahan Baru
-    ];
+    'kode', 
+    'nama', 
+    'nama_program', // jaga-jaga kalau ada alias
+    'tahun', // <--- TAMBAHKAN INI
+    'pagu', 
+    'realisasi'
+];
 
     public function outcomes()
     {
