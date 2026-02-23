@@ -1,5 +1,4 @@
 <div class="space-y-6"
-
     x-data="{ 
         // MENGGUNAKAN ENTANGLE AGAR SINKRON DENGAN LIVEWIRE/DATABASE
         totalAnggaran: @entangle('totalAnggaran'), 
@@ -113,7 +112,8 @@
             <div class="w-px h-10 bg-gray-300"></div>
             <div class="text-right">
                 <p class="text-[10px] text-gray-500 uppercase font-bold tracking-wider mb-0.5">Total Persentase%</p>
-                <p class="text-lg font-bold text-blue-600"><span x-text="totalPersentase.toFixed(1)">0</span>%</p>
+                {{-- PERBAIKAN: Format 2 angka desimal dan ubah titik ke koma (Alpine JS) --}}
+                <p class="text-lg font-bold text-blue-600"><span x-text="totalPersentase.toFixed(2).replace('.', ',')">0</span>%</p>
             </div>
         </div>
     </div>
@@ -296,12 +296,12 @@
                             <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
 
-                        {{-- % Capaian Keu --}}
-                        <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuProg, 0) }}%</td>
+                        {{-- PERBAIKAN: % Capaian Keu Program (2 desimal, koma) --}}
+                        <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuProg, 2, ',', '.') }}%</td>
 
-                        {{-- % Capaian Fisik (RATA-RATA PERSENTASE) --}}
+                        {{-- PERBAIKAN: % Capaian Fisik Program (2 desimal, koma) --}}
                         <td class="text-center text-[10px] font-bold text-gray-600 border-r border-gray-200 align-middle">
-                            <span class="text-gray-800">{{ $formatClean($persenFisikProg) }}%</span>
+                            <span class="text-gray-800">{{ number_format($persenFisikProg, 2, ',', '.') }}%</span>
                         </td>
 
                         {{-- SISA ANGGARAN PROGRAM --}}
@@ -392,12 +392,12 @@
                             <span class="text-gray-400 font-bold text-[14px]">-</span>
                         </td>
 
-                        {{-- % Capaian Keu --}}
-                        <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuKeg, 0) }}%</td>
+                        {{-- PERBAIKAN: % Capaian Keu Kegiatan (2 desimal, koma) --}}
+                        <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuKeg, 2, ',', '.') }}%</td>
 
-                        {{-- % Capaian Fisik (RATA-RATA PERSENTASE) --}}
+                        {{-- PERBAIKAN: % Capaian Fisik Kegiatan (2 desimal, koma) --}}
                         <td class="text-center text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">
-                            <span class="text-gray-700">{{ $formatClean($persenFisikKeg) }}%</span>
+                            <span class="text-gray-700">{{ number_format($persenFisikKeg, 2, ',', '.') }}%</span>
                         </td>
 
                         {{-- SISA ANGGARAN KEGIATAN --}}
@@ -496,8 +496,9 @@
                             <input type="text" x-model="displayValue" @input="updateWire" @blur="updateWire" class="w-full text-[11px] text-right font-medium text-gray-800 bg-white border border-gray-300 rounded shadow-sm focus:border-green-500 focus:ring-1 focus:ring-green-500 px-2 py-1.5 disabled:bg-gray-100 disabled:text-gray-400 disabled:cursor-not-allowed" placeholder="" @if(!$canEditRealisasi) disabled @endif>
                         </td>
 
-                        <td class="px-2 py-2 text-center text-[10px] text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuSub, 0) }}%</td>
-                        <td class="px-2 py-2 text-center text-[10px] text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenFisikSub, 0) }}%</td>
+                        {{-- PERBAIKAN: % Capaian Keu & Fisik Sub Kegiatan (2 desimal, koma) --}}
+                        <td class="px-2 py-2 text-center text-[10px] text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenKeuSub, 2, ',', '.') }}%</td>
+                        <td class="px-2 py-2 text-center text-[10px] text-gray-600 border-r border-gray-200 align-middle">{{ number_format($persenFisikSub, 2, ',', '.') }}%</td>
 
                         {{-- SISA ANGGARAN SUB KEGIATAN --}}
                         <td class="px-2 py-2 text-right text-[10px] font-medium text-gray-600 border-r border-gray-200 align-middle">
