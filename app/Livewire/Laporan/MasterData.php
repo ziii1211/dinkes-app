@@ -22,7 +22,7 @@ class MasterData extends Component
     public $isEditMode = false;
 
     // Properti untuk Show Entries (Default ganti ke 10 biar lebih rapi)
-    public $perPage = 10;
+    public $perPage = 1;
 
     // --- PROPERTI FILTER TAHUN (BARU) ---
     public $tahun; 
