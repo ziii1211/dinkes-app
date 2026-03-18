@@ -215,16 +215,15 @@ Route::middleware('auth')->group(function () {
         ->name('laporan-konsolidasi.cetak')
         ->middleware('auth'); // Pastikan user login
 
-    // ==========================================
+   // ==========================================
     // --- TAMBAHAN BARU: MENU PUSAT LAPORAN ---
     // ==========================================
-   Route::prefix('pusat-laporan')->name('laporan.')->group(function () {
+    Route::prefix('pusat-laporan')->name('laporan.')->group(function () {
         
-        // KOMEN ATAU HAPUS DULU BARIS INI (Karena class-nya belum kita buat)
-        Route::get('/', \App\Livewire\PusatLaporan::class)->name('index'); 
+        // KOMEN KEDUA BARIS INI KARENA FILE-NYA SUDAH KAMU HAPUS
+        // Route::get('/', \App\Livewire\PusatLaporan::class)->name('index'); 
+        // Route::get('/renstra', \App\Livewire\Laporan\CetakRenstra::class)->name('cetak-renstra');
         
-        // Rute Cetak Renstra yang sudah kita buat filenya
-        Route::get('/renstra', \App\Livewire\Laporan\CetakRenstra::class)->name('cetak-renstra');
     });
 
-});
+}); // <-- Penutup Route::middleware('auth')->group
