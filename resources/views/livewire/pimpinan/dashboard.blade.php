@@ -169,36 +169,83 @@
                     @endif
                 </div>
 
-                {{-- Chart Container --}}
-                <div class="h-[340px] w-full flex items-end justify-between gap-2 sm:gap-4 relative z-10 px-2 pb-2">
-                    {{-- Guide Lines --}}
-                    <div class="absolute inset-0 flex flex-col justify-between pointer-events-none opacity-30">
-                        <div class="border-t border-dashed border-slate-300 w-full h-0"></div>
-                        <div class="border-t border-dashed border-slate-300 w-full h-0"></div>
-                        <div class="border-t border-dashed border-slate-300 w-full h-0"></div>
-                        <div class="border-t border-slate-200 w-full h-0"></div>
-                    </div>
+               {{-- Chart Container ApexCharts --}}
+                <div class="h-[340px] w-full relative z-10 px-2 pb-2 mt-4" 
+                     x-data="{
+                         chartInstance: null,
+                         init() {
+                             // 1. PAKE BLADE LANGSUNG: Garansi 100% data terisi saat pertama kali halaman dibuka
+                             let rawData = {{ json_encode($chart_data) }};
+                             let rawLabels = {{ json_encode($chart_labels) }};
 
-                    @foreach($chart_data as $index => $val)
-                    <div class="w-full h-full flex flex-col justify-end group/bar cursor-pointer relative">
-                        <div class="relative w-full flex items-end justify-center h-full">
-                            {{-- Tooltip --}}
-                            <div class="opacity-0 group-hover/bar:opacity-100 absolute bottom-full mb-3 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-bold py-1.5 px-3 rounded-lg shadow-xl transition-all duration-300 transform translate-y-2 group-hover/bar:translate-y-0 z-20 whitespace-nowrap">
-                                {{ $val }}%
-                                <svg class="absolute -bottom-1 left-1/2 -translate-x-1/2 text-slate-800 w-2 h-2" viewBox="0 0 255 255" xml:space="preserve"><polygon class="fill-current" points="0,0 127.5,127.5 255,0"/></svg>
-                            </div>
+                             let options = {
+                                 series: [{ 
+                                     name: 'Rata-rata Capaian', 
+                                     data: rawData 
+                                 }],
+                                 chart: { 
+                                     type: 'bar', 
+                                     height: 320, 
+                                     toolbar: { show: false }, 
+                                     fontFamily: 'inherit',
+                                     animations: {
+                                         enabled: true,
+                                         easing: 'easeinout',
+                                         speed: 800
+                                     }
+                                 },
+                                 colors: ['#6366f1'], // Warna Indigo-500
+                                 plotOptions: { 
+                                     bar: { 
+                                         borderRadius: 6, 
+                                         columnWidth: '45%' 
+                                     } 
+                                 },
+                                 dataLabels: { enabled: false },
+                                 xaxis: { 
+                                     categories: rawLabels, 
+                                     axisBorder: { show: false }, 
+                                     axisTicks: { show: false },
+                                     labels: {
+                                         style: { colors: '#64748b', fontWeight: 600 }
+                                     }
+                                 },
+                                 yaxis: { 
+                                     max: 100, 
+                                     labels: { 
+                                         formatter: (val) => val + '%',
+                                         style: { colors: '#64748b', fontWeight: 600 }
+                                     } 
+                                 },
+                                 grid: { 
+                                     borderColor: '#f1f5f9', 
+                                     strokeDashArray: 4 
+                                 },
+                                 tooltip: {
+                                     theme: 'dark',
+                                     y: { formatter: (val) => val + '%' }
+                                 }
+                             };
 
-                            {{-- The Bar --}}
-                            <div style="height: {{ $val > 100 ? 100 : ($val < 5 ? 5 : $val) }}%" 
-                                 class="w-full max-w-[50px] rounded-t-2xl relative transition-all duration-700 cubic-bezier(0.4, 0, 0.2, 1)
-                                 {{ $val >= 100 ? 'bg-gradient-to-t from-emerald-500 to-emerald-400' : 'bg-gradient-to-t from-indigo-600 to-indigo-400' }}
-                                 opacity-90 hover:opacity-100 group-hover/bar:scale-y-[1.03] group-hover/bar:shadow-[0_0_20px_-5px_rgba(99,102,241,0.5)]">
-                                 <div class="absolute top-0 left-0 right-0 h-1/2 bg-gradient-to-b from-white/30 to-transparent rounded-t-2xl"></div>
-                            </div>
-                        </div>
-                        <span class="text-[10px] font-bold text-slate-400 mt-3 text-center transition-colors group-hover/bar:text-indigo-600 uppercase tracking-wider">{{ substr($chart_labels[$index], 0, 3) }}</span>
-                    </div>
-                    @endforeach
+                             // Render Grafik dengan Jeda Waktu (Mencegah blank)
+                             setTimeout(() => {
+                                 this.chartInstance = new ApexCharts(this.$refs.apexChart, options);
+                                 this.chartInstance.render();
+                             }, 150);
+
+                             // 2. JADIKAN REAKTIF: Pakai $wire bawaan Livewire 3 untuk merespons dropdown
+                             $wire.$watch('chart_data', (newData) => {
+                                 if(this.chartInstance) {
+                                     // Pastikan data dipaksa jadi array murni sebelum diumpankan ke grafik
+                                     let updatedData = JSON.parse(JSON.stringify(newData));
+                                     this.chartInstance.updateSeries([{ data: updatedData }]);
+                                 }
+                             });
+                         }
+                     }">
+                     
+                     <div id="chart-capaian-pimpinan" x-ref="apexChart" wire:ignore></div>
+                     
                 </div>
             </div>
 
