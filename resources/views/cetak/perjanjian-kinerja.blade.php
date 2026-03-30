@@ -7,7 +7,7 @@
         /* 1. SETUP HALAMAN PDF */
         @page { 
             size: A4 portrait; 
-            margin: 2.5cm 2.5cm; 
+            margin: 2cm 2.5cm; /* Margin atas-bawah 2cm, kiri-kanan 2.5cm */
         }
         
         body { 
@@ -17,7 +17,7 @@
             background: #fff; 
             margin: 0; 
             padding: 0;
-            line-height: 1.3;
+            line-height: 1.4; /* Line height agar teks tidak terlalu mepet */
         }
 
         /* UTILITIES */
@@ -27,45 +27,66 @@
         .font-bold { font-weight: bold; }
         .uppercase { text-transform: uppercase; }
 
-        /* HEADER SURAT */
+        /* HEADER SURAT (KOP) */
+        .table-kop {
+            width: 100%;
+            border-bottom: 4px double #000; /* Garis kop surat lebih tebal/resmi */
+            padding-bottom: 10px;
+            margin-bottom: 25px;
+        }
+        .table-kop td {
+            border: none;
+            vertical-align: middle;
+        }
+        .logo-img {
+            width: 85px; 
+            height: auto;
+        }
         .header-title {
-            font-size: 12pt;
+            font-size: 13pt;
             font-weight: bold;
             text-align: center;
-            margin-bottom: 30px;
             text-transform: uppercase;
-            line-height: 1.5;
+            line-height: 1.3;
         }
 
         /* TABEL UTAMA (SASARAN) */
         .table-main {
             width: 100%;
             border-collapse: collapse;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
         }
         .table-main th, 
         .table-main td {
             border: 1px solid #000;
-            padding: 6px 8px;
-            vertical-align: top;
+            padding: 8px 10px; /* Padding ditambah agar lega */
+            vertical-align: middle;
         }
         .table-main th {
             background-color: #E8E8E8; 
             text-align: center;
             font-weight: bold;
+            font-size: 10.5pt;
+        }
+        .table-main td {
+            font-size: 10.5pt;
+            text-align: justify; /* Teks rata kiri-kanan */
+        }
+        .table-main td.text-center {
+            text-align: center;
         }
 
         /* TABEL ANGGARAN (BORDERLESS) */
         .table-budget {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 15px;
             margin-bottom: 40px;
         }
         .table-budget td {
-            padding: 4px 5px;
-            vertical-align: top;
+            padding: 6px 8px;
+            vertical-align: bottom;
             border: none; 
+            font-size: 11pt;
         }
         .border-top-black {
             border-top: 1px solid #000 !important;
@@ -75,44 +96,69 @@
         .table-signature {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 10px; /* Jarak dari tabel anggaran */
-            page-break-inside: avoid; 
+            margin-top: 20px; 
+            page-break-inside: avoid; /* Mencegah ttd terpotong ke halaman 2 */
         }
         .table-signature td {
             border: none;
             text-align: center;
-            vertical-align: top; /* Pastikan konten nempel atas */
+            vertical-align: top;
             padding: 0;
+        }
+        .signature-title {
+            font-weight: bold;
+            margin: 0 0 5px 0;
+        }
+        .signature-jabatan {
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+            height: 40px; /* Menyamakan tinggi baris jabatan */
         }
         /* Row khusus untuk spasi tanda tangan */
         .row-space td {
-            height: 80px;
-            vertical-align: middle;
+            height: 90px; /* Area tanda tangan diperluas */
         }
         .name-underline {
             font-weight: bold;
             text-decoration: underline;
+            margin: 0 0 3px 0;
+        }
+        .nip-text {
+            margin: 0;
         }
     </style>
 </head>
 <body>
 
-    {{-- JUDUL --}}
-    <div class="header-title">
-        PERJANJIAN KINERJA TAHUN {{ $pk->tahun }}<br>
-        {{ $jabatan->nama }}<br>
-        DINAS KESEHATAN<br>
-        PROVINSI KALIMANTAN SELATAN
-    </div>
+    {{-- KOP SURAT BERLOGO --}}
+    <table class="table-kop">
+        <tr>
+            <td style="width: 15%; text-align: center;">
+                <img src="{{ public_path('logo pemprov.png') }}" class="logo-img" alt="Logo Pemprov">
+            </td>
+            <td style="width: 70%;">
+                <div class="header-title">
+                    PERJANJIAN KINERJA TAHUN {{ $pk->tahun }}<br>
+                    {{ $jabatan->nama }}<br>
+                    DINAS KESEHATAN<br>
+                    PROVINSI KALIMANTAN SELATAN
+                </div>
+            </td>
+            <td style="width: 15%;">
+                {{-- Ruang kosong penyeimbang --}}
+            </td>
+        </tr>
+    </table>
 
     {{-- TABEL 1: SASARAN --}}
     <table class="table-main">
         <thead>
             <tr>
                 <th style="width: 5%;">No</th>
-                <th style="width: 35%;">KINERJA UTAMA</th>
+                <th style="width: 30%;">KINERJA UTAMA</th>
                 <th style="width: 45%;">INDIKATOR KINERJA</th>
-                <th style="width: 15%;">TARGET</th>
+                <th style="width: 20%;">TARGET</th>
             </tr>
         </thead>
         <tbody>
@@ -131,7 +177,7 @@
                                 <td rowspan="{{ $rowspan }}">{{ $sasaran->sasaran }}</td>
                             @endif
 
-                            <td style="padding-left: 10px;">{{ $ind->nama_indikator }}</td>
+                            <td>{{ $ind->nama_indikator }}</td>
                             <td class="text-center">
                                 @php 
                                     $colTarget = 'target_' . $pk->tahun;
@@ -146,7 +192,7 @@
                     <tr>
                         <td class="text-center">{{ $no++ }}.</td>
                         <td>{{ $sasaran->sasaran }}</td>
-                        <td>-</td>
+                        <td class="text-center">-</td>
                         <td class="text-center">-</td>
                     </tr>
                 @endif
@@ -158,8 +204,8 @@
     <table class="table-budget">
         <thead>
             <tr>
-                <th style="text-align: left; width: 70%; border:none; padding-bottom: 10px;">Program/Kegiatan/Sub Kegiatan</th>
-                <th style="text-align: right; width: 30%; border:none; padding-bottom: 10px;">Anggaran</th>
+                <th style="text-align: left; width: 75%; border:none; padding-bottom: 10px;">Program/Kegiatan/Sub Kegiatan</th>
+                <th style="text-align: right; width: 25%; border:none; padding-bottom: 10px;">Anggaran</th>
             </tr>
         </thead>
         <tbody>
@@ -182,75 +228,70 @@
             @endforeach
             
             <tr style="font-weight: bold;">
-                <td class="text-center" style="padding-top: 10px;">JUMLAH</td>
-                <td class="text-right border-top-black" style="padding-top: 10px;">
+                <td class="text-center" style="padding-top: 15px;">JUMLAH</td>
+                <td class="text-right border-top-black" style="padding-top: 15px;">
                     Rp {{ number_format($totalAnggaran, 0, ',', '.') }}
                 </td>
             </tr>
         </tbody>
     </table>
 
-    {{-- TABEL 3: TANDA TANGAN (PERBAIKAN STRUKTUR) --}}
+    {{-- TABEL 3: TANDA TANGAN --}}
     <table class="table-signature">
-        {{-- BARIS 1: JUDUL PIHAK & JABATAN (Akan expand sesuai teks terpanjang) --}}
+        {{-- BARIS 1: JUDUL PIHAK & JABATAN --}}
         <tr>
-            {{-- KIRI: PIHAK PERTAMA --}}
-            <td style="width: 50%; padding-bottom: 0;">
-                <p class="font-bold" style="margin-bottom: 5px;">PIHAK PERTAMA,</p>
-                <p class="font-bold uppercase" style="margin-top: 0;">
+            {{-- KIRI: PIHAK KEDUA (BAWAHAN) --}}
+            <td style="width: 50%;">
+                <p class="signature-title">PIHAK KEDUA,</p>
+                <div class="signature-jabatan">
                     {{ $jabatan->nama }}
-                </p>
+                </div>
             </td>
 
-            {{-- KANAN: PIHAK KEDUA --}}
-            <td style="width: 50%; padding-bottom: 0;">
-                <p class="font-bold" style="margin-bottom: 5px;">PIHAK KEDUA,</p>
-                @if($is_kepala_dinas)
-                    <p class="font-bold uppercase" style="margin-top: 0;">
+            {{-- KANAN: PIHAK PERTAMA (ATASAN) --}}
+            <td style="width: 50%;">
+                <p class="signature-title">PIHAK PERTAMA,</p>
+                <div class="signature-jabatan">
+                    @if($is_kepala_dinas)
                         GUBERNUR KALIMANTAN SELATAN
-                    </p>
-                @elseif(isset($atasan_jabatan) && $atasan_jabatan)
-                    <p class="font-bold uppercase" style="margin-top: 0;">
+                    @elseif(isset($atasan_jabatan) && $atasan_jabatan)
                         {{ $atasan_jabatan->nama }}
-                    </p>
-                @else
-                    <p class="font-bold uppercase" style="margin-top: 0;">
+                    @else
                         (JABATAN ATASAN)
-                    </p>
-                @endif
+                    @endif
+                </div>
             </td>
         </tr>
 
-        {{-- BARIS 2: SPASI TANDA TANGAN (Tinggi Fix, sejajar kiri kanan) --}}
+        {{-- BARIS 2: SPASI TANDA TANGAN --}}
         <tr class="row-space">
             <td>&nbsp;</td>
             <td>&nbsp;</td>
         </tr>
 
-        {{-- BARIS 3: NAMA & NIP (Akan mulai di posisi vertikal yang sama) --}}
+        {{-- BARIS 3: NAMA & NIP --}}
         <tr>
-            {{-- KIRI: NAMA PIHAK PERTAMA --}}
+            {{-- KIRI: NAMA PIHAK KEDUA --}}
             <td>
                 @if($pegawai)
-                    <p class="name-underline" style="margin: 0;">{{ $pegawai->nama }}</p>
-                    <p style="margin: 0;">NIP. {{ $pegawai->nip }}</p>
+                    <p class="name-underline">{{ $pegawai->nama }}</p>
+                    <p class="nip-text">NIP. {{ $pegawai->nip }}</p>
                 @else
-                    <p class="name-underline" style="margin: 0;">(Belum Ada Pejabat)</p>
-                    <p style="margin: 0;">NIP. -</p>
+                    <p class="name-underline">(Belum Ada Pejabat)</p>
+                    <p class="nip-text">NIP. -</p>
                 @endif
             </td>
 
-            {{-- KANAN: NAMA PIHAK KEDUA --}}
+            {{-- KANAN: NAMA PIHAK PERTAMA --}}
             <td>
                 @if($is_kepala_dinas)
-                    <p class="name-underline" style="margin: 0;">H. MUHIDIN</p>
-                    {{-- <p style="margin: 0;">NIP. ...</p> --}}
+                    <p class="name-underline">H. MUHIDIN</p>
                 @elseif($atasan_pegawai)
-                    <p class="name-underline" style="margin: 0;">{{ $atasan_pegawai->nama }}</p>
-                    <p style="margin: 0;">NIP. {{ $atasan_pegawai->nip }}</p>
+                    <p class="name-underline">{{ $atasan_pegawai->nama }}</p>
+                    <p class="nip-text">NIP. {{ $atasan_pegawai->nip }}</p>
                 @else
-                    <p class="name-underline" style="margin: 0;">(Atasan Belum Diset)</p>
-                    <p style="margin: 0;">NIP. -</p>
+                    <p class="name-underline">(Atasan Belum Diset)</p>
+                    <p class="nip-text">NIP. -</p>
                 @endif
             </td>
         </tr>

@@ -207,10 +207,10 @@
                             </div>
                         </div>
 
-                        {{-- MODIFIKASI: Menu Laporan (Admin, Pegawai & Verifikator) --}}
+                        {{-- MODIFIKASI: Menu Laporan Dropdown (Kecuali Pusat Laporan) --}}
                         @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
                         <div class="relative group">
-                            <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' ? 'text-blue-700 dark:text-blue-400' : '' }}">
+                            <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' && request()->segment(1) != 'pusat-laporan' ? 'text-blue-700 dark:text-blue-400' : '' }}">
                                 Laporan
                                 <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -235,6 +235,13 @@
                                 <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
                             </div>
                         </div>
+
+                        {{-- MENU BARU: PUSAT LAPORAN (Berdiri Sendiri / Standalone) --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
+                        <a href="{{ route('laporan.index') }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('laporan.index') || request()->segment(1) == 'pusat-laporan' ? 'text-blue-700 dark:text-blue-400' : '' }}">
+                            Pusat Laporan
+                        </a>
+                        @endif
 
                         {{-- Admin Menu --}}
                         @if(auth()->user()->role == 'admin')
@@ -383,10 +390,10 @@
                         </div>
                     </div>
 
-                    {{-- MODIFIKASI: Menu Laporan Mobile (Admin, Pegawai & Verifikator) --}}
+                    {{-- MODIFIKASI: Menu Laporan Dropdown Mobile (Kecuali Pusat Laporan) --}}
                     @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
                     <div x-data="{ expanded: false }">
-                        <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
+                        <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' && request()->segment(1) != 'pusat-laporan' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
                             <span>Laporan</span>
                             <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
@@ -394,7 +401,7 @@
                         </button>
                         <div x-show="expanded" class="pl-4 space-y-1">
                             <a href="{{ route('laporan.master') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Master Data</a>
-                            <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Laporan Konsolidasi</a>
+                            <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Laporan E-Monev</a>
                         </div>
                     </div>
                     @endif
@@ -410,6 +417,13 @@
                             <a href="/struktur-organisasi" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Struktur Organisasi</a>
                         </div>
                     </div>
+
+                    {{-- MENU BARU: PUSAT LAPORAN MOBILE (Berdiri Sendiri / Standalone) --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
+                    <a href="{{ route('laporan.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->routeIs('laporan.index') || request()->segment(1) == 'pusat-laporan' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
+                        Pusat Laporan
+                    </a>
+                    @endif
 
                     @if(auth()->user()->role == 'admin')
                     <a href="{{ route('admin.manajemen-user') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
@@ -429,7 +443,7 @@
                 <div class="flex items-center text-blue-100 text-sm mb-4 sm:mb-6">
                     <a href="{{ auth()->user()->role === 'admin' ? route('admin.dashboard') : (auth()->user()->role === 'pimpinan' ? route('pimpinan.dashboard') : route('dashboard')) }}" class="hover:text-white transition-colors">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path>
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 001 1m-6 0h6"></path>
                         </svg>
                     </a>
 

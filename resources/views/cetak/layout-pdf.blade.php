@@ -21,8 +21,8 @@
 
     <table class="kop-surat">
         <tr>
-            <td width="15%" class="text-center">
-                <img src="{{ public_path('logo kalsel1.png') }}" class="logo" alt="Logo Kalsel">
+           <td width="15%" class="text-center">
+                <img src="{{ public_path('logo pemprov.png') }}" class="logo" alt="Logo Kalsel">
             </td>
             <td width="85%" class="text-center">
                 <h3 class="header-text">PEMERINTAH PROVINSI KALIMANTAN SELATAN</h3>

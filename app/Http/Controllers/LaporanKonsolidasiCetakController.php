@@ -21,19 +21,23 @@ class LaporanKonsolidasiCetakController extends Controller
         // 2. Logic Filter Jabatan
         $jabatanId = $request->query('jabatan_id');
         $selectedJabatan = null;
+        $isKepalaDinas = false;
 
         if ($jabatanId) {
             $selectedJabatan = Jabatan::find($jabatanId);
+            
+            // Cek apakah ini Kepala Dinas (parent_id nya kosong)
+            if ($selectedJabatan && is_null($selectedJabatan->parent_id)) {
+                $isKepalaDinas = true;
+            }
         }
 
-        // 3. AMBIL DATA (DENGAN FILTER JABATAN JIKA ADA)
-        
-        // Mulai query untuk mengambil Detail (Sub Kegiatan)
+        // 3. AMBIL DATA (DENGAN FILTER JABATAN JIKA BUKAN KADIS)
         $detailsQuery = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan', 'subKegiatan.indikators'])
             ->where('laporan_konsolidasi_id', $id);
 
-        // JIKA ADA FILTER JABATAN, maka ambil HANYA Sub Kegiatan yang jabatan_id-nya cocok
-        if ($jabatanId) {
+        // JIKA BUKAN KEPALA DINAS DAN ADA JABATAN YANG DIPILIH, filter datanya
+        if ($selectedJabatan && !$isKepalaDinas) {
             $detailsQuery->whereHas('subKegiatan', function ($q) use ($jabatanId) {
                 $q->where('jabatan_id', $jabatanId);
             });
@@ -41,11 +45,11 @@ class LaporanKonsolidasiCetakController extends Controller
 
         $detailsRaw = $detailsQuery->get();
 
-        // Cari ID Kegiatan dan Program yang valid (yang memiliki Sub Kegiatan terkait PJ)
+        // Cari ID Kegiatan dan Program yang valid
         $validKegiatanIds = $detailsRaw->pluck('subKegiatan.kegiatan_id')->unique()->filter();
         $validProgramIds = Kegiatan::whereIn('id', $validKegiatanIds)->pluck('program_id')->unique()->filter();
 
-        // Urutkan Program yang hanya masuk dalam filter
+        // Urutkan Program
         $programsInReport = Program::whereIn('id', $validProgramIds)
             ->orderByRaw("CASE WHEN kode LIKE 'X%' OR kode LIKE 'x%' THEN 0 ELSE 1 END ASC")
             ->orderBy('kode', 'asc')
@@ -59,7 +63,6 @@ class LaporanKonsolidasiCetakController extends Controller
         foreach ($programsInReport as $prog) {
             $progAnggaran = $anggaranRaw->where('program_id', $prog->id)->first();
 
-            // Cari Kegiatan untuk Program ini yang ada di dalam filter
             $kegiatans = Kegiatan::whereIn('id', $validKegiatanIds)
                 ->where('program_id', $prog->id)
                 ->orderBy('kode', 'asc')
@@ -70,12 +73,13 @@ class LaporanKonsolidasiCetakController extends Controller
             foreach ($kegiatans as $keg) {
                 $kegAnggaran = $anggaranRaw->where('kegiatan_id', $keg->id)->first();
 
-                // Ambil Sub Kegiatan yang cuma milik kegiatan ini
+                // Ambil Sub Kegiatan dan sekalian URUTKAN berdasarkan Kode
                 $subs = $detailsRaw->filter(function ($item) use ($keg) {
                     return $item->subKegiatan?->kegiatan_id == $keg->id;
+                })->sortBy(function($item) {
+                    return $item->subKegiatan->kode ?? '';
                 });
 
-                // Pastikan kegiatan ini punya isi sebelum dimasukkan
                 if ($subs->count() > 0) {
                     $kegiatansGrouped[$keg->id] = [
                         'kegiatan' => $keg,
@@ -85,7 +89,6 @@ class LaporanKonsolidasiCetakController extends Controller
                 }
             }
 
-            // Pastikan program ini punya kegiatan sebelum dimasukkan
             if (count($kegiatansGrouped) > 0) {
                 $groupedData[$prog->id] = [
                     'program' => $prog,
@@ -103,7 +106,7 @@ class LaporanKonsolidasiCetakController extends Controller
         ])->setPaper('a4', 'landscape');
 
         // 6. Nama File
-        $judulFile = $selectedJabatan ? 'Laporan_' . str_replace(' ', '_', $selectedJabatan->nama) : 'Laporan_Konsolidasi';
+        $judulFile = $selectedJabatan ? 'Laporan_E-Monev_' . str_replace(' ', '_', $selectedJabatan->nama) : 'Laporan_Konsolidasi';
         $fileName = $judulFile . '_' . $laporan->bulan . '_' . $laporan->tahun . '.pdf';
 
         return $pdf->stream($fileName);

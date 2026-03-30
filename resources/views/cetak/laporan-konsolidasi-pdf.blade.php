@@ -3,18 +3,32 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Realisasi</title>
+    <title>Laporan Realisasi E-Monev</title>
     <style>
-        body { font-family: Arial, sans-serif; font-size: 9px; }
-        .header-table { width: 100%; margin-bottom: 20px; font-weight: bold; font-size: 11px; }
-        .header-table td { padding: 2px; vertical-align: top; }
+        body { font-family: 'Times New Roman', Times, serif; font-size: 9px; color: #000; }
+        
+        /* KOP SURAT LOGO (Garis Panjang Diubah Jadi 1 Solid Line) */
+        .table-kop { width: 100%; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 15px; border-collapse: collapse; }
+        .table-kop td { border: none; vertical-align: middle; }
+        .logo-img { width: 75px; height: auto; }
+        .header-title { font-size: 13pt; font-weight: bold; text-align: center; text-transform: uppercase; line-height: 1.3; }
+
+        /* TABEL IDENTITAS */
+        .header-table { width: 100%; margin-bottom: 15px; font-weight: bold; font-size: 11px; }
+        .header-table td { padding: 2px; vertical-align: top; border: none; }
+        
+        /* TABEL UTAMA */
         .main-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
         .main-table th, .main-table td { border: 1px solid #000; padding: 4px; vertical-align: top; word-wrap: break-word; }
+        
+        /* BACKGROUND WARNA DIHAPUS JADI POLOS */
         .main-table thead th { text-transform: uppercase; font-size: 8px; text-align: center; vertical-align: middle; }
+        
         .text-center { text-align: center; }
         .text-right { text-align: right; }
         .text-left { text-align: left; }
         .align-middle { vertical-align: middle; }
+        
         /* Lebar Kolom */
         .col-kode { width: 8%; } .col-uraian { width: 23%; } .col-indikator { width: 14%; }
         .col-satuan { width: 5%; } .col-target { width: 5%; } .col-pagu { width: 10%; }
@@ -44,10 +58,28 @@
         };
     @endphp
 
-    {{-- HEADER --}}
+    {{-- KOP SURAT BERLOGO --}}
+    <table class="table-kop">
+        <tr>
+            <td style="width: 12%; text-align: center;">
+                <img src="{{ public_path('logo pemprov.png') }}" class="logo-img" alt="Logo Pemprov">
+            </td>
+            <td style="width: 76%;">
+                <div class="header-title">
+                    LAPORAN KONSOLIDASI (E-MONEV)<br>
+                    TAHUN ANGGARAN {{ request('tahun') ?? $laporan->tahun }}<br>
+                    DINAS KESEHATAN PROVINSI KALIMANTAN SELATAN
+                </div>
+            </td>
+            <td style="width: 12%;"></td>
+        </tr>
+    </table>
+
+    {{-- HEADER IDENTITAS --}}
     <table class="header-table">
         <tr><td width="15%">Kode SKPD</td><td width="2%">:</td><td width="83%">1.02.0.00.0.00.01.0000</td></tr>
-        <tr><td>Nama SKPD</td><td>:</td><td>DINAS KESEHATAN</td></tr>
+        <tr><td>Nama SKPD</td><td>:</td><td>DINAS KESEHATAN PROVINSI KALIMANTAN SELATAN</td></tr>
+        {{-- Teks "Unit Penanggung Jawab" dihapus --}}
         <tr><td colspan="3" style="height: 10px;"></td></tr>
         <tr>
             <td colspan="3" class="text-center" style="font-size: 14px; line-height: 1.2;">
@@ -67,7 +99,7 @@
                 <th rowspan="2" class="col-satuan">Satuan</th>
                 <th rowspan="2" class="col-target">Target</th>
                 <th rowspan="2" class="col-pagu">Pagu<br>Anggaran</th>
-                <th colspan="2">Realisasi S/D {{ $laporan->bulan }}</th>
+                <th colspan="2">Realisasi S/D {{ strtoupper($laporan->bulan) }}</th>
                 <th colspan="2">% Capaian</th>
                 <th rowspan="2" class="col-sisa">Sisa<br>Anggaran</th>
             </tr>
@@ -90,7 +122,7 @@
             $sisaProg = $paguProg - $realisasiProg;
             @endphp
 
-            <tr>
+            <tr style="font-weight: bold;">
                 <td class="text-center align-middle">{{ $prog->kode }}</td>
                 <td class="align-middle"><span>{{ strtoupper($prog->nama ?? $prog->nama_program) }}</span></td>
                 <td class="text-center align-middle">-</td><td class="text-center align-middle">-</td><td class="text-center align-middle">-</td>
@@ -113,7 +145,7 @@
             $sisaKeg = $paguKeg - $realisasiKeg;
             @endphp
 
-            <tr>
+            <tr style="font-weight: bold;">
                 <td class="text-center align-middle">{{ $keg->kode }}</td>
                 <td class="align-middle indent-keg"><span>{{ $keg->nama ?? $keg->nama_kegiatan }}</span></td>
                 <td class="text-center align-middle">-</td><td class="text-center align-middle">-</td><td class="text-center align-middle">-</td>
@@ -154,7 +186,7 @@
             @endforeach
             @endforeach
             @empty
-            <tr><td colspan="11" class="text-center" style="padding: 20px;">Belum ada data.</td></tr>
+            <tr><td colspan="11" class="text-center" style="padding: 20px;">Belum ada data untuk Jabatan / Tahun ini.</td></tr>
             @endforelse
         </tbody>
 
@@ -181,12 +213,12 @@
         <tfoot>
             <tr style="text-transform: uppercase;">
                 <td colspan="5" class="text-center align-middle" style="font-size: 10px; padding: 6px; font-weight: bold;">TOTAL KESELURUHAN</td>
-                <td class="text-right align-middle" style="font-size: 10px;">{{ number_format($sumPagu, 0, ',', '.') }}</td>
-                <td class="text-right align-middle" style="font-size: 10px;">{{ number_format($sumRealisasi, 0, ',', '.') }}</td>
-                <td class="text-center align-middle">-</td>
-                <td class="text-center align-middle" style="font-size: 10px;">{{ $formatPersen($avgPersenKeu) }}</td>
-                <td class="text-center align-middle" style="font-size: 10px;">{{ $formatPersen($avgPersenFisik) }}</td>
-                <td class="text-right align-middle" style="font-size: 10px;">{{ number_format($sumSisa, 0, ',', '.') }}</td>
+                <td class="text-right align-middle" style="font-size: 10px; font-weight: bold;">{{ number_format($sumPagu, 0, ',', '.') }}</td>
+                <td class="text-right align-middle" style="font-size: 10px; font-weight: bold;">{{ number_format($sumRealisasi, 0, ',', '.') }}</td>
+                <td class="text-center align-middle font-weight-bold">-</td>
+                <td class="text-center align-middle" style="font-size: 10px; font-weight: bold;">{{ $formatPersen($avgPersenKeu) }}</td>
+                <td class="text-center align-middle" style="font-size: 10px; font-weight: bold;">{{ $formatPersen($avgPersenFisik) }}</td>
+                <td class="text-right align-middle" style="font-size: 10px; font-weight: bold;">{{ number_format($sumSisa, 0, ',', '.') }}</td>
             </tr>
         </tfoot>
     </table>
@@ -216,7 +248,7 @@
         // 4. Jika Jabatan Ditemukan, Cari Pegawainya
         if ($ttdJabatanModel) {
             $ttdJabatan = $ttdJabatanModel->nama;
-            $ttdInstansi = 'Provinsi Kalimantan Selatan'; // Default Instansi
+            $ttdInstansi = 'PROVINSI KALIMANTAN SELATAN'; 
 
             // Cari Pegawai yang menjabat
             $pegawai = \App\Models\Pegawai::where('jabatan_id', $ttdJabatanModel->id)->first();
@@ -228,26 +260,40 @@
                 $ttdNama = '.....................................';
                 $ttdNip = '.....................................';
             }
+        } else {
+            // JIKA FULL SKPD (TIDAK ADA JABATAN YANG DIPILIH), MAKA YANG TTD ADALAH KEPALA DINAS
+            $ttdJabatan = 'KEPALA DINAS';
+            $ttdInstansi = 'PROVINSI KALIMANTAN SELATAN';
+            
+            $kadis = \App\Models\Jabatan::whereNull('parent_id')->first();
+            if($kadis) {
+                $pegawai = \App\Models\Pegawai::where('jabatan_id', $kadis->id)->first();
+                if($pegawai) {
+                    $ttdNama = $pegawai->nama;
+                    $ttdNip = $pegawai->nip;
+                } else {
+                    $ttdNama = '.....................................';
+                    $ttdNip = '.....................................';
+                }
+            }
         }
     @endphp
 
     <br><br>
-    {{-- TAMPILKAN TANDA TANGAN HANYA JIKA ADA DATA PEJABAT --}}
-    @if($ttdJabatanModel)
+    
     <table width="100%" style="page-break-inside: avoid; border: none;">
         <tr>
             <td width="60%" style="border: none;"></td>
             <td width="40%" class="text-center" style="font-size: 11px; border: none;">
-                Banjarmasin, ........................ {{ $laporan->bulan }} {{ $laporan->tahun }}<br>
-                {{ $ttdJabatan }}<br>
-                {{ $ttdInstansi }}
+                Banjarmasin, ........................ {{ $laporan->tahun }}<br>
+                <span style="font-weight: bold; text-transform: uppercase;">{{ $ttdJabatan }}</span><br>
+                {{ strtoupper($ttdInstansi) }}
                 <br><br><br><br><br>
-                <u>{{ $ttdNama }}</u><br>
+                <u style="font-weight: bold;">{{ $ttdNama }}</u><br>
                 NIP. {{ $ttdNip }}
             </td>
         </tr>
     </table>
-    @endif
 
 </body>
 </html>
