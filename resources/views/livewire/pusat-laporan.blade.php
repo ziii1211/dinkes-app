@@ -453,10 +453,10 @@
     </div>
     @endif
 
-    {{-- MODAL TOP PERFORMER (KEMBALI DITAMBAHKAN DENGAN RUTE BARU) --}}
+    {{-- MODAL TOP PERFORMER (DIPERBARUI) --}}
     @if($showTopPerformerModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-xl overflow-hidden flex flex-col">
             <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 shrink-0">
                 <div class="flex items-center gap-3">
                     <div class="p-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-lg">
@@ -481,7 +481,7 @@
                         <option value="2029">2029</option>
                     </select>
                 </div>
-                <div class="mb-2">
+                <div class="mb-4">
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Filter Evaluasi Pada Jabatan</label>
                     <select wire:model.live="topJabatan" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-yellow-500 outline-none">
                         <option value="">-- Semua Jabatan --</option>
@@ -490,12 +490,28 @@
                         @endforeach
                     </select>
                 </div>
+
+                {{-- PREVIEW TOP PERFORMER (Alasan dan Jabatan) --}}
+                <div class="mt-4 p-4 rounded-xl border {{ $topPerformerName ? 'bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800' : 'bg-red-50 border-red-200 dark:bg-red-900/20 dark:border-red-800' }}">
+                    @if($topPerformerName)
+                        <h4 class="text-lg font-bold text-green-800 dark:text-green-400 mb-2">🎉 Pemenang: {{ $topPerformerName }}</h4>
+                        <p class="text-sm text-green-700 dark:text-green-300">
+                            <strong>Capaian Kinerja:</strong> {{ $topPerformerScore }}% <br><br>
+                            <strong>Alasan:</strong> {{ $alasanTopPerformer }}
+                        </p>
+                    @else
+                        <h4 class="text-lg font-bold text-red-800 dark:text-red-400 mb-2">Belum Ada Pemenang (Top Performer)</h4>
+                        <p class="text-sm text-red-700 dark:text-red-300">
+                            Saat ini belum ada kegiatan pada filter ini yang mencatatkan realisasi di atas 0%. Silakan update capaian kinerja terlebih dahulu.
+                        </p>
+                    @endif
+                </div>
             </div>
 
             <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 flex justify-end gap-3">
                 <button wire:click="closeTopPerformerModal" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">Batal</button>
-                @if($topJabatan != '')
-                    <a href="{{ route('top.performer.print') }}?tahun={{ $topTahun }}&jabatan_id={{ $topJabatan }}" target="_blank" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+                @if($topPerformerName)
+                    <a href="{{ route('top.performer.print') }}?tahun={{ $topTahun }}&jabatan_id={{ $topJabatan }}&alasan={{ urlencode($alasanTopPerformer) }}" target="_blank" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
                         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                         Cetak Laporan
                     </a>

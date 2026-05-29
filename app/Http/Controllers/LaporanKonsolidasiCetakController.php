@@ -112,98 +112,19 @@ class LaporanKonsolidasiCetakController extends Controller
         return $pdf->stream($fileName);
     }
 
-    // FUNGSI BARU: CETAK TOP PERFORMER
+    // FUNGSI BARU: CETAK TOP PERFORMER (SINKRON DENGAN LIVEWIRE & DINAMIS KADIS)
     public function cetakTopPerformer(Request $request)
     {
-        $tahun = $request->query('tahun');
+        $tahun = $request->query('tahun', date('Y'));
         $jabatanId = $request->query('jabatan_id');
+        $alasan = $request->query('alasan'); 
 
-        // Cari laporan konsolidasi terakhir di tahun tersebut untuk base data
-        $laporan = LaporanKonsolidasi::where('tahun', $tahun)->orderBy('id', 'desc')->first();
-
-        // JIKA DATA LAPORAN BELUM ADA, TAMPILKAN PESAN ERROR YANG RAPI (BUKAN 404 DEFAULT)
-        if (!$laporan) {
-            return response("<div style='text-align:center; padding:50px; font-family:sans-serif;'>
-                <h2 style='color:#e74c3c;'>⚠️ Data Laporan Belum Tersedia</h2>
-                <p>Data E-Monev untuk tahun <b>{$tahun}</b> belum tersedia di sistem database.</p>
-                <p>Silakan buat atau isi realisasi Laporan Konsolidasi untuk tahun tersebut terlebih dahulu agar sistem bisa menghitung Top Performer.</p>
-                <br>
-                <a href='javascript:window.close();' style='padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;'>Tutup Halaman</a>
-            </div>", 404);
-        }
-
-        $id = $laporan->id;
-
-        // Logic Filter Jabatan
         $selectedJabatan = null;
-        $isKepalaDinas = false;
-
         if ($jabatanId) {
             $selectedJabatan = Jabatan::find($jabatanId);
-            if ($selectedJabatan && is_null($selectedJabatan->parent_id)) {
-                $isKepalaDinas = true;
-            }
         }
 
-        // Ambil data
-        $detailsQuery = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan'])
-            ->where('laporan_konsolidasi_id', $id);
-
-        if ($selectedJabatan && !$isKepalaDinas) {
-            $detailsQuery->whereHas('subKegiatan', function ($q) use ($jabatanId) {
-                $q->where('jabatan_id', $jabatanId);
-            });
-        }
-
-        $detailsRaw = $detailsQuery->get();
-        $validKegiatanIds = $detailsRaw->pluck('subKegiatan.kegiatan_id')->unique()->filter();
-        $anggaranRaw = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)->get();
-        $kegiatans = Kegiatan::whereIn('id', $validKegiatanIds)->get();
-
-        $highestScore = 0;
-        $topPerformer = null;
-
-        // Proses Seleksi Top Performer
-        foreach ($kegiatans as $keg) {
-            $kegAnggaran = $anggaranRaw->where('kegiatan_id', $keg->id)->first();
-            
-            if ($kegAnggaran) {
-                $paguKeg = $kegAnggaran->pagu_anggaran ?? 0;
-                $realisasiKeg = $kegAnggaran->pagu_realisasi ?? 0;
-
-                // Hitung Persentase
-                $persenKeu = ($paguKeg > 0) ? ($realisasiKeg / $paguKeg * 100) : 0;
-                $persenFisik = $kegAnggaran->realisasi_fisik ?? 0;
-
-                // Rata-rata Skor Capaian
-                $score = ($persenKeu + $persenFisik) / 2;
-
-                if ($score > $highestScore && $score > 0) {
-                    $highestScore = $score;
-                    $namaKegiatan = strtoupper($keg->nama ?? $keg->nama_kegiatan);
-                    
-                    // Kalimat Alasan Otomatis
-                    $alasan = "Berdasarkan hasil evaluasi sistem perencanaan dan pelaporan secara objektif, kegiatan <b>\"{$namaKegiatan}\"</b> "
-                            . "berhasil meraih predikat sebagai <b>Top Performer</b>.<br><br> Pencapaian ini didasarkan pada perolehan performa kumulatif tertinggi "
-                            . "dengan rincian metrik:<br>"
-                            . "1. <b>Realisasi Fisik mencapai " . number_format($persenFisik, 2, ',', '.') . "%</b><br>"
-                            . "2. <b>Efisiensi Serapan Anggaran (Keuangan) sebesar " . number_format($persenKeu, 2, ',', '.') . "%</b><br><br>"
-                            . "Kinerja luar biasa ini menunjukkan optimalisasi penggunaan anggaran serta komitmen pada capaian target kinerja. "
-                            . "Pencapaian ini diharapkan dapat menjadi tolak ukur dan motivasi bagi unit kerja lainnya di lingkungan Dinas Kesehatan.";
-
-                    $topPerformer = [
-                        'nama_kegiatan' => $namaKegiatan,
-                        'persen_fisik' => number_format($persenFisik, 2, ',', '.'),
-                        'persen_keu' => number_format($persenKeu, 2, ',', '.'),
-                        'score' => number_format($score, 2, ',', '.'),
-                        'alasan' => $alasan
-                    ];
-                }
-            }
-        }
-
-        // JIKA DATA ADA TAPI ANGKA REALISASINYA MASIH 0 SEMUA, TAMPILKAN PESAN INI
-        if (!$topPerformer) {
+        if (!$alasan) {
             return response("<div style='text-align:center; padding:50px; font-family:sans-serif;'>
                 <h2 style='color:#f39c12;'>⚠️ Belum Ada Pemenang (Top Performer)</h2>
                 <p>Saat ini belum ada kegiatan pada jabatan ini yang mencatatkan realisasi di atas 0%.</p>
@@ -213,14 +134,32 @@ class LaporanKonsolidasiCetakController extends Controller
             </div>", 404);
         }
 
-        // Generate PDF Khusus
+        // 1. AMBIL DATA KEPALA DINAS SECARA DINAMIS DARI STRUKTUR ORGANISASI
+        // Mencari jabatan tertinggi yang parent_id nya null (Kepala Dinas) beserta data pegawainya
+        $kadisJabatan = Jabatan::whereNull('parent_id')->with('pegawai')->first();
+        $namaKadis = $kadisJabatan?->pegawai?->nama ?? 'Nama Kepala Dinas Belum Diisi';
+        $nipKadis = $kadisJabatan?->pegawai?->nip ?? '-';
+        
+        // Cek juga pangkat/golongan jika ada di table pegawai (misal pembina utama muda)
+        $pangkatKadis = $kadisJabatan?->pegawai?->pangkat ?? 'Pembina Utama Madya'; 
+
+        // 2. FORMAT TANGGAL KE BAHASA INDONESIA (MEI, JUNI, DLL)
+        \Carbon\Carbon::setLocale('id');
+        $tanggalCetak = \Carbon\Carbon::now()->translatedFormat('d F Y');
+
+        // 3. Eksekusi Cetak PDF dengan mempassing data Kadis asli
         $pdf = Pdf::loadView('cetak.top-performer-pdf', [
             'tahun' => $tahun,
             'selectedJabatan' => $selectedJabatan,
-            'topPerformer' => $topPerformer
+            'alasan' => urldecode($alasan),
+            'namaKadis' => $namaKadis,
+            'nipKadis' => $nipKadis,
+            'pangkatKadis' => $pangkatKadis,
+            'tanggalCetak' => $tanggalCetak
         ])->setPaper('a4', 'portrait');
 
         $judulFile = $selectedJabatan ? 'Sertifikat_Top_Performer_' . str_replace(' ', '_', $selectedJabatan->nama) : 'Laporan_Top_Performer';
+        
         return $pdf->stream($judulFile . '_' . $tahun . '.pdf');
     }
 }

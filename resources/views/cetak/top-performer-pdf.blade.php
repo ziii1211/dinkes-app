@@ -2,126 +2,252 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Laporan Top Performer</title>
+    <title>Sertifikat Top Performer</title>
     <style>
-        body { font-family: 'Times New Roman', Times, serif; font-size: 11pt; color: #000; line-height: 1.5; padding: 20px;}
-        .table-kop { width: 100%; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 30px; border-collapse: collapse; }
-        .table-kop td { border: none; vertical-align: middle; }
-        .logo-img { width: 80px; height: auto; }
-        .header-title { font-size: 14pt; font-weight: bold; text-align: center; text-transform: uppercase; line-height: 1.3; }
-        
-        .content-title { text-align: center; font-size: 16pt; font-weight: bold; margin-bottom: 5px; text-decoration: underline;}
-        .subtitle { text-align: center; font-size: 12pt; margin-bottom: 40px; font-weight: bold;}
-        
-        .box-performer { border: 2px dashed #000; padding: 25px; margin-bottom: 30px; text-align: center; background-color: #fdfdfd;}
-        .kegiatan-name { font-size: 15pt; font-weight: bold; color: #1a1a1a; text-transform: uppercase; margin: 20px 0;}
-        .label-top { font-size: 14pt; font-weight: bold; letter-spacing: 2px;}
-        
-        .stats-table { width: 85%; margin: 0 auto; border-collapse: collapse; }
-        .stats-table td { padding: 10px; border: 1px solid #ccc; font-size: 11pt;}
-        .stats-table td:first-child { font-weight: bold; width: 60%; background-color: #f5f5f5;}
-        .stats-table td:last-child { text-align: right; font-weight: bold; color: #000; width: 40%; font-size: 12pt;}
-        
-        .reason-box { margin-top: 20px; text-align: justify; padding: 20px; border-left: 5px solid #000; background-color: #f9f9f9;}
-        .reason-title { font-weight: bold; margin-bottom: 15px; font-size: 12pt; text-transform: uppercase;}
+        @page {
+            size: a4 portrait;
+            margin: 0;
+        }
+        body {
+            font-family: 'Georgia', 'Times New Roman', Times, serif;
+            color: #1e293b;
+            margin: 0;
+            padding: 0;
+            background-color: #ffffff;
+            background-image: radial-gradient(#f1f5f9 1px, transparent 1px);
+            background-size: 20px 20px;
+        }
+        /* Bingkai Sertifikat Mewah */
+        .certificate-border {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 6px double #b45309; /* Warna Gold Tua */
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        .inner-border {
+            border: 1px solid #cbd5e1;
+            height: 100%;
+            padding: 30px;
+            box-sizing: border-box;
+            position: relative;
+        }
+        /* Ornamen Sudut Klasik */
+        .corner {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #b45309;
+        }
+        .top-left { top: -5px; left: -5px; border-right: none; border-bottom: none; }
+        .top-right { top: -5px; right: -5px; border-left: none; border-bottom: none; }
+        .bottom-left { bottom: -5px; left: -5px; border-right: none; border-top: none; }
+        .bottom-right { bottom: -5px; right: -5px; border-left: none; border-top: none; }
+
+        /* Header Instansi */
+        .kop-instansi {
+            text-align: center;
+            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin-bottom: 40px;
+        }
+        .kop-instansi h4 {
+            margin: 0;
+            font-size: 14px;
+            letter-spacing: 2px;
+            color: #475569;
+            text-transform: uppercase;
+        }
+        .kop-instansi h2 {
+            margin: 5px 0 0 0;
+            font-size: 24px;
+            color: #1e3a8a; /* Navy Blue */
+            font-weight: bold;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .line-separator {
+            margin: 15px auto;
+            width: 60%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #b45309, transparent);
+        }
+
+        /* Judul Dokumen Utama */
+        .main-title {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .main-title h1 {
+            font-size: 32px;
+            margin: 0;
+            color: #b45309;
+            font-weight: normal;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+        }
+        .main-title p {
+            margin: 8px 0 0 0;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            color: #64748b;
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }
+
+        /* Deskripsi Penerima */
+        .award-to {
+            text-align: center;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            color: #475569;
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        .recipient-name {
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .recipient-name h2 {
+            font-size: 28px;
+            color: #1e3a8a;
+            margin: 0;
+            display: inline-block;
+            border-bottom: 1px dashed #cbd5e1;
+            padding-bottom: 5px;
+        }
+
+        /* Nilai / Skor Box */
+        .score-badge {
+            text-align: center;
+            margin: 20px auto;
+        }
+        .score-badge span {
+            font-family: Arial, sans-serif;
+            background-color: #1e3a8a;
+            color: #ffffff;
+            padding: 8px 25px;
+            font-size: 14px;
+            font-weight: bold;
+            border-radius: 20px;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Rincian Alasan Penetapan (Revisian Utama Dospem) */
+        .reason-container {
+            margin: 30px auto;
+            width: 85%;
+            font-family: 'Georgia', serif;
+            font-size: 15px;
+            line-height: 1.7;
+            text-align: center;
+            color: #334155;
+            background-color: #fff7ed; /* Soft Orange Tint */
+            border: 1px solid #ffedd5;
+            padding: 20px 25px;
+            border-radius: 8px;
+        }
+        .reason-container strong {
+            color: #b45309;
+            display: block;
+            margin-bottom: 10px;
+            font-family: Arial, sans-serif;
+            font-size: 12px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+
+        /* Footer & Tanda Tangan */
+        .footer-table {
+            width: 100%;
+            margin-top: 60px;
+            font-family: Arial, sans-serif;
+            font-size: 13px;
+            color: #334155;
+        }
+        .signature-title {
+            margin-bottom: 65px;
+        }
+        .signature-line {
+            width: 200px;
+            border-bottom: 1px solid #334155;
+            margin-top: 5px;
+            display: inline-block;
+        }
     </style>
 </head>
 <body>
-    {{-- KOP SURAT BERLOGO --}}
-    <table class="table-kop">
-        <tr>
-            <td style="width: 15%; text-align: center;">
-                <img src="{{ public_path('logo pemprov.png') }}" class="logo-img" alt="Logo Pemprov">
-            </td>
-            <td style="width: 85%;">
-                <div class="header-title">
-                    PEMERINTAH PROVINSI KALIMANTAN SELATAN<br>
-                    DINAS KESEHATAN<br>
-                </div>
-                <div style="text-align: center; font-size: 10pt; font-weight: normal; margin-top: 5px;">
-                    Jalan Belitung Darat No. 118 Banjarmasin 70116<br>
-                    Telepon (0511) 3354387 - 3355661, Email: dinkes@kalselprov.go.id
-                </div>
-            </td>
-        </tr>
-    </table>
 
-    <div class="content-title">LAPORAN TOP PERFORMER KINERJA</div>
-    <div class="subtitle">TAHUN ANGGARAN {{ $tahun }}</div>
+<div class="certificate-border">
+    <div class="inner-border">
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
 
-    <div style="text-align: justify; margin-bottom: 25px; text-indent: 40px;">
-        Berdasarkan hasil rekapitulasi evaluasi dan pengukuran kinerja melalui sistem E-Monev Dinas Kesehatan Provinsi Kalimantan Selatan, 
-        berikut ini merupakan hasil penetapan capaian predikat kinerja tertinggi (Top Performer) untuk unit kerja 
-        <b>{{ $selectedJabatan ? $selectedJabatan->nama : 'DI LINGKUNGAN DINAS KESEHATAN (KESELURUHAN)' }}</b> pada Tahun Anggaran {{ $tahun }}.
-    </div>
+        <div class="kop-instansi">
+            <h4>Pemerintah Provinsi Kalimantan Selatan</h4>
+            <h2>Dinas Kesehatan</h2>
+            <div class="line-separator"></div>
+        </div>
 
-    <div class="box-performer">
-        <div class="label-top">★ PREDIKAT TOP PERFORMER ★</div>
-        <div class="kegiatan-name">"{{ $topPerformer['nama_kegiatan'] }}"</div>
+        <div class="main-title">
+            <h1>Piagam Penghargaan</h1>
+            <p>Top Performer Kinerja</p>
+        </div>
+
+        <div class="award-to">Diberikan Kepada Jabatan:</div>
         
-        <table class="stats-table">
+        <div class="recipient-name">
+            <h2>{{ $selectedJabatan ? $selectedJabatan->nama : 'Sekretaris' }}</h2>
+        </div>
+
+        <div class="score-badge">
+            <span>PERIODE EVALUASI TAHUN {{ $tahun ?? request('tahun', date('Y')) }}</span>
+        </div>
+
+        <div class="reason-container">
+            <strong>Alasan & Pertimbangan Hukum Penetapan:</strong>
+            @if(isset($alasan) && $alasan != '')
+                "{!! $alasan !!}"
+            @elseif(request('alasan'))
+                "{!! urldecode(request('alasan')) !!}"
+            @else
+                "Ditetapkan sebagai Top Performer berdasarkan rekapitulasi penilaian objektif sistem SAKIP, mencatatkan rata-rata realisasi capaian program kerja tertinggi di atas rata-rata unit kerja lainnya pada periode berjalan."
+            @endif
+        </div>
+
+        <table class="footer-table" border="0" cellspacing="0" cellpadding="0">
             <tr>
-                <td>Realisasi Pencapaian Fisik</td>
-                <td>{{ $topPerformer['persen_fisik'] }} %</td>
-            </tr>
-            <tr>
-                <td>Efisiensi Serapan Anggaran (Keuangan)</td>
-                <td>{{ $topPerformer['persen_keu'] }} %</td>
-            </tr>
-            <tr>
-                <td style="border-top: 2px solid #000; background-color: #fff;">Skor Kinerja Komposit (Rata-Rata)</td>
-                <td style="border-top: 2px solid #000; font-size: 14pt;">{{ $topPerformer['score'] }}</td>
+                <td style="width: 55%; text-align: center; vertical-align: bottom; font-style: italic; color: #64748b; font-size: 11px; padding-bottom: 5px;">
+                    
+                    <div style="margin-bottom: 8px;">
+                        <img src="data:image/svg+xml;base64,{{ base64_encode(QrCode::size(100)->generate('Sertifikat Sah: ' . $namaKadis . ' - Tahun ' . $tahun)) }}" alt="QR Code">
+                    </div>
+
+                    *Dokumen ini diterbitkan sah secara digital<br>
+                    serta terverifikasi oleh Sistem Aplikasi SAKIP Terpadu.
+                </td>
+                
+                <td style="text-align: center; width: 45%;">
+                    <div class="signature-title">
+                        Banjarmasin, {{ $tanggalCetak }}<br>
+                        <strong>Kepala Dinas Kesehatan</strong>
+                    </div>
+                    <div>
+                        <span class="signature-line"></span><br>
+                        <span style="font-weight: bold; text-transform: uppercase; display: block; margin-top: 5px;">{{ $namaKadis }}</span>
+                        <span style="font-size: 12px; color: #64748b;">{{ $pangkatKadis }} / NIP. {{ $nipKadis }}</span>
+                    </div>
+                </td>
             </tr>
         </table>
+
     </div>
+</div>
 
-    <div class="reason-box">
-        <div class="reason-title">Alasan dan Justifikasi Penilaian:</div>
-        <div style="line-height: 1.6; font-size: 11pt;">
-            {!! $topPerformer['alasan'] !!}
-        </div>
-    </div>
-
-    <br><br>
-    
-    {{-- TANDA TANGAN DINAMIS --}}
-    @php
-        $ttdJabatan = '';
-        $ttdNama = '.....................................';
-        $ttdNip = '.....................................';
-
-        if ($selectedJabatan) {
-            $ttdJabatan = $selectedJabatan->nama;
-            $pegawai = \App\Models\Pegawai::where('jabatan_id', $selectedJabatan->id)->first();
-            if ($pegawai) {
-                $ttdNama = $pegawai->nama;
-                $ttdNip = $pegawai->nip;
-            }
-        } else {
-            $ttdJabatan = 'KEPALA DINAS KESEHATAN';
-            $kadis = \App\Models\Jabatan::whereNull('parent_id')->first();
-            if($kadis) {
-                $pegawai = \App\Models\Pegawai::where('jabatan_id', $kadis->id)->first();
-                if($pegawai) {
-                    $ttdNama = $pegawai->nama;
-                    $ttdNip = $pegawai->nip;
-                }
-            }
-        }
-    @endphp
-
-    <table width="100%" style="page-break-inside: avoid; border: none; margin-top: 40px;">
-        <tr>
-            <td width="50%" style="border: none;"></td>
-            <td width="50%" class="text-center" style="font-size: 11pt; border: none; text-align: center;">
-                Banjarmasin, ........................ {{ $tahun }}<br>
-                <span style="font-weight: bold; text-transform: uppercase;">{{ $ttdJabatan }}</span><br>
-                PROVINSI KALIMANTAN SELATAN
-                <br><br><br><br><br>
-                <u style="font-weight: bold;">{{ $ttdNama }}</u><br>
-                NIP. {{ $ttdNip }}
-            </td>
-        </tr>
-    </table>
 </body>
 </html>
