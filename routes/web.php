@@ -342,16 +342,21 @@ Route::middleware('auth')->group(function () {
     });
 
     Route::get('/laporan-konsolidasi/cetak/{id}', [LaporanKonsolidasiCetakController::class, 'cetak'])
-        ->name('laporan-konsolidasi.cetak')
-        ->middleware('auth');
+        ->name('laporan-konsolidasi.cetak');
+
+
+    // ========================================================
+    // RUTE BARU: CETAK TOP PERFORMER (PINDAHKAN KE SINI AGAR TIDAK 404)
+    // ========================================================
+    Route::get('/cetak-top-performer', [LaporanKonsolidasiCetakController::class, 'cetakTopPerformer'])
+        ->name('top.performer.print');
+
 
     // --- PUSAT LAPORAN ---
     Route::prefix('pusat-laporan')->name('laporan.')->group(function () {
         Route::get('/', \App\Livewire\PusatLaporan::class)->name('index'); 
 
-        // ========================================================
-        // RUTE BARU: CETAK PDF DATA PEGAWAI
-        // ========================================================
+        // RUTE CETAK PDF DATA PEGAWAI
         Route::get('/cetak-pegawai', function (\Illuminate\Http\Request $request) {
             $jabatanId = $request->query('jabatan_id');
             
@@ -378,7 +383,6 @@ Route::middleware('auth')->group(function () {
 
             $namaFile = $filterJabatan ? 'Data_Pegawai_' . str_replace(' ', '_', $filterJabatan->nama) : 'Data_Pegawai_Full_SKPD';
             return $pdf->download($namaFile . '.pdf');
-        })->name('pegawai.print'); // <-- PERBAIKAN DI SINI, HILANGKAN KATA "laporan."
-        // ========================================================
+        })->name('pegawai.print');
     });
 });

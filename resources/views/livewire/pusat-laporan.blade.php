@@ -124,6 +124,22 @@
                 <span>Pilih Parameter Pegawai</span>
             </button>
         </div>
+
+        {{-- KARTU BARU: TOP PERFORMER --}}
+        <div class="group relative bg-white dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-yellow-500/10 hover:-translate-y-2 border border-slate-200/60 dark:border-slate-700/60 overflow-hidden flex flex-col">
+            <div class="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-transparent dark:from-yellow-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div class="relative z-10 flex-grow">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-yellow-400 to-yellow-600 text-white flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg shadow-yellow-500/30">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Top Performer</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">Akses cepat melihat dan mencetak sertifikat data program/kegiatan dengan performa terbaik.</p>
+            </div>
+            <button wire:click="openTopPerformerModal" class="relative z-10 mt-auto w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-yellow-700 dark:text-yellow-300 bg-yellow-50 dark:bg-yellow-900/30 hover:bg-yellow-500 hover:text-white dark:hover:bg-yellow-500 dark:hover:text-white rounded-xl transition-all duration-300 group/btn">
+                <span>Pilih Parameter Cetak</span>
+            </button>
+        </div>
+
     </div>
 
     {{-- MODAL PK, RENCANA AKSI, BULANAN, TAHUNAN, EMONEV DISINI --}}
@@ -398,9 +414,7 @@
     </div>
     @endif
 
-    {{-- ========================================================= --}}
-    {{-- MODAL POP-UP PILIH DATA PEGAWAI (BARU) --}}
-    {{-- ========================================================= --}}
+    {{-- MODAL POP-UP PILIH DATA PEGAWAI --}}
     @if($showPegawaiModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fade-in">
         <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
@@ -434,6 +448,63 @@
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
                     Cetak PDF
                 </a>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- MODAL TOP PERFORMER (KEMBALI DITAMBAHKAN DENGAN RUTE BARU) --}}
+    @if($showTopPerformerModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-slate-100">Parameter Cetak Top Performer</h3>
+                </div>
+                <button wire:click="closeTopPerformerModal" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 bg-slate-50/50 dark:bg-slate-800/50">
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Tahun</label>
+                    <select wire:model.live="topTahun" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-yellow-500 outline-none">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                        <option value="2029">2029</option>
+                    </select>
+                </div>
+                <div class="mb-2">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Filter Evaluasi Pada Jabatan</label>
+                    <select wire:model.live="topJabatan" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-yellow-500 outline-none">
+                        <option value="">-- Semua Jabatan --</option>
+                        @foreach($listJabatan as $jab)
+                            <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 flex justify-end gap-3">
+                <button wire:click="closeTopPerformerModal" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">Batal</button>
+                @if($topJabatan != '')
+                    <a href="{{ route('top.performer.print') }}?tahun={{ $topTahun }}&jabatan_id={{ $topJabatan }}" target="_blank" class="px-6 py-2.5 bg-yellow-500 hover:bg-yellow-600 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Cetak Laporan
+                    </a>
+                @else
+                    <button disabled class="px-6 py-2.5 bg-gray-300 dark:bg-slate-600 text-gray-500 dark:text-gray-400 rounded-xl font-bold cursor-not-allowed flex items-center justify-center gap-2">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                        Cetak Laporan
+                    </button>
+                @endif
             </div>
         </div>
     </div>

@@ -223,6 +223,23 @@
         </tfoot>
     </table>
 
+    {{-- HIGHLIGHT TOP PERFORMER (DARI DOSBING) --}}
+    @if(isset($topPerformer))
+    <br>
+    <table style="width: 100%; border: 1px solid #000; border-collapse: collapse; margin-top: 10px; page-break-inside: avoid;">
+        <tr>
+            <td style="padding: 10px; background-color: #fdfdfd;">
+                <div style="font-size: 11px; font-weight: bold; margin-bottom: 5px;">
+                    🏆 HIGHLIGHT KINERJA (TOP PERFORMER)
+                </div>
+                <div style="font-size: 10px; text-align: justify; line-height: 1.4;">
+                    {!! $topPerformer['alasan'] !!}
+                </div>
+            </td>
+        </tr>
+    </table>
+    @endif
+
     {{-- TANDA TANGAN DINAMIS --}}
     @php
         // 1. Ambil Variabel Selected Jabatan (Prioritas dari Controller)

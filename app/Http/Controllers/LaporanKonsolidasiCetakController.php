@@ -111,4 +111,102 @@ class LaporanKonsolidasiCetakController extends Controller
 
         return $pdf->stream($fileName);
     }
+
+    // FUNGSI BARU: CETAK TOP PERFORMER
+    public function cetakTopPerformer(Request $request)
+    {
+        $tahun = $request->query('tahun');
+        $jabatanId = $request->query('jabatan_id');
+
+        // Cari laporan konsolidasi terakhir di tahun tersebut untuk base data
+        $laporan = LaporanKonsolidasi::where('tahun', $tahun)->orderBy('id', 'desc')->first();
+
+        if (!$laporan) {
+            return abort(404, "Data E-Monev untuk tahun {$tahun} belum tersedia di sistem. Silakan isi realisasi terlebih dahulu.");
+        }
+
+        $id = $laporan->id;
+
+        // Logic Filter Jabatan
+        $selectedJabatan = null;
+        $isKepalaDinas = false;
+
+        if ($jabatanId) {
+            $selectedJabatan = Jabatan::find($jabatanId);
+            if ($selectedJabatan && is_null($selectedJabatan->parent_id)) {
+                $isKepalaDinas = true;
+            }
+        }
+
+        // Ambil data
+        $detailsQuery = DetailLaporanKonsolidasi::with(['subKegiatan.kegiatan'])
+            ->where('laporan_konsolidasi_id', $id);
+
+        if ($selectedJabatan && !$isKepalaDinas) {
+            $detailsQuery->whereHas('subKegiatan', function ($q) use ($jabatanId) {
+                $q->where('jabatan_id', $jabatanId);
+            });
+        }
+
+        $detailsRaw = $detailsQuery->get();
+        $validKegiatanIds = $detailsRaw->pluck('subKegiatan.kegiatan_id')->unique()->filter();
+        $anggaranRaw = LaporanKonsolidasiAnggaran::where('laporan_konsolidasi_id', $id)->get();
+        $kegiatans = Kegiatan::whereIn('id', $validKegiatanIds)->get();
+
+        $highestScore = 0;
+        $topPerformer = null;
+
+        // Proses Seleksi Top Performer
+        foreach ($kegiatans as $keg) {
+            $kegAnggaran = $anggaranRaw->where('kegiatan_id', $keg->id)->first();
+            
+            if ($kegAnggaran) {
+                $paguKeg = $kegAnggaran->pagu_anggaran ?? 0;
+                $realisasiKeg = $kegAnggaran->pagu_realisasi ?? 0;
+
+                // Hitung Persentase
+                $persenKeu = ($paguKeg > 0) ? ($realisasiKeg / $paguKeg * 100) : 0;
+                $persenFisik = $kegAnggaran->realisasi_fisik ?? 0;
+
+                // Rata-rata Skor Capaian
+                $score = ($persenKeu + $persenFisik) / 2;
+
+                if ($score > $highestScore && $score > 0) {
+                    $highestScore = $score;
+                    $namaKegiatan = strtoupper($keg->nama ?? $keg->nama_kegiatan);
+                    
+                    // Kalimat Alasan Otomatis
+                    $alasan = "Berdasarkan hasil evaluasi sistem perencanaan dan pelaporan secara objektif, kegiatan <b>\"{$namaKegiatan}\"</b> "
+                            . "berhasil meraih predikat sebagai <b>Top Performer</b>.<br><br> Pencapaian ini didasarkan pada perolehan performa kumulatif tertinggi "
+                            . "dengan rincian metrik:<br>"
+                            . "1. <b>Realisasi Fisik mencapai " . number_format($persenFisik, 2, ',', '.') . "%</b><br>"
+                            . "2. <b>Efisiensi Serapan Anggaran (Keuangan) sebesar " . number_format($persenKeu, 2, ',', '.') . "%</b><br><br>"
+                            . "Kinerja luar biasa ini menunjukkan optimalisasi penggunaan anggaran serta komitmen pada capaian target kinerja. "
+                            . "Pencapaian ini diharapkan dapat menjadi tolak ukur dan motivasi bagi unit kerja lainnya di lingkungan Dinas Kesehatan.";
+
+                    $topPerformer = [
+                        'nama_kegiatan' => $namaKegiatan,
+                        'persen_fisik' => number_format($persenFisik, 2, ',', '.'),
+                        'persen_keu' => number_format($persenKeu, 2, ',', '.'),
+                        'score' => number_format($score, 2, ',', '.'),
+                        'alasan' => $alasan
+                    ];
+                }
+            }
+        }
+
+        if (!$topPerformer) {
+            return abort(404, "Belum ada capaian kinerja yang mencukupi untuk dicetak sebagai Top Performer pada parameter ini.");
+        }
+
+        // Generate PDF Khusus
+        $pdf = Pdf::loadView('cetak.top-performer-pdf', [
+            'tahun' => $tahun,
+            'selectedJabatan' => $selectedJabatan,
+            'topPerformer' => $topPerformer
+        ])->setPaper('a4', 'portrait');
+
+        $judulFile = $selectedJabatan ? 'Sertifikat_Top_Performer_' . str_replace(' ', '_', $selectedJabatan->nama) : 'Laporan_Top_Performer';
+        return $pdf->stream($judulFile . '_' . $tahun . '.pdf');
+    }
 }

@@ -15,6 +15,7 @@ class PusatLaporan extends Component
     public $showTahunanModal = false;
     public $showEmonevModal = false;
     public $showPegawaiModal = false; // <-- Modal Pegawai
+    public $showTopPerformerModal = false; // <-- Modal Top Performer (BARU)
     
     public $pkList = [];
     public $bulanTerpilih = 1; 
@@ -24,6 +25,10 @@ class PusatLaporan extends Component
     public $emonevTahun;
     public $emonevJabatan = '';
     public $pegawaiJabatan = ''; // Untuk filter Pegawai
+    
+    // State Data Top Performer (BARU)
+    public $topTahun;
+    public $topJabatan = '';
 
     public function openPkModal() {
         $this->pkList = PerjanjianKinerja::with(['jabatan', 'pegawai'])->orderBy('tahun', 'desc')->get();
@@ -65,6 +70,15 @@ class PusatLaporan extends Component
         $this->showPegawaiModal = true;
     }
     public function closePegawaiModal() { $this->showPegawaiModal = false; }
+
+    // --- MODAL TOP PERFORMER (BARU) ---
+    public function openTopPerformerModal() {
+        $this->listJabatan = Jabatan::orderBy('id', 'asc')->get();
+        $this->topTahun = date('Y');
+        $this->topJabatan = ''; 
+        $this->showTopPerformerModal = true;
+    }
+    public function closeTopPerformerModal() { $this->showTopPerformerModal = false; }
 
     public function render()
     {
