@@ -121,8 +121,15 @@ class LaporanKonsolidasiCetakController extends Controller
         // Cari laporan konsolidasi terakhir di tahun tersebut untuk base data
         $laporan = LaporanKonsolidasi::where('tahun', $tahun)->orderBy('id', 'desc')->first();
 
+        // JIKA DATA LAPORAN BELUM ADA, TAMPILKAN PESAN ERROR YANG RAPI (BUKAN 404 DEFAULT)
         if (!$laporan) {
-            return abort(404, "Data E-Monev untuk tahun {$tahun} belum tersedia di sistem. Silakan isi realisasi terlebih dahulu.");
+            return response("<div style='text-align:center; padding:50px; font-family:sans-serif;'>
+                <h2 style='color:#e74c3c;'>⚠️ Data Laporan Belum Tersedia</h2>
+                <p>Data E-Monev untuk tahun <b>{$tahun}</b> belum tersedia di sistem database.</p>
+                <p>Silakan buat atau isi realisasi Laporan Konsolidasi untuk tahun tersebut terlebih dahulu agar sistem bisa menghitung Top Performer.</p>
+                <br>
+                <a href='javascript:window.close();' style='padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;'>Tutup Halaman</a>
+            </div>", 404);
         }
 
         $id = $laporan->id;
@@ -195,8 +202,15 @@ class LaporanKonsolidasiCetakController extends Controller
             }
         }
 
+        // JIKA DATA ADA TAPI ANGKA REALISASINYA MASIH 0 SEMUA, TAMPILKAN PESAN INI
         if (!$topPerformer) {
-            return abort(404, "Belum ada capaian kinerja yang mencukupi untuk dicetak sebagai Top Performer pada parameter ini.");
+            return response("<div style='text-align:center; padding:50px; font-family:sans-serif;'>
+                <h2 style='color:#f39c12;'>⚠️ Belum Ada Pemenang (Top Performer)</h2>
+                <p>Saat ini belum ada kegiatan pada jabatan ini yang mencatatkan realisasi di atas 0%.</p>
+                <p>Silakan update realisasi capaian kinerja terlebih dahulu.</p>
+                <br>
+                <a href='javascript:window.close();' style='padding:10px 20px; background:#3498db; color:white; text-decoration:none; border-radius:5px;'>Tutup Halaman</a>
+            </div>", 404);
         }
 
         // Generate PDF Khusus
