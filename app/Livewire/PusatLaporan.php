@@ -5,7 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\PerjanjianKinerja;
 use App\Models\Jabatan;
-use Illuminate\Support\Facades\DB; // <-- Tambahan Wajib
+use Illuminate\Support\Facades\DB; 
 
 class PusatLaporan extends Component
 {
@@ -16,7 +16,10 @@ class PusatLaporan extends Component
     public $showTahunanModal = false;
     public $showEmonevModal = false;
     public $showPegawaiModal = false; 
-    public $showTopPerformerModal = false; 
+    public $showTopPerformerModal = false;
+    
+    // --- TAMBAHAN BARU: Modal State Laporan Penilaian Divisi ---
+    public $showPenilaianDivisiModal = false; 
     
     public $pkList = [];
     public $bulanTerpilih = 1; 
@@ -27,12 +30,22 @@ class PusatLaporan extends Component
     public $emonevJabatan = '';
     public $pegawaiJabatan = ''; 
     
-    // State Data Top Performer (BARU)
+    // --- TAMBAHAN BARU: State Data Penilaian Divisi ---
+    public $penilaianTahun;
+    public $penilaianJabatan = '';
+
+    // State Data Top Performer 
     public $topTahun;
     public $topJabatan = '';
     public $topPerformerName = null;
     public $topPerformerScore = 0;
     public $alasanTopPerformer = null;
+
+    public $showKeputusanKadisModal = false;
+    public $keputusanKadisTahun;
+    public $keputusanKadisBulan;
+
+    
 
     public function openPkModal() {
         $this->pkList = PerjanjianKinerja::with(['jabatan', 'pegawai'])->orderBy('tahun', 'desc')->get();
@@ -73,6 +86,54 @@ class PusatLaporan extends Component
         $this->showPegawaiModal = true;
     }
     public function closePegawaiModal() { $this->showPegawaiModal = false; }
+
+    // --- TAMBAHAN BARU: Fungsi Modal Laporan Penilaian Divisi ---
+    public function openPenilaianDivisiModal() {
+        $this->listJabatan = Jabatan::orderBy('id', 'asc')->get();
+        $this->penilaianTahun = date('Y');
+        $this->penilaianJabatan = ''; 
+        $this->showPenilaianDivisiModal = true;
+    }
+    public function closePenilaianDivisiModal() { $this->showPenilaianDivisiModal = false; }
+
+    public function generatePenilaianDivisi() {
+        $this->validate([
+            'penilaianJabatan' => 'required',
+            'penilaianTahun' => 'required'
+        ], [
+            'penilaianJabatan.required' => 'Pilih Divisi/Jabatan terlebih dahulu!',
+            'penilaianTahun.required' => 'Pilih Tahun terlebih dahulu!'
+        ]);
+
+        // Redirect langsung ke halaman cetak PDF
+        return redirect()->route('cetak.penilaian-divisi', [
+            'jabatan_id' => $this->penilaianJabatan, 
+            'tahun' => $this->penilaianTahun
+        ]);
+    }
+
+    // --- TAMBAHAN BARU: Fungsi Modal Keputusan Kadis ---
+    public function openKeputusanKadisModal() {
+        $this->keputusanKadisTahun = date('Y');
+        $this->keputusanKadisBulan = date('n'); // <-- Default ke bulan saat ini (1-12)
+        $this->showKeputusanKadisModal = true;
+    }
+    public function closeKeputusanKadisModal() { $this->showKeputusanKadisModal = false; }
+
+    public function generateKeputusanKadis() {
+        $this->validate([
+            'keputusanKadisTahun' => 'required',
+            'keputusanKadisBulan' => 'required' // <-- Tambahan validasi bulan
+        ], [
+            'keputusanKadisTahun.required' => 'Pilih Tahun terlebih dahulu!',
+            'keputusanKadisBulan.required' => 'Pilih Bulan terlebih dahulu!'
+        ]);
+
+        return redirect()->route('cetak.keputusan-kadis', [
+            'tahun' => $this->keputusanKadisTahun,
+            'bulan' => $this->keputusanKadisBulan // <-- Kirim data bulan ke route
+        ]);
+    }
 
     // --- MODAL TOP PERFORMER ---
     public function openTopPerformerModal() {

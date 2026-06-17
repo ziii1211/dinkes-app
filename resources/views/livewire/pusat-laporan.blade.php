@@ -125,7 +125,6 @@
             </button>
         </div>
 
-        {{-- KARTU BARU: TOP PERFORMER --}}
         <div class="group relative bg-white dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-yellow-500/10 hover:-translate-y-2 border border-slate-200/60 dark:border-slate-700/60 overflow-hidden flex flex-col">
             <div class="absolute inset-0 bg-gradient-to-br from-yellow-50/50 to-transparent dark:from-yellow-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
             <div class="relative z-10 flex-grow">
@@ -140,8 +139,37 @@
             </button>
         </div>
 
-    </div>
+        {{-- KARTU BARU: PENILAIAN DIVISI --}}
+        <div class="group relative bg-white dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-emerald-500/10 hover:-translate-y-2 border border-slate-200/60 dark:border-slate-700/60 overflow-hidden flex flex-col">
+            <div class="absolute inset-0 bg-gradient-to-br from-emerald-50/50 to-transparent dark:from-emerald-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div class="relative z-10 flex-grow">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-400 to-emerald-600 text-white flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg shadow-emerald-500/30">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Penilaian Divisi</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">Cetak laporan evaluasi target, realisasi, dan kendala/tanggapan kinerja per divisi.</p>
+            </div>
+            <button wire:click="openPenilaianDivisiModal" class="relative z-10 mt-auto w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-emerald-700 dark:text-emerald-300 bg-emerald-50 dark:bg-emerald-900/30 hover:bg-emerald-500 hover:text-white dark:hover:bg-emerald-500 dark:hover:text-white rounded-xl transition-all duration-300 group/btn">
+                <span>Pilih Parameter Cetak</span>
+            </button>
+        </div>
 
+        {{-- KARTU BARU: KEPUTUSAN KADIS (DIPINDAHKAN KE DALAM GRID) --}}
+        <div class="group relative bg-white dark:bg-slate-800/80 backdrop-blur-sm rounded-2xl p-6 transition-all duration-500 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.1)] hover:shadow-red-500/10 hover:-translate-y-2 border border-slate-200/60 dark:border-slate-700/60 overflow-hidden flex flex-col">
+            <div class="absolute inset-0 bg-gradient-to-br from-red-50/50 to-transparent dark:from-red-900/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"></div>
+            <div class="relative z-10 flex-grow">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-red-500 to-red-700 text-white flex items-center justify-center mb-6 transition-transform duration-500 group-hover:scale-110 group-hover:rotate-3 shadow-lg shadow-red-500/30">
+                    <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                </div>
+                <h3 class="text-xl font-bold text-slate-800 dark:text-slate-100 mb-2">Keputusan Kadis</h3>
+                <p class="text-sm text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">Cetak ringkasan indikator di bawah target dari seluruh divisi beserta rekomendasi keputusan Kepala Dinas.</p>
+            </div>
+            <button wire:click="openKeputusanKadisModal" class="relative z-10 mt-auto w-full inline-flex items-center justify-center px-4 py-2.5 text-sm font-semibold text-red-700 dark:text-red-300 bg-red-50 dark:bg-red-900/30 hover:bg-red-600 hover:text-white dark:hover:bg-red-600 dark:hover:text-white rounded-xl transition-all duration-300 group/btn">
+                <span>Pilih Parameter Cetak</span>
+            </button>
+        </div>
+
+    </div>
     {{-- MODAL PK, RENCANA AKSI, BULANAN, TAHUNAN, EMONEV DISINI --}}
     
     @if($showPkModal)
@@ -526,4 +554,121 @@
     </div>
     @endif
 
+    {{-- MODAL BARU: PENILAIAN DIVISI --}}
+    @if($showPenilaianDivisiModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-slate-100">Parameter Penilaian Divisi</h3>
+                </div>
+                <button wire:click="closePenilaianDivisiModal" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 bg-slate-50/50 dark:bg-slate-800/50">
+                @if (session()->has('message'))
+                    <div class="mb-4 p-3 bg-green-100 border border-green-200 text-green-700 rounded-xl">
+                        {{ session('message') }}
+                    </div>
+                @endif
+
+                <div class="mb-5">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Tahun Laporan</label>
+                    <select wire:model.live="penilaianTahun" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="2024">2024</option>
+                        <option value="2025">2025</option>
+                        <option value="2026">2026</option>
+                        <option value="2027">2027</option>
+                        <option value="2028">2028</option>
+                        <option value="2029">2029</option>
+                    </select>
+                    @error('penilaianTahun') <span class="text-sm text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+                <div class="mb-2">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Jabatan/Divisi</label>
+                    <select wire:model.live="penilaianJabatan" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <option value="">-- Silakan Pilih Divisi/Jabatan --</option>
+                        @foreach($listJabatan as $jab)
+                            <option value="{{ $jab->id }}">{{ $jab->nama }}</option>
+                        @endforeach
+                    </select>
+                    @error('penilaianJabatan') <span class="text-sm text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+            </div>
+
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 flex justify-end gap-3">
+                <button wire:click="closePenilaianDivisiModal" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">Batal</button>
+                <button wire:click="generatePenilaianDivisi" class="px-6 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Cetak Laporan 
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
+
+    {{-- MODAL BARU: KEPUTUSAN KADIS --}}
+    @if($showKeputusanKadisModal)
+    <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fade-in">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="p-2 bg-red-100 dark:bg-red-900/30 text-red-600 rounded-lg">
+                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                    </div>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-slate-100">Parameter Laporan Keputusan</h3>
+                </div>
+                <button wire:click="closeKeputusanKadisModal" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+            
+            <div class="p-6 bg-slate-50/50 dark:bg-slate-800/50">
+                <div class="mb-5 flex gap-4">
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Bulan</label>
+                        <select wire:model.live="keputusanKadisBulan" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none">
+                            <option value="1">Januari</option>
+                            <option value="2">Februari</option>
+                            <option value="3">Maret</option>
+                            <option value="4">April</option>
+                            <option value="5">Mei</option>
+                            <option value="6">Juni</option>
+                            <option value="7">Juli</option>
+                            <option value="8">Agustus</option>
+                            <option value="9">September</option>
+                            <option value="10">Oktober</option>
+                            <option value="11">November</option>
+                            <option value="12">Desember</option>
+                        </select>
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Tahun</label>
+                        <select wire:model.live="keputusanKadisTahun" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-red-500 outline-none">
+                            <option value="2024">2024</option>
+                            <option value="2025">2025</option>
+                            <option value="2026">2026</option>
+                            <option value="2027">2027</option>
+                            <option value="2028">2028</option>
+                            <option value="2029">2029</option>
+                        </select>
+                    </div>
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400">Sistem akan secara otomatis memfilter seluruh indikator dari semua divisi yang berada di bawah target pada bulan dan tahun yang dipilih, lalu men-*generate* draf keputusan pimpinan.</p>
+            </div>
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 flex justify-end gap-3">
+                <button wire:click="closeKeputusanKadisModal" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">Batal</button>
+                <button wire:click="generateKeputusanKadis" class="px-6 py-2.5 bg-red-600 hover:bg-red-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Cetak Laporan
+                </button>
+            </div>
+        </div>
+    </div>
+    @endif
 </div>

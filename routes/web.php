@@ -344,14 +344,11 @@ Route::middleware('auth')->group(function () {
     Route::get('/laporan-konsolidasi/cetak/{id}', [LaporanKonsolidasiCetakController::class, 'cetak'])
         ->name('laporan-konsolidasi.cetak');
 
-
-    // ========================================================
-    // RUTE BARU: CETAK TOP PERFORMER (PINDAHKAN KE SINI AGAR TIDAK 404)
-    // ========================================================
     Route::get('/cetak-top-performer', [LaporanKonsolidasiCetakController::class, 'cetakTopPerformer'])
         ->name('top.performer.print');
-
-
+    Route::get('/cetak/penilaian-divisi', [\App\Http\Controllers\CetakPenilaianDivisiController::class, 'cetak'])->name('cetak.penilaian-divisi');
+    // Route Cetak Laporan Keputusan Kepala Dinas
+    Route::get('/cetak/keputusan-kadis', [\App\Http\Controllers\CetakKeputusanKadisController::class, 'cetak'])->name('cetak.keputusan-kadis');
     // --- PUSAT LAPORAN ---
     Route::prefix('pusat-laporan')->name('laporan.')->group(function () {
         Route::get('/', \App\Livewire\PusatLaporan::class)->name('index'); 
