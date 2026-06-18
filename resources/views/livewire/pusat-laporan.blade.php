@@ -185,6 +185,7 @@
         </div>
 
     </div>
+
     {{-- MODAL PK, RENCANA AKSI, BULANAN, TAHUNAN, EMONEV DISINI --}}
     
     @if($showPkModal)
@@ -285,68 +286,64 @@
     </div>
     @endif
 
+    {{-- MODAL DIPERBARUI: KINERJA BULANAN (Format seperti Kadis) --}}
     @if($showBulananModal)
     <div class="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm p-4 animate-fade-in">
-        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-3xl overflow-hidden flex flex-col max-h-[90vh]">
-            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex flex-col sm:flex-row justify-between items-start sm:items-center bg-white dark:bg-slate-800 shrink-0 gap-4">
+        <div class="bg-white dark:bg-slate-800 rounded-2xl shadow-2xl w-full max-w-lg overflow-hidden flex flex-col">
+            <div class="px-6 py-4 border-b border-gray-100 dark:border-slate-700 flex justify-between items-center bg-white dark:bg-slate-800 shrink-0">
                 <div class="flex items-center gap-3">
-                    <div class="p-2 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 rounded-lg hidden sm:block">
+                    <div class="p-2 bg-cyan-100 dark:bg-cyan-900/30 text-cyan-600 rounded-lg">
                         <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z"></path></svg>
                     </div>
-                    <h3 class="text-xl font-bold text-gray-800 dark:text-slate-100">Pilih Laporan Bulanan</h3>
+                    <h3 class="text-xl font-bold text-gray-800 dark:text-slate-100">Parameter Kinerja Bulanan</h3>
                 </div>
-                
-                <div class="flex items-center gap-2 w-full sm:w-auto">
-                    <span class="text-sm font-semibold text-gray-600 dark:text-gray-300">Bulan:</span>
-                    <select wire:model.live="bulanTerpilih" class="border border-gray-300 dark:border-slate-600 rounded-lg bg-gray-50 dark:bg-slate-700 text-gray-800 dark:text-white px-3 py-1.5 focus:ring-2 focus:ring-blue-500 outline-none w-full sm:w-auto">
-                        <option value="1">Januari</option>
-                        <option value="2">Februari</option>
-                        <option value="3">Maret</option>
-                        <option value="4">April</option>
-                        <option value="5">Mei</option>
-                        <option value="6">Juni</option>
-                        <option value="7">Juli</option>
-                        <option value="8">Agustus</option>
-                        <option value="9">September</option>
-                        <option value="10">Oktober</option>
-                        <option value="11">November</option>
-                        <option value="12">Desember</option>
-                    </select>
-                    <button wire:click="closeBulananModal" class="ml-2 text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
-                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                    </button>
-                </div>
+                <button wire:click="closeBulananModal" class="text-gray-400 hover:text-red-500 transition-colors p-1 rounded-md hover:bg-red-50 dark:hover:bg-red-900/20">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
             </div>
             
-            <div class="p-6 overflow-y-auto bg-slate-50/50 dark:bg-slate-800/50">
-                @if(count($pkList) > 0)
-                    <div class="grid grid-cols-1 gap-4">
-                        @foreach($pkList as $pk)
-                            <div class="bg-white dark:bg-slate-800 border border-gray-200 dark:border-slate-700 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 hover:shadow-md transition-shadow">
-                                <div class="flex items-start gap-4">
-                                    <div class="w-12 h-12 shrink-0 rounded-full bg-blue-50 dark:bg-slate-700 flex items-center justify-center font-bold text-blue-600 dark:text-blue-400 border border-blue-100 dark:border-slate-600">{{ $pk->tahun }}</div>
-                                    <div>
-                                        <div class="font-bold text-gray-800 dark:text-slate-200 text-lg">{{ $pk->jabatan->nama ?? 'Tidak Diketahui' }}</div>
-                                        <div class="text-sm text-gray-600 dark:text-slate-400 flex items-center gap-1 mt-1">
-                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-                                            Penanggung Jawab: <span class="font-semibold">{{ $pk->pegawai->nama ?? 'Belum Diisi' }}</span>
-                                        </div>
-                                    </div>
-                                </div>
-                                <a href="{{ route('kinerja.bulanan.print', ['id' => $pk->id, 'bulan' => $bulanTerpilih]) }}" target="_blank" class="shrink-0 w-full sm:w-auto px-5 py-2.5 bg-red-500 hover:bg-red-600 text-white text-sm font-bold rounded-lg shadow-sm transition-colors flex items-center justify-center gap-2 group">
-                                    <svg class="w-5 h-5 group-hover:-translate-y-0.5 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
-                                    Cetak PDF
-                                </a>
-                            </div>
-                        @endforeach
+            <div class="p-6 bg-slate-50/50 dark:bg-slate-800/50">
+                <div class="mb-5 flex gap-4">
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Bulan</label>
+                        <select wire:model.live="bulananBulan" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none">
+                            <option value="1">Januari</option> <option value="2">Februari</option> <option value="3">Maret</option>
+                            <option value="4">April</option> <option value="5">Mei</option> <option value="6">Juni</option>
+                            <option value="7">Juli</option> <option value="8">Agustus</option> <option value="9">September</option>
+                            <option value="10">Oktober</option> <option value="11">November</option> <option value="12">Desember</option>
+                        </select>
                     </div>
-                @else
-                    <div class="text-center py-12"><div class="text-gray-500">Belum Ada Dokumen.</div></div>
-                @endif
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Tahun</label>
+                        <select wire:model.live="bulananTahun" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none">
+                            <option value="2024">2024</option> <option value="2025">2025</option> <option value="2026">2026</option>
+                            <option value="2027">2027</option> <option value="2028">2028</option> <option value="2029">2029</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <div class="mb-2">
+                    <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Jabatan (Dokumen PK)</label>
+                    <select wire:model.live="bulananPkId" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-cyan-500 outline-none">
+                        <option value="">-- Silakan Pilih Jabatan --</option>
+                        @foreach($pkList as $pk)
+                            {{-- Hanya tampilkan pilihan jabatan yang Dokumen PK nya sesuai dengan Tahun yang dipilih --}}
+                            @if($pk->tahun == $bulananTahun)
+                                <option value="{{ $pk->id }}">{{ $pk->jabatan->nama ?? 'Tidak Diketahui' }}</option>
+                            @endif
+                        @endforeach
+                    </select>
+                    @error('bulananPkId') <span class="text-sm text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                </div>
+                <p class="text-xs text-gray-500 dark:text-gray-400 mt-4">Sistem hanya akan mencetak hasil laporan realisasi kinerja dan parameter evaluasi khusus untuk bulan yang dipilih.</p>
             </div>
 
-            <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 flex justify-end">
-                <button wire:click="closeBulananModal" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-lg font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">Tutup Jendela</button>
+            <div class="px-6 py-4 border-t border-gray-100 dark:border-slate-700 bg-white dark:bg-slate-800 shrink-0 flex justify-end gap-3">
+                <button wire:click="closeBulananModal" class="px-6 py-2.5 bg-gray-100 dark:bg-slate-700 text-gray-700 dark:text-slate-200 rounded-xl font-bold hover:bg-gray-200 dark:hover:bg-slate-600 transition-colors">Batal</button>
+                <button wire:click="generateBulanan" class="px-6 py-2.5 bg-cyan-600 hover:bg-cyan-700 text-white rounded-xl font-bold transition-colors flex items-center justify-center gap-2 shadow-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+                    Cetak Laporan
+                </button>
             </div>
         </div>
     </div>
@@ -592,18 +589,27 @@
                     </div>
                 @endif
 
-                <div class="mb-5">
-                    <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Tahun Laporan</label>
-                    <select wire:model.live="penilaianTahun" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
-                        <option value="2024">2024</option>
-                        <option value="2025">2025</option>
-                        <option value="2026">2026</option>
-                        <option value="2027">2027</option>
-                        <option value="2028">2028</option>
-                        <option value="2029">2029</option>
-                    </select>
-                    @error('penilaianTahun') <span class="text-sm text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                <div class="mb-5 flex gap-4">
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Bulan</label>
+                        <select wire:model.live="penilaianBulan" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="1">Januari</option> <option value="2">Februari</option> <option value="3">Maret</option>
+                            <option value="4">April</option> <option value="5">Mei</option> <option value="6">Juni</option>
+                            <option value="7">Juli</option> <option value="8">Agustus</option> <option value="9">September</option>
+                            <option value="10">Oktober</option> <option value="11">November</option> <option value="12">Desember</option>
+                        </select>
+                        @error('penilaianBulan') <span class="text-sm text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
+                    <div class="w-1/2">
+                        <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Tahun</label>
+                        <select wire:model.live="penilaianTahun" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <option value="2024">2024</option> <option value="2025">2025</option> <option value="2026">2026</option>
+                            <option value="2027">2027</option> <option value="2028">2028</option> <option value="2029">2029</option>
+                        </select>
+                        @error('penilaianTahun') <span class="text-sm text-red-500 mt-1 block">{{ $message }}</span> @enderror
+                    </div>
                 </div>
+
                 <div class="mb-2">
                     <label class="block text-sm font-bold text-gray-700 dark:text-slate-300 mb-2">Pilih Jabatan/Divisi</label>
                     <select wire:model.live="penilaianJabatan" class="w-full border border-gray-300 dark:border-slate-600 rounded-xl bg-white dark:bg-slate-700 text-gray-800 dark:text-white px-4 py-3 focus:ring-2 focus:ring-emerald-500 outline-none">

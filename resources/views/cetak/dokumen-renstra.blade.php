@@ -4,17 +4,22 @@
     <meta charset="UTF-8">
     <title>Matriks Renstra - {{ $header['unit_kerja'] ?? 'Dinas Kesehatan' }}</title>
     <style>
-        @page { margin: 30px 40px; }
+        /* Paksa ke format Landscape untuk Matriks agar kolom lebih lega */
+        @page { 
+            size: A4 landscape; 
+            margin: 1.5cm; 
+        }
         body { 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            font-size: 10pt; 
-            color: #1f2937; 
+            font-family: 'Times New Roman', Times, serif; /* Font resmi pemerintahan */
+            font-size: 11pt; 
+            color: #000; 
+            line-height: 1.3;
         }
         
         /* Gaya Kop Surat */
         .kop-surat {
             width: 100%;
-            border-bottom: 3px solid #000;
+            border-bottom: 4px double #000; /* Garis bawah ganda untuk kesan resmi */
             padding-bottom: 10px;
             margin-bottom: 20px;
         }
@@ -23,7 +28,7 @@
             vertical-align: middle;
         }
         .kop-surat .logo {
-            width: 80px;
+            width: 85px;
             height: auto;
         }
         .kop-surat .judul-dokumen {
@@ -36,40 +41,60 @@
             letter-spacing: 1px;
         }
         .kop-surat h2 { 
-            font-size: 12pt; 
+            font-size: 14pt; 
             font-weight: bold; 
             margin: 0 0 3px 0; 
         }
         .kop-surat h3 {
-            font-size: 11pt;
+            font-size: 12pt;
             font-weight: normal;
             margin: 0;
         }
         
         /* Gaya Tabel Utama */
-        .table-data { width: 100%; border-collapse: collapse; }
+        .table-data { 
+            width: 100%; 
+            border-collapse: collapse; 
+            margin-bottom: 30px;
+        }
         .table-data th, .table-data td { 
-            border: 1px solid #374151; 
+            border: 1px solid #000; 
             padding: 8px; 
             vertical-align: top; 
         }
         .table-data th { 
-            background-color: #dbeafe; 
+            background-color: #e0e0e0; /* Warna abu-abu resmi */
             text-align: center; 
             font-weight: bold; 
-            font-size: 10pt;
+            font-size: 11pt;
             text-transform: uppercase;
         }
         .bg-section { 
-            background-color: #f3f4f6; 
+            background-color: #f2f2f2; 
             font-weight: bold; 
-            font-size: 10pt; 
+            font-size: 11pt; 
         }
         .text-center { text-align: center; }
         
-        ul { margin: 0; padding-left: 18px; }
+        /* Merapikan List Indikator */
+        ul { margin: 0; padding-left: 20px; }
         li { margin-bottom: 4px; text-align: left; }
         .mb-2 { margin-bottom: 8px; }
+
+        /* Tanda Tangan */
+        .signature { 
+            width: 100%; 
+            margin-top: 40px; 
+            page-break-inside: avoid; /* Mencegah TTD terpotong beda halaman */
+        }
+        .signature table { 
+            width: 100%; 
+            border: none; 
+        }
+        .signature td { 
+            border: none; 
+            font-size: 11pt;
+        }
     </style>
 </head>
 <body>
@@ -125,7 +150,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4" class="text-center">Data Tujuan belum tersedia</td></tr>
+            <tr><td colspan="4" class="text-center" style="font-style: italic;">Data Tujuan belum tersedia</td></tr>
             @endforelse
 
             {{-- ================= B. SASARAN ================= --}}
@@ -154,7 +179,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4" class="text-center">Data Sasaran belum tersedia</td></tr>
+            <tr><td colspan="4" class="text-center" style="font-style: italic;">Data Sasaran belum tersedia</td></tr>
             @endforelse
 
             {{-- ================= C. OUTCOME ================= --}}
@@ -186,10 +211,10 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4" class="text-center">Data Outcome belum tersedia</td></tr>
+            <tr><td colspan="4" class="text-center" style="font-style: italic;">Data Outcome belum tersedia</td></tr>
             @endforelse
 
-            {{-- ================= D. KEGIATAN (Diperbaiki logic relasinya) ================= --}}
+            {{-- ================= D. KEGIATAN ================= --}}
             <tr><td colspan="4" class="bg-section">D. KEGIATAN</td></tr>
             @forelse($kegiatans as $i => $item)
             <tr>
@@ -219,7 +244,7 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4" class="text-center">Data Kegiatan belum tersedia</td></tr>
+            <tr><td colspan="4" class="text-center" style="font-style: italic;">Data Kegiatan belum tersedia</td></tr>
             @endforelse
 
             {{-- ================= E. SUB KEGIATAN ================= --}}
@@ -248,11 +273,27 @@
                 </td>
             </tr>
             @empty
-            <tr><td colspan="4" class="text-center">Data Sub Kegiatan belum tersedia</td></tr>
+            <tr><td colspan="4" class="text-center" style="font-style: italic;">Data Sub Kegiatan belum tersedia</td></tr>
             @endforelse
 
         </tbody>
     </table>
+
+    <div class="signature">
+        <table>
+            <tr>
+                <td style="width: 60%;"></td> 
+                <td style="width: 40%; text-align: center;">
+                    Banjarmasin, {{ \Carbon\Carbon::now('Asia/Makassar')->locale('id')->translatedFormat('d F Y') }} <br>
+                    Kepala Dinas Kesehatan<br>
+                    Provinsi Kalimantan Selatan
+                    <br><br><br><br><br>
+                    <strong><u>Dr. Diauddin, M.Kes</u></strong><br>
+                    NIP. 19770923 200604 1 015
+                </td>
+            </tr>
+        </table>
+    </div>
 
 </body>
 </html>

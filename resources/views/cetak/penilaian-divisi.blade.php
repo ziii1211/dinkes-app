@@ -3,7 +3,6 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Tag Title ini yang akan otomatis menjadi nama file saat di-Save as PDF -->
     <title>Laporan_Evaluasi_{{ str_replace([' ', '/', '\\'], '_', $jabatan->nama) }}_{{ $tahun }}</title>
     <style>
         body {
@@ -17,7 +16,7 @@
             align-items: center;
             border-bottom: 3px solid black;
             padding-bottom: 5px; 
-            margin-bottom: 10px; 
+            margin-bottom: 15px; 
         }
         .header img {
             width: 80px; 
@@ -41,24 +40,24 @@
             margin: 2px 0 0 0;
             font-size: 12px;
         }
-        /* Judul Laporan */
-        .title {
+        
+        /* PERBAIKAN: Judul Laporan dibuat lebih rapi dan rata tengah */
+        .title-container {
             text-align: center;
+            margin-bottom: 25px;
+        }
+        .title {
             font-size: 14px;
             font-weight: bold;
             text-decoration: underline;
-            margin-bottom: 15px; /* Jarak dirapatkan */
+            margin: 0 auto 5px auto;
+            line-height: 1.4;
         }
-        /* Info Divisi */
-        .info-table {
-            width: 100%;
-            margin-bottom: 15px;
+        .subtitle {
             font-size: 12px;
+            font-weight: normal;
         }
-        .info-table td {
-            padding: 3px;
-            border: none;
-        }
+
         /* Tabel Data */
         .data-table {
             width: 100%;
@@ -93,7 +92,6 @@
 </head>
 <body>
 
-    <!-- KOP SURAT -->
     <div class="header">
         <img src="{{ asset('logo pemprov.png') }}" alt="Logo Kalsel">
         <div class="header-text">
@@ -103,30 +101,17 @@
             <p>Telepon: (0511) 3354311, Email: dinkes@kalselprov.go.id</p>
             <p>Website: dinkes.kalselprov.go.id</p>
         </div>
-        <div style="width: 80px;"></div> <!-- Spacer -->
+        <div style="width: 80px;"></div> </div>
+
+    <div class="title-container">
+        <div class="title">
+            LAPORAN EVALUASI DAN PENILAIAN KINERJA<br>DIVISI {{ strtoupper($jabatan->nama) }}
+        </div>
+        <div class="subtitle">
+            TAHUN EVALUASI: {{ $tahun }}
+        </div>
     </div>
 
-    <!-- JUDUL LAPORAN -->
-    <div class="title">
-        LAPORAN EVALUASI DAN PENILAIAN KINERJA DIVISI
-    </div>
-
-    <!-- INFO DIVISI -->
-    <table class="info-table">
-        <tr>
-            <td style="width: 15%; font-weight: bold;">Tahun Evaluasi</td>
-            <td style="width: 2%;">:</td>
-            <td>{{ $tahun }}</td>
-        </tr>
-        <tr>
-            <td style="font-weight: bold;">Nama Divisi/Jabatan</td>
-            <td>:</td>
-            <!-- Menampilkan Jabatan + Nama Pegawai -->
-            <td>{{ $jabatan->nama }} <br> <strong>({{ $nama_pegawai }})</strong></td>
-        </tr>
-    </table>
-
-    <!-- TABEL DATA KINERJA -->
     <table class="data-table">
         <thead>
             <tr>
@@ -166,14 +151,12 @@
         </tbody>
     </table>
 
-    <!-- TANDA TANGAN -->
     <div class="signature">
         <table>
             <tr>
-                <!-- Kolom kosong di kiri sebesar 60% agar TTD terdorong ke kanan -->
                 <td style="width: 60%;"></td> 
                 <td style="width: 40%; text-align: center; font-size: 12px;">
-                    Banjarmasin, 16 June 2026 <br>
+                    Banjarmasin, {{ \Carbon\Carbon::now('Asia/Makassar')->locale('id')->translatedFormat('d F Y') }} <br>
                     Kepala Dinas Kesehatan<br>
                     Provinsi Kalimantan Selatan
                     <br><br><br><br><br>
@@ -184,7 +167,6 @@
         </table>
     </div>
 
-    <!-- Script Print & Notifikasi -->
     <script>
         window.onload = function() {
             // Otomatis buka dialog print (Save as PDF)

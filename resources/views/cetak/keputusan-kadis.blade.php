@@ -68,7 +68,8 @@
                 @foreach($items as $index => $row)
                     <tr>
                         <td class="text-center">{{ $index + 1 }}</td>
-                        <td>{{ $row->nama_indikator }}<br><em style="font-size: 9px;">({{ $row->kinerja_utama }})</em></td>
+                        <!-- PERBAIKAN: Menghapus style italic/miring -->
+                        <td>{{ $row->nama_indikator }}<br><span style="font-size: 9px;">({{ $row->kinerja_utama }})</span></td>
                         <td class="text-center">{{ $row->target }} {{ $row->satuan }}</td>
                         <td class="text-center text-red-600 font-bold">
                             {{ $row->realisasi ? $row->realisasi . ' ' . $row->satuan : '0 (Kosong)' }}
@@ -78,8 +79,9 @@
                     </tr>
                 @endforeach
             @empty
+                <!-- PERBAIKAN: Menghapus style italic/miring -->
                 <tr>
-                    <td colspan="6" class="text-center" style="font-style: italic;">Semua indikator pada seluruh divisi telah mencapai target 100% pada tahun {{ $tahun }}. Tidak ada evaluasi kritis yang diperlukan.</td>
+                    <td colspan="6" class="text-center">Semua indikator pada seluruh divisi telah mencapai target 100% pada tahun {{ $tahun }}. Tidak ada evaluasi kritis yang diperlukan.</td>
                 </tr>
             @endforelse
         </tbody>
@@ -91,7 +93,8 @@
             <tr>
                 <td style="width: 60%;"></td> 
                 <td style="width: 40%; text-align: center; font-size: 12px;">
-                    Banjarmasin, {{ \Carbon\Carbon::now()->translatedFormat('d F Y') }} <br>
+                    <!-- PERBAIKAN: Menambahkan locale ID dan timezone Asia/Makassar agar tanggal sesuai waktu Banjarmasin -->
+                    Banjarmasin, {{ \Carbon\Carbon::now('Asia/Makassar')->locale('id')->translatedFormat('d F Y') }} <br>
                     Kepala Dinas Kesehatan<br>
                     Provinsi Kalimantan Selatan
                     <br><br><br><br><br>

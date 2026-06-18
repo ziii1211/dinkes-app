@@ -18,11 +18,15 @@ class PusatLaporan extends Component
     public $showPegawaiModal = false; 
     public $showTopPerformerModal = false;
     
-    // --- TAMBAHAN BARU: Modal State Laporan Penilaian Divisi ---
+    // Modal State Laporan Penilaian Divisi
     public $showPenilaianDivisiModal = false; 
     
     public $pkList = [];
-    public $bulanTerpilih = 1; 
+
+    // --- PERBAIKAN: State Data Kinerja Bulanan (Sistem Form seperti Kadis) ---
+    public $bulananTahun;
+    public $bulananBulan;
+    public $bulananPkId = ''; 
 
     // State Data E-Monev & Pegawai
     public $listJabatan = [];
@@ -30,7 +34,7 @@ class PusatLaporan extends Component
     public $emonevJabatan = '';
     public $pegawaiJabatan = ''; 
     
-    // --- TAMBAHAN BARU: State Data Penilaian Divisi ---
+    // State Data Penilaian Divisi
     public $penilaianTahun;
     public $penilaianJabatan = '';
 
@@ -41,14 +45,17 @@ class PusatLaporan extends Component
     public $topPerformerScore = 0;
     public $alasanTopPerformer = null;
 
+    // State Keputusan Kadis
     public $showKeputusanKadisModal = false;
     public $keputusanKadisTahun;
     public $keputusanKadisBulan;
 
-    // --- TAMBAHAN BARU: State Modal Laporan Grafik ---
+    // State Modal Laporan Grafik
     public $showGrafikModal = false;
     public $grafikTahun;
     public $grafikBulan;
+
+    public $penilaianBulan;
 
 
     public function openPkModal() {
@@ -63,12 +70,33 @@ class PusatLaporan extends Component
     }
     public function closeAksiModal() { $this->showAksiModal = false; }
 
+    // --- PERBAIKAN: Fungsi Modal Kinerja Bulanan ---
     public function openBulananModal() {
         $this->pkList = PerjanjianKinerja::with(['jabatan', 'pegawai'])->orderBy('tahun', 'desc')->get();
-        $this->bulanTerpilih = date('n'); 
+        $this->bulananTahun = date('Y');
+        $this->bulananBulan = date('n'); 
+        $this->bulananPkId = ''; // Reset pilihan jabatan
         $this->showBulananModal = true;
     }
     public function closeBulananModal() { $this->showBulananModal = false; }
+
+    public function generateBulanan() {
+        $this->validate([
+            'bulananTahun' => 'required',
+            'bulananBulan' => 'required',
+            'bulananPkId' => 'required'
+        ], [
+            'bulananTahun.required' => 'Pilih Tahun terlebih dahulu!',
+            'bulananBulan.required' => 'Pilih Bulan terlebih dahulu!',
+            'bulananPkId.required' => 'Pilih Jabatan/Dokumen PK terlebih dahulu!'
+        ]);
+
+        return redirect()->route('kinerja.bulanan.print', [
+            'id' => $this->bulananPkId,
+            'bulan' => $this->bulananBulan 
+        ]);
+    }
+    // ----------------------------------------------------------------
 
     public function openTahunanModal() {
         $this->pkList = PerjanjianKinerja::with(['jabatan', 'pegawai'])->orderBy('tahun', 'desc')->get();
@@ -91,10 +119,10 @@ class PusatLaporan extends Component
     }
     public function closePegawaiModal() { $this->showPegawaiModal = false; }
 
-    // --- TAMBAHAN BARU: Fungsi Modal Laporan Penilaian Divisi ---
     public function openPenilaianDivisiModal() {
         $this->listJabatan = Jabatan::orderBy('id', 'asc')->get();
         $this->penilaianTahun = date('Y');
+        $this->penilaianBulan = date('n'); // <-- Set default bulan saat ini
         $this->penilaianJabatan = ''; 
         $this->showPenilaianDivisiModal = true;
     }
@@ -103,23 +131,24 @@ class PusatLaporan extends Component
     public function generatePenilaianDivisi() {
         $this->validate([
             'penilaianJabatan' => 'required',
-            'penilaianTahun' => 'required'
+            'penilaianTahun' => 'required',
+            'penilaianBulan' => 'required' // <-- Tambahan validasi bulan
         ], [
             'penilaianJabatan.required' => 'Pilih Divisi/Jabatan terlebih dahulu!',
-            'penilaianTahun.required' => 'Pilih Tahun terlebih dahulu!'
+            'penilaianTahun.required' => 'Pilih Tahun terlebih dahulu!',
+            'penilaianBulan.required' => 'Pilih Bulan terlebih dahulu!'
         ]);
 
-        // Redirect langsung ke halaman cetak PDF
         return redirect()->route('cetak.penilaian-divisi', [
             'jabatan_id' => $this->penilaianJabatan, 
-            'tahun' => $this->penilaianTahun
+            'tahun' => $this->penilaianTahun,
+            'bulan' => $this->penilaianBulan // <-- Kirim data bulan ke Controller
         ]);
     }
 
-    // --- TAMBAHAN BARU: Fungsi Modal Keputusan Kadis ---
     public function openKeputusanKadisModal() {
         $this->keputusanKadisTahun = date('Y');
-        $this->keputusanKadisBulan = date('n'); // <-- Default ke bulan saat ini (1-12)
+        $this->keputusanKadisBulan = date('n'); 
         $this->showKeputusanKadisModal = true;
     }
     public function closeKeputusanKadisModal() { $this->showKeputusanKadisModal = false; }
@@ -127,7 +156,7 @@ class PusatLaporan extends Component
     public function generateKeputusanKadis() {
         $this->validate([
             'keputusanKadisTahun' => 'required',
-            'keputusanKadisBulan' => 'required' // <-- Tambahan validasi bulan
+            'keputusanKadisBulan' => 'required'
         ], [
             'keputusanKadisTahun.required' => 'Pilih Tahun terlebih dahulu!',
             'keputusanKadisBulan.required' => 'Pilih Bulan terlebih dahulu!'
@@ -135,11 +164,10 @@ class PusatLaporan extends Component
 
         return redirect()->route('cetak.keputusan-kadis', [
             'tahun' => $this->keputusanKadisTahun,
-            'bulan' => $this->keputusanKadisBulan // <-- Kirim data bulan ke route
+            'bulan' => $this->keputusanKadisBulan 
         ]);
     }
 
-    // --- TAMBAHAN BARU: Fungsi Modal Laporan Grafik ---
     public function openGrafikModal() {
         $this->grafikTahun = date('Y');
         $this->grafikBulan = date('n');
@@ -153,23 +181,22 @@ class PusatLaporan extends Component
             'grafikBulan' => 'required'
         ]);
 
-        // Langsung redirect ke route cetak dengan membawa data bulan dan tahun
         return redirect()->route('cetak.grafik', [
             'tahun' => $this->grafikTahun,
             'bulan' => $this->grafikBulan
         ]);
     }
+
     // --- MODAL TOP PERFORMER ---
     public function openTopPerformerModal() {
         $this->listJabatan = Jabatan::orderBy('id', 'asc')->get();
         $this->topTahun = date('Y');
         $this->topJabatan = ''; 
-        $this->loadTopPerformerData(); // Hitung Data Saat Modal Dibuka
+        $this->loadTopPerformerData(); 
         $this->showTopPerformerModal = true;
     }
     public function closeTopPerformerModal() { $this->showTopPerformerModal = false; }
 
-    // Otomatis update ketika filter tahun/jabatan diubah di view
     public function updatedTopTahun() {
         $this->loadTopPerformerData();
     }
@@ -177,7 +204,6 @@ class PusatLaporan extends Component
         $this->loadTopPerformerData();
     }
 
-    // Fungsi Kalkulasi Top Performer (Replikasi dari Dashboard)
     public function loadTopPerformerData()
     {
         $query = DB::table('realisasi_kinerjas')
@@ -237,11 +263,10 @@ class PusatLaporan extends Component
             foreach ($jabatanScores as $nm => $d) {
                 $finalScores[$nm] = $d['count'] > 0 ? ($d['total'] / $d['count']) : 0;
             }
-            arsort($finalScores); // Urutkan yang tertinggi
+            arsort($finalScores); 
             $this->topPerformerName = array_key_first($finalScores);
             $this->topPerformerScore = round(reset($finalScores), 2);
             
-            // Susun Alasan Dinamis
             if ($this->topPerformerScore > 0) {
                 $cakupan = $this->topJabatan != '' ? 'jabatan ini' : 'keseluruhan dinas';
                 $this->alasanTopPerformer = "{$this->topPerformerName} ditetapkan sebagai Top Performer karena berhasil mencatatkan rata-rata capaian kinerja tertinggi sebesar {$this->topPerformerScore}% dibandingkan unit/jabatan lainnya pada cakupan {$cakupan} di periode evaluasi tahun {$this->topTahun}.";
@@ -249,6 +274,7 @@ class PusatLaporan extends Component
         }
     }
 
+    
     public function render()
     {
         return view('livewire.pusat-laporan')

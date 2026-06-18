@@ -19,7 +19,8 @@
         /* TABEL UTAMA */
         .table-main { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
         .table-main th, .table-main td { border: 1px solid #000; padding: 6px 8px; vertical-align: middle; }
-        .table-main th { background-color: #E8E8E8; text-align: center; font-weight: bold; font-size: 10pt; }
+        /* PERBAIKAN: Menghapus background-color agar menjadi putih polos */
+        .table-main th { background-color: #fff; text-align: center; font-weight: bold; font-size: 10pt; }
         .table-main td { font-size: 10pt; text-align: justify; }
         .table-main td.text-center { text-align: center; }
 
@@ -153,7 +154,7 @@
         <tr>
             <td style="width: 60%;"></td> {{-- Kolom Kiri Kosong sebagai pendorong --}}
             <td style="width: 40%; text-align: center;">
-                <div class="signature-date">Banjarmasin, 2 Januari {{ $pk->tahun }}</div>
+                <div class="signature-date">Banjarmasin, {{ \Carbon\Carbon::now('Asia/Makassar')->locale('id')->translatedFormat('d F Y') }}</div>
                 <p class="font-bold uppercase" style="margin: 0;">{{ $jabatan->nama }}</p>
             </td>
         </tr>

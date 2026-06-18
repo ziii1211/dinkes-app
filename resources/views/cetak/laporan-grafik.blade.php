@@ -151,7 +151,8 @@
             <tr>
                 <td style="width: 60%;"></td> 
                 <td style="width: 40%; text-align: center;">
-                    Banjarmasin, {{ $tanggal_cetak }} <br>
+                    <!-- PERBAIKAN TANGGAL: Menggunakan Carbon dengan timezone Makassar (WITA) dan locale Indonesia -->
+                    Banjarmasin, {{ \Carbon\Carbon::now('Asia/Makassar')->locale('id')->translatedFormat('d F Y') }} <br>
                     Kepala Dinas Kesehatan<br>
                     Provinsi Kalimantan Selatan
                     <br><br><br><br><br>
@@ -170,8 +171,6 @@
         var numItems = categories.length;
         
         // Hitung tinggi grafik
-        // Di format Landscape, kertas lebih pendek tingginya. 
-        // Maksimal ideal height kita turunkan jadi 400px agar tidak lompat halaman.
         var idealHeight = Math.max(300, numItems * 35);
         if (idealHeight > 420) {
             idealHeight = 420; 
@@ -180,8 +179,7 @@
         var labelFontSize = numItems > 20 ? '9px' : '11px';
         var titleFontSize = '12px';
         var barThickness = numItems > 20 ? '80%' : '45%';
-        var dataLabelOffset = 20;
-
+        
         // Konfigurasi ApexCharts Profesional
         var options = {
             series: [{
@@ -191,7 +189,10 @@
             chart: {
                 type: 'bar',
                 height: idealHeight,
-                animations: { enabled: false }, 
+                animations: { 
+                    enabled: false, // Matikan animasi awal
+                    dynamicAnimation: { enabled: false } // Matikan animasi update agar siap di-print
+                }, 
                 toolbar: { show: false }
             },
             plotOptions: {
@@ -206,7 +207,8 @@
             colors: ['#1f497d'], // Biru dongker formal
             dataLabels: {
                 enabled: true,
-                offsetX: dataLabelOffset, 
+                textAnchor: 'start', // Pastikan teks diratakan dari titik mulai bar
+                offsetX: 5, // Jarak disesuaikan agar tidak hilang/keluar batas frame saat di download
                 style: { 
                     fontSize: labelFontSize, 
                     colors: ['#000'],
@@ -221,23 +223,20 @@
             },
             xaxis: {
                 categories: categories,
-                // Skala dimaksimalkan ke 100 agar ujung grafik tidak terpotong
                 max: 100, 
-                // Tick amount diset agar angka X axis rapi (0, 20, 40, 60, 80, 100)
-                tickAmount: 5, 
+                tickAmount: 10, 
                 title: { 
                     text: 'Persentase Capaian (%)',
                     style: { fontSize: titleFontSize, fontWeight: 'bold', fontFamily: 'Times New Roman, serif' },
-                    offsetY: 5 // Geser sedikit ke bawah agar tidak tabrakan dengan angka
+                    offsetY: 5 
                 },
                 labels: { 
                     style: { fontSize: labelFontSize, fontFamily: 'Times New Roman, serif' },
-                    formatter: function(val) { return Math.round(val) } // Bulatkan angka X axis
+                    formatter: function(val) { return Math.round(val) }
                 }
             },
             yaxis: {
                 labels: {
-                    // Karena kertas kita sekarang landscape, ruang nama jabatan bisa lebih panjang
                     maxWidth: 450, 
                     style: {
                         fontSize: labelFontSize,
@@ -247,6 +246,7 @@
                 }
             },
             grid: {
+                padding: { right: 40 },
                 xaxis: { lines: { show: true } },
                 yaxis: { lines: { show: false } },
                 borderColor: '#666',
@@ -258,10 +258,11 @@
         // Render Grafik
         var chart = new ApexCharts(document.querySelector("#pdfChart"), options);
         chart.render().then(() => {
-            // Jeda 800ms agar grafik selesai animasi drawing sebelum trigger window print
+            // Menaikkan waktu tunggu menjadi 1.5 detik (1500ms) untuk memastikan 
+            // angka sudah tergambar utuh di browser sebelum sistem PDF mengambil snapshot/download.
             setTimeout(() => {
                 window.print();
-            }, 800);
+            }, 1500);
         });
     </script>
 </body>

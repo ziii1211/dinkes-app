@@ -124,21 +124,49 @@
         <thead>
             <tr>
                 <th style="width: 5%;">No</th>
-                <th style="width: 45%;">Program / Kegiatan / Sub Kegiatan</th>
-                <th style="width: 25%;">Pagu Anggaran</th>
-                <th style="width: 25%;">Keterangan</th>
+                <th style="width: 40%;">Program / Kegiatan / Sub Kegiatan</th>
+                <th style="width: 20%;">Pagu Anggaran</th>
+                <th style="width: 35%;">Keterangan (Indikator Sub Kegiatan)</th>
             </tr>
         </thead>
         <tbody>
             @php $totalAnggaran = 0; @endphp
             @if(isset($pk->anggarans) && $pk->anggarans->count() > 0)
                 @foreach($pk->anggarans as $idx => $anggaran)
-                    @php $totalAnggaran += $anggaran->anggaran; @endphp
+                    @php 
+                        $totalAnggaran += $anggaran->anggaran; 
+
+                        $keterangan = '-';
+                        $subKegiatanId = null;
+
+                        if (isset($anggaran->sub_kegiatan_id) && $anggaran->sub_kegiatan_id) {
+                            $subKegiatanId = $anggaran->sub_kegiatan_id;
+                        } elseif ($anggaran->subKegiatan) {
+                            $subKegiatanId = $anggaran->subKegiatan->id;
+                        } else {
+                            $namaClean = trim(preg_replace('/^[\d\.]+\s*/', '', $anggaran->nama_program_kegiatan));
+                            $subK = \Illuminate\Support\Facades\DB::table('sub_kegiatans')->where('nama', $namaClean)->first();
+                            if ($subK) {
+                                $subKegiatanId = $subK->id;
+                            }
+                        }
+
+                        if ($subKegiatanId) {
+                            $inds = \Illuminate\Support\Facades\DB::table('indikator_sub_kegiatans')
+                                      ->where('sub_kegiatan_id', $subKegiatanId)
+                                      ->pluck('keterangan')
+                                      ->toArray();
+                                      
+                            if (!empty($inds)) {
+                                $keterangan = implode(', ', $inds);
+                            }
+                        }
+                    @endphp
                     <tr>
                         <td class="text-center">{{ $idx + 1 }}.</td>
                         <td>{{ $anggaran->subKegiatan ? $anggaran->subKegiatan->nama : preg_replace('/^[\d\.]+\s*/', '', $anggaran->nama_program_kegiatan) }}</td>
                         <td class="text-right">Rp {{ number_format($anggaran->anggaran, 0, ',', '.') }}</td>
-                        <td class="text-center">-</td>
+                        <td class="text-left">{{ $keterangan }}</td>
                     </tr>
                 @endforeach
                 <tr>
@@ -156,7 +184,7 @@
     <table class="table-signature">
         <tr>
             <td style="width: 50%;"></td>
-            <td style="width: 50%; text-align: center; padding-bottom: 10px;">Banjarmasin, 31 Desember {{ $tahun }}</td>
+            <td style="width: 50%; text-align: center; padding-bottom: 10px;">Banjarmasin, {{ \Carbon\Carbon::now('Asia/Makassar')->locale('id')->translatedFormat('d F Y') }}</td>
         </tr>
         <tr>
             <td style="text-align: center;">Mengetahui Atasan Langsung,</td>

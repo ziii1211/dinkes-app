@@ -283,7 +283,8 @@ Route::middleware('auth')->group(function () {
         })->name('kinerja.bulanan.print');
 
         Route::get('/tahunan/cetak/{id}', function ($id) {
-            $pk = PkModel::with(['jabatan.pegawai', 'sasarans.indikators', 'anggarans.subKegiatan'])->findOrFail($id);
+            // PERBAIKAN: Menambahkan relasi `anggarans.subKegiatan.indikators` 
+            $pk = PkModel::with(['jabatan.pegawai', 'sasarans.indikators', 'anggarans.subKegiatan.indikators'])->findOrFail($id);
             $jabatan = $pk->jabatan;
             $tahun = $pk->tahun;
 
@@ -303,7 +304,8 @@ Route::middleware('auth')->group(function () {
                 ->where('bulan', '<=', 12)->get();
             $realisasiData = $realisasis->groupBy('indikator_id');
 
-            $hariIni = \Carbon\Carbon::now()->timezone('Asia/Makassar')->format('d F Y');
+            // PERBAIKAN TANGGAL: Menggunakan locale 'id' dan format translated
+            $hariIni = \Carbon\Carbon::now()->timezone('Asia/Makassar')->locale('id')->translatedFormat('d F Y');
 
             $pdf = Pdf::loadView('cetak.laporan-realisasi-tahunan', compact(
                 'pk', 'jabatan', 'tahun', 'atasan', 'realisasiData', 'hariIni'
