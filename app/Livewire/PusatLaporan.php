@@ -45,7 +45,11 @@ class PusatLaporan extends Component
     public $keputusanKadisTahun;
     public $keputusanKadisBulan;
 
-    
+    // --- TAMBAHAN BARU: State Modal Laporan Grafik ---
+    public $showGrafikModal = false;
+    public $grafikTahun;
+    public $grafikBulan;
+
 
     public function openPkModal() {
         $this->pkList = PerjanjianKinerja::with(['jabatan', 'pegawai'])->orderBy('tahun', 'desc')->get();
@@ -135,6 +139,26 @@ class PusatLaporan extends Component
         ]);
     }
 
+    // --- TAMBAHAN BARU: Fungsi Modal Laporan Grafik ---
+    public function openGrafikModal() {
+        $this->grafikTahun = date('Y');
+        $this->grafikBulan = date('n');
+        $this->showGrafikModal = true;
+    }
+    public function closeGrafikModal() { $this->showGrafikModal = false; }
+
+    public function generateGrafik() {
+        $this->validate([
+            'grafikTahun' => 'required',
+            'grafikBulan' => 'required'
+        ]);
+
+        // Langsung redirect ke route cetak dengan membawa data bulan dan tahun
+        return redirect()->route('cetak.grafik', [
+            'tahun' => $this->grafikTahun,
+            'bulan' => $this->grafikBulan
+        ]);
+    }
     // --- MODAL TOP PERFORMER ---
     public function openTopPerformerModal() {
         $this->listJabatan = Jabatan::orderBy('id', 'asc')->get();

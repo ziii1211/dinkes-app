@@ -349,6 +349,10 @@ Route::middleware('auth')->group(function () {
     Route::get('/cetak/penilaian-divisi', [\App\Http\Controllers\CetakPenilaianDivisiController::class, 'cetak'])->name('cetak.penilaian-divisi');
     // Route Cetak Laporan Keputusan Kepala Dinas
     Route::get('/cetak/keputusan-kadis', [\App\Http\Controllers\CetakKeputusanKadisController::class, 'cetak'])->name('cetak.keputusan-kadis');
+    // Route Cetak Grafik Dashboard
+    Route::post('/cetak/grafik-capaian', [\App\Http\Controllers\CetakGrafikController::class, 'cetak'])->name('cetak.grafik');
+    // Route Cetak Laporan Grafik
+    Route::get('/cetak/grafik-capaian', [\App\Http\Controllers\CetakGrafikController::class, 'cetak'])->name('cetak.grafik');
     // --- PUSAT LAPORAN ---
     Route::prefix('pusat-laporan')->name('laporan.')->group(function () {
         Route::get('/', \App\Livewire\PusatLaporan::class)->name('index'); 
