@@ -128,42 +128,8 @@
                             Dashboard
                         </a>
 
-                        @if(auth()->user()->role == 'pimpinan')
-
-                        {{-- Pimpinan Menu Desktop --}}
-                        <div class="relative group">
-                            <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
-                                Pengukuran Kinerja
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-                            <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                <a href="{{ route('pengukuran.bulanan') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">
-                                    Pengukuran Bulanan
-                                </a>
-                            </div>
-                        </div>
-
-                        <div class="relative group">
-                            <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
-                                Master Data
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-                            <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
-                                    Struktur Organisasi
-                                </a>
-                            </div>
-                        </div>
-
-                        @else
-
-                        {{-- Admin & Pegawai Menu Desktop (Disembunyikan dari Verifikator) --}}
-                        @if(in_array(auth()->user()->role, ['admin', 'pegawai']))
-                            {{-- Matrik Renstra --}}
+                        {{-- Matrik Renstra (Hanya Admin) --}}
+                        @if(auth()->user()->role === 'admin')
                             <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Matrik Renstra
@@ -179,8 +145,10 @@
                                     <a href="/matrik-renstra/program-kegiatan-sub" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Program/Kegiatan/Sub</a>
                                 </div>
                             </div>
+                        @endif
 
-                            {{-- Perencanaan Kinerja --}}
+                        {{-- Perencanaan Kinerja (Hanya Admin) --}}
+                        @if(auth()->user()->role === 'admin')
                             <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Perencanaan Kinerja
@@ -193,8 +161,10 @@
                                     <a href="{{ route('perjanjian.kinerja') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400">Perjanjian Kinerja</a>
                                 </div>
                             </div>
+                        @endif
 
-                            {{-- Pengukuran Kinerja --}}
+                        {{-- Pengukuran Kinerja (Admin, Pimpinan, Pegawai) --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'pimpinan', 'pegawai']))
                             <div class="relative group">
                                 <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
                                     Pengukuran Kinerja
@@ -208,49 +178,49 @@
                             </div>
                         @endif
 
-                        {{-- Menu Laporan Dropdown (Bisa diakses Verifikator) --}}
+                        {{-- Menu Laporan Dropdown (Admin, Pegawai, Verifikator) --}}
                         @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
-                        <div class="relative group">
-                            <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' && request()->segment(1) != 'pusat-laporan' ? 'text-blue-700 dark:text-blue-400' : '' }}">
-                                Laporan
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-                            <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                <a href="{{ route('laporan.master') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700 transition-colors">Master Data</a>
-                                <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Laporan E-Monev</a>
+                            <div class="relative group">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' && request()->segment(1) != 'pusat-laporan' ? 'text-blue-700 dark:text-blue-400' : '' }}">
+                                    Laporan
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <div class="absolute left-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                    <a href="{{ route('laporan.master') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 border-b border-gray-50 dark:border-slate-700 transition-colors">Master Data</a>
+                                    <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Laporan E-Monev</a>
+                                </div>
                             </div>
-                        </div>
                         @endif
 
-                        {{-- Master Data --}}
-                        <div class="relative group">
-                            <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
-                                Master Data
-                                <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                                </svg>
-                            </button>
-                            <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
-                                <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
+                        {{-- Master Data (Admin, Pimpinan, Verifikator) --}}
+                        @if(in_array(auth()->user()->role, ['admin', 'pimpinan', 'verifikator']))
+                            <div class="relative group">
+                                <button class="flex items-center text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors focus:outline-none whitespace-nowrap">
+                                    Master Data
+                                    <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                    </svg>
+                                </button>
+                                <div class="absolute right-0 mt-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-slate-700 shadow-xl rounded-b-lg hidden group-hover:block z-50 animate-fade-in-down">
+                                    <a href="/struktur-organisasi" class="block px-4 py-3 text-sm text-gray-600 dark:text-slate-300 hover:bg-blue-50 dark:hover:bg-slate-700 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">Struktur Organisasi</a>
+                                </div>
                             </div>
-                        </div>
-
-                        {{-- PUSAT LAPORAN (Disembunyikan dari Verifikator) --}}
-                        @if(in_array(auth()->user()->role, ['admin', 'pegawai']))
-                        <a href="{{ route('laporan.index') }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('laporan.index') || request()->segment(1) == 'pusat-laporan' ? 'text-blue-700 dark:text-blue-400' : '' }}">
-                            Pusat Laporan
-                        </a>
                         @endif
 
-                        {{-- Admin Menu --}}
-                        @if(auth()->user()->role == 'admin')
-                        <a href="{{ route('admin.manajemen-user') }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('admin.manajemen-user') ? 'text-blue-700 dark:text-blue-400' : '' }}">
-                            Manajemen User
-                        </a>
+                        {{-- PUSAT LAPORAN (Hanya Admin) --}}
+                        @if(auth()->user()->role === 'admin')
+                            <a href="{{ route('laporan.index') }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('laporan.index') || request()->segment(1) == 'pusat-laporan' ? 'text-blue-700 dark:text-blue-400' : '' }}">
+                                Pusat Laporan
+                            </a>
                         @endif
 
+                        {{-- Admin Menu (Manajemen User) --}}
+                        @if(auth()->user()->role === 'admin')
+                            <a href="{{ route('admin.manajemen-user') }}" class="text-gray-800 dark:text-slate-200 hover:text-blue-700 dark:hover:text-blue-400 font-bold px-3 py-2 text-sm uppercase tracking-wide transition-colors whitespace-nowrap {{ request()->routeIs('admin.manajemen-user') ? 'text-blue-700 dark:text-blue-400' : '' }}">
+                                Manajemen User
+                            </a>
                         @endif
 
                     </nav>
@@ -322,35 +292,8 @@
                         Dashboard
                     </a>
 
-                    @if(auth()->user()->role == 'pimpinan')
-                    {{-- Pimpinan Menu Mobile --}}
-                    <div x-data="{ expanded: false }">
-                        <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
-                            <span>Pengukuran Kinerja</span>
-                            <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="expanded" class="pl-4 space-y-1">
-                            <a href="{{ route('pengukuran.bulanan') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Pengukuran Bulanan</a>
-                        </div>
-                    </div>
-
-                    <div x-data="{ expanded: false }">
-                        <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
-                            <span>Master Data</span>
-                            <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="expanded" class="pl-4 space-y-1">
-                            <a href="/struktur-organisasi" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Struktur Organisasi</a>
-                        </div>
-                    </div>
-
-                    @else
-                    {{-- Admin & Pegawai Menu Mobile (Disembunyikan dari Verifikator) --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'pegawai']))
+                    {{-- Matrik Renstra Mobile (Hanya Admin) --}}
+                    @if(auth()->user()->role === 'admin')
                         <div x-data="{ expanded: false }">
                             <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
                                 <span>Matrik Renstra</span>
@@ -366,7 +309,10 @@
                                 <a href="/matrik-renstra/program-kegiatan-sub" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Program/Kegiatan/Sub</a>
                             </div>
                         </div>
+                    @endif
 
+                    {{-- Perencanaan Kinerja Mobile (Hanya Admin) --}}
+                    @if(auth()->user()->role === 'admin')
                         <div x-data="{ expanded: false }">
                             <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
                                 <span>Perencanaan Kinerja</span>
@@ -379,7 +325,10 @@
                                 <a href="{{ route('perjanjian.kinerja') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Perjanjian Kinerja</a>
                             </div>
                         </div>
+                    @endif
 
+                    {{-- Pengukuran Kinerja Mobile (Admin, Pegawai, Pimpinan) --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'pimpinan']))
                         <div x-data="{ expanded: false }">
                             <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
                                 <span>Pengukuran Kinerja</span>
@@ -393,47 +342,49 @@
                         </div>
                     @endif
 
-                    {{-- Menu Laporan Dropdown Mobile (Bisa diakses Verifikator) --}}
+                    {{-- Menu Laporan Dropdown Mobile (Admin, Pegawai, Verifikator) --}}
                     @if(in_array(auth()->user()->role, ['admin', 'pegawai', 'verifikator']))
-                    <div x-data="{ expanded: false }">
-                        <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' && request()->segment(1) != 'pusat-laporan' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
-                            <span>Laporan</span>
-                            <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="expanded" class="pl-4 space-y-1">
-                            <a href="{{ route('laporan.master') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Master Data</a>
-                            <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Laporan E-Monev</a>
+                        <div x-data="{ expanded: false }">
+                            <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->segment(1) == 'laporan' || request()->segment(1) == 'laporan-konsolidasi' && request()->segment(1) != 'pusat-laporan' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
+                                <span>Laporan</span>
+                                <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="expanded" class="pl-4 space-y-1">
+                                <a href="{{ route('laporan.master') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Master Data</a>
+                                <a href="{{ route('laporan-konsolidasi.index') }}" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Laporan E-Monev</a>
+                            </div>
                         </div>
-                    </div>
                     @endif
 
-                    <div x-data="{ expanded: false }">
-                        <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
-                            <span>Master Data</span>
-                            <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                            </svg>
-                        </button>
-                        <div x-show="expanded" class="pl-4 space-y-1">
-                            <a href="/struktur-organisasi" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Struktur Organisasi</a>
+                    {{-- Master Data Mobile (Admin, Pimpinan, Verifikator) --}}
+                    @if(in_array(auth()->user()->role, ['admin', 'pimpinan', 'verifikator']))
+                        <div x-data="{ expanded: false }">
+                            <button @click="expanded = !expanded" class="w-full flex justify-between items-center px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
+                                <span>Master Data</span>
+                                <svg :class="{'rotate-180': expanded}" class="w-4 h-4 transition-transform duration-200" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </button>
+                            <div x-show="expanded" class="pl-4 space-y-1">
+                                <a href="/struktur-organisasi" class="block px-3 py-2 rounded-md text-sm text-gray-600 dark:text-slate-400 hover:text-blue-600 dark:hover:text-blue-300">Struktur Organisasi</a>
+                            </div>
                         </div>
-                    </div>
-
-                    {{-- PUSAT LAPORAN MOBILE (Disembunyikan dari Verifikator) --}}
-                    @if(in_array(auth()->user()->role, ['admin', 'pegawai']))
-                    <a href="{{ route('laporan.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->routeIs('laporan.index') || request()->segment(1) == 'pusat-laporan' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
-                        Pusat Laporan
-                    </a>
                     @endif
 
-                    @if(auth()->user()->role == 'admin')
-                    <a href="{{ route('admin.manajemen-user') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
-                        Manajemen User
-                    </a>
+                    {{-- PUSAT LAPORAN MOBILE (Hanya Admin) --}}
+                    @if(auth()->user()->role === 'admin')
+                        <a href="{{ route('laporan.index') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800 {{ request()->routeIs('laporan.index') || request()->segment(1) == 'pusat-laporan' ? 'bg-blue-50 text-blue-700 dark:bg-slate-800 dark:text-blue-400' : '' }}">
+                            Pusat Laporan
+                        </a>
                     @endif
 
+                    {{-- Manajemen User Mobile (Hanya Admin) --}}
+                    @if(auth()->user()->role === 'admin')
+                        <a href="{{ route('admin.manajemen-user') }}" class="block px-3 py-2 rounded-md text-base font-medium text-gray-700 dark:text-slate-200 hover:text-blue-700 hover:bg-blue-50 dark:hover:bg-slate-800">
+                            Manajemen User
+                        </a>
                     @endif
 
                 </div>
