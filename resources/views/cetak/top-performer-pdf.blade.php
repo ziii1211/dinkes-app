@@ -222,7 +222,7 @@
 
         <table class="footer-table" border="0" cellspacing="0" cellpadding="0">
             <tr>
-                <td style="width: 55%; text-align: center; vertical-align: bottom; font-style: italic; color: #64748b; font-size: 11px; padding-bottom: 5px;">
+                {{-- <td style="width: 55%; text-align: center; vertical-align: bottom; font-style: italic; color: #64748b; font-size: 11px; padding-bottom: 5px;">
                     
                     <div style="margin-bottom: 8px;">
                         <img src="data:image/svg+xml;base64,{{ base64_encode(QrCode::size(100)->generate('Sertifikat Sah: ' . $namaKadis . ' - Tahun ' . $tahun)) }}" alt="QR Code">
@@ -230,7 +230,7 @@
 
                     *Dokumen ini diterbitkan sah secara digital<br>
                     serta terverifikasi oleh Sistem Aplikasi SAKIP Terpadu.
-                </td>
+                </td> --}}
                 
                 <td style="text-align: center; width: 45%;">
                     <div class="signature-title">

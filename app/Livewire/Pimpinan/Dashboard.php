@@ -19,6 +19,7 @@ class Dashboard extends Component
 
     public $chart_data = [];
     public $chart_labels = [];
+    public $is_dummy_chart = false;
 
     // State Modal & Tabs
     public $isOpenHighlight = false;
@@ -365,6 +366,16 @@ class Dashboard extends Component
         $hasRealChartData = count($chartData) > 0;
         $bulanLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
         
+        if($hasRealChartData) {
+            for ($i = 1; $i <= 12; $i++) {
+                $val = isset($chartData[$i]) ? round($chartData[$i], 1) : 0;
+                $normalizedChart[] = $val > 100 ? 100 : $val;
+            }
+            $this->is_dummy_chart = false;
+        } else {
+            $normalizedChart = [15, 25, 30, 42, 50, 58, 65, 75, 82, 88, 95, 100];
+            $this->is_dummy_chart = true;
+        }
 
         $this->chart_data = $normalizedChart;
         $this->chart_labels = $bulanLabels;

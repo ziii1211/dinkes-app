@@ -126,8 +126,8 @@
         <div class="header-text">
             <h3>PEMERINTAH PROVINSI KALIMANTAN SELATAN</h3>
             <h1>DINAS KESEHATAN</h1>
-            <p>Jalan Belitung Darat No. 118, Banjarmasin 70116</p>
-            <p>Telepon: (0511) 3354311, Email: dinkes@kalselprov.go.id</p>
+            <p>Jalan Dharma Praja, Banjarbaru, Kalimantan Selatan Kode Pos 70732</p>
+            <p>(Kawasan Perkantoran Pemerintah Provinsi Kalimantan Selatan)</p>
             <p>Website: dinkes.kalselprov.go.id</p>
         </div>
         <div style="width: 90px;"></div>
