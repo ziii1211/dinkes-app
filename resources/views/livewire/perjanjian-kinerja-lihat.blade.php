@@ -8,7 +8,7 @@
                     <h2 class="text-xl sm:text-2xl font-bold text-gray-900 tracking-tight">
                         Perjanjian Kinerja (PK) • DINAS KESEHATAN
                     </h2>
-                    
+
                     @if($pk->status_verifikasi == 'draft')
                         <span class="bg-gray-100 text-gray-600 text-xs font-bold px-3 py-1.5 rounded rounded-md border border-gray-200 uppercase tracking-wider">Draft</span>
                     @else
@@ -49,12 +49,12 @@
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                     Kembali
                 </a>
-                
+
                 <a href="{{ route('perjanjian.kinerja.print', $pk->id) }}" target="_blank" class="flex-1 xl:flex-none justify-center inline-flex items-center px-5 py-2.5 bg-[#ffc107] hover:bg-[#e0a800] text-white text-sm font-bold rounded-lg shadow-sm transition-all hover:shadow-md whitespace-nowrap">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                     Preview
                 </a>
-                
+
                 @if(auth()->user()->hasRole('admin'))
                 <button wire:click="deletePk" wire:confirm="Hapus seluruh dokumen PK ini?" class="flex-1 xl:flex-none justify-center inline-flex items-center px-5 py-2.5 bg-[#f93154] hover:bg-[#d92644] text-white text-sm font-bold rounded-lg shadow-sm transition-all hover:shadow-md whitespace-nowrap">
                     <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -123,7 +123,7 @@
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Tambah Kinerja Utama
             </button>
-            
+
             <button wire:click="ajukan" wire:confirm="Simpan dan Publikasikan data ini?" class="w-full sm:w-auto justify-center px-5 py-2.5 bg-[#f93154] hover:bg-[#d92644] text-white text-sm font-bold rounded rounded-md shadow-sm flex items-center transition-all">
                 <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                 Simpan & Publikasikan
@@ -215,7 +215,7 @@
                 </button>
                 @endif
             </div>
-            
+
             <div class="p-0">
                  {{-- TABEL ANGGARAN SCROLLABLE --}}
                  <div class="overflow-x-auto">
@@ -289,7 +289,6 @@
             <div class="p-6 space-y-4 overflow-y-auto">
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Pilih Kinerja Utamamu</label>
-                    {{-- PERBAIKAN: Gunakan key array ['id'] dan ['label'] dari Controller --}}
                     <select wire:model.live="sumber_kinerja_id" class="w-full border border-gray-300 rounded px-3 py-2">
                         <option value="">-- Pilih Kinerja --</option>
                         @foreach($list_sumber as $item)
@@ -332,7 +331,7 @@
                     <label class="block text-sm font-bold text-gray-700 mb-2">Program, Kegiatan & Sub Kegiatan</label>
                     <select wire:model="anggaran_pilihan_id" class="w-full border border-gray-300 rounded px-3 py-2 text-sm focus:ring-blue-500 focus:border-blue-500">
                         <option value="">-- Pilih --</option>
-                        
+
                         <optgroup label="PROGRAM">
                             @foreach($programs_dropdown as $prog)
                                 <option value="program:{{ $prog->id }}">{{ $prog->kode }} {{ $prog->nama }}</option>
@@ -352,10 +351,17 @@
                         </optgroup>
                     </select>
                 </div>
+                
+                {{-- PERBAIKAN: Input Anggaran (type="text" ditambah x-on:input) --}}
                 <div>
                     <label class="block text-sm font-bold text-gray-700 mb-2">Nilai Anggaran (Rp)</label>
-                    <input type="number" wire:model="anggaran_nilai" class="w-full border border-gray-300 rounded px-3 py-2" placeholder="0">
+                    <input type="text" 
+                           wire:model="anggaran_nilai" 
+                           x-on:input="$el.value = $el.value.replace(/[^0-9]/g, '').replace(/\B(?=(\d{3})+(?!\d))/g, '.')"
+                           class="w-full border border-gray-300 rounded px-3 py-2" 
+                           placeholder="Masukkan Anggka ">
                 </div>
+
             </div>
             <div class="px-6 py-4 bg-gray-50 border-t border-gray-100 flex justify-end gap-3 shrink-0">
                 <button wire:click="closeModal" class="px-4 py-2 bg-white border border-gray-300 rounded text-sm font-bold text-gray-600">Batal</button>

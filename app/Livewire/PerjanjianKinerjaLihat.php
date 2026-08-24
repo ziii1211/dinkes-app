@@ -22,14 +22,14 @@ class PerjanjianKinerjaLihat extends Component
 {
     public $pkId;
     public $pk; // Variabel utama untuk data PerjanjianKinerja
-    
+
     // Data Pendukung Tampilan
     public $jabatan;
     public $pegawai;
     public $atasan_pegawai;
     public $atasan_jabatan;
     public $is_kepala_dinas = false;
-    
+
     public $gubernur_nama = 'H. MUHIDIN'; 
     public $gubernur_jabatan = 'GUBERNUR KALIMANTAN SELATAN';
 
@@ -37,14 +37,14 @@ class PerjanjianKinerjaLihat extends Component
     public $isOpenKinerjaUtama = false;
     public $isOpenAnggaran = false;
     public $isOpenEditTarget = false; 
-    
+
     // --- FORM PROPERTIES ---
     public $sumber_kinerja_id; 
-    
+
     // --- FORM EDIT TARGET ---
     public $edit_indikator_id;
     public $edit_target_nilai;
-    
+
     // --- FORM ANGGARAN ---
     public $anggaran_pilihan_id; 
     public $anggaran_nilai;
@@ -66,7 +66,7 @@ class PerjanjianKinerjaLihat extends Component
 
         $this->jabatan = $this->pk->jabatan;
         $this->pegawai = $this->pk->pegawai;
-        
+
         $this->is_kepala_dinas = is_null($this->jabatan->parent_id);
 
         // LOGIKA CARI ATASAN (Untuk Pihak Pertama di PDF)
@@ -119,7 +119,7 @@ class PerjanjianKinerjaLihat extends Component
         ]);
 
         session()->flash('message', 'Perjanjian Kinerja BERHASIL DIPUBLIKASIKAN.');
-        
+
         return redirect(request()->header('Referer'));
     }
 
@@ -162,9 +162,9 @@ class PerjanjianKinerjaLihat extends Component
         } elseif ($tipeSumber == 'output') { 
             // --- PERBAIKAN LOGIC: LANGSUNG CARI OUTPUT BERDASARKAN ID UNIKNYA ---
             $sumber = OutputKegiatan::with('indikators')->find($idSumber);
-            
+
             if (!$sumber) return;
-            
+
             // Ambil deskripsi output sebagai sasaran
             $textSasaran = $sumber->deskripsi;
             // Ambil indikator yang melekat pada output tersebut
@@ -192,7 +192,7 @@ class PerjanjianKinerjaLihat extends Component
         }
 
         session()->flash('message', 'Kinerja Utama berhasil ditambahkan.');
-        
+
         return redirect(request()->header('Referer'));
     }
 
@@ -216,7 +216,7 @@ class PerjanjianKinerjaLihat extends Component
             $ind->update([$col => $this->edit_target_nilai]);
         }
         session()->flash('message', 'Target berhasil diperbarui.');
-        
+
         return redirect(request()->header('Referer'));
     }
 
@@ -224,7 +224,7 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $sasaran = PkSasaran::find($id);
         if($sasaran) { $sasaran->delete(); }
-        
+
         return redirect(request()->header('Referer'));
     }
 
@@ -232,7 +232,7 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $ind = PkIndikator::find($id);
         if($ind) { $ind->delete(); }
-        
+
         return redirect(request()->header('Referer'));
     }
 
@@ -248,7 +248,12 @@ class PerjanjianKinerjaLihat extends Component
 
     public function storeAnggaran() {
         if (!$this->canEdit()) return;
-        
+
+        // PERBAIKAN: Hilangkan titik pemisah ribuan agar validasi & simpan tidak error
+        if ($this->anggaran_nilai) {
+            $this->anggaran_nilai = str_replace('.', '', $this->anggaran_nilai);
+        }
+
         $this->validate([
             'anggaran_pilihan_id' => 'required', 
             'anggaran_nilai' => 'required|numeric|min:0'
@@ -289,7 +294,7 @@ class PerjanjianKinerjaLihat extends Component
         ]);
 
         session()->flash('message', 'Anggaran berhasil ditambahkan.');
-        
+
         return redirect(request()->header('Referer'));
     }
 
@@ -313,7 +318,7 @@ class PerjanjianKinerjaLihat extends Component
         if (!$this->canEdit()) return;
         $jabatanId = $this->pk->jabatan_id;
         $this->pk->delete();
-        
+
         return redirect()->route('perjanjian.kinerja.detail', $jabatanId);
     }
 
@@ -329,7 +334,7 @@ class PerjanjianKinerjaLihat extends Component
             ->get();
 
         $list_sumber = collect();
-        
+
         // A. SASARAN STRATEGIS
         if ($this->is_kepala_dinas) {
             Sasaran::all()->each(function($s) use ($list_sumber) {
@@ -356,7 +361,7 @@ class PerjanjianKinerjaLihat extends Component
             if($out->kegiatan) {
                 // Label tetap informatif ada nama kegiatannya
                 $label = '[KEGIATAN] ' . $out->kegiatan->nama . ' - (Output: ' . \Illuminate\Support\Str::limit($out->deskripsi, 40) . ')';
-                
+
                 // PERBAIKAN: Gunakan ID Output langsung (DNA Unik)
                 $list_sumber->push([
                     'id' => 'output:' . $out->id, // <--- INI KUNCINYA
