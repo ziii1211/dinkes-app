@@ -53,42 +53,35 @@ class SubKegiatanRenstra extends Component
         $this->filter_output_id = request()->query('output_id');
     }
 
-    // File: app/Livewire/SubKegiatanRenstra.php
+    public function render()
+    {
+        $filteredOutcomes = $this->program->outcomes()
+            ->when($this->filter_outcome_id, function($q) {
+                $q->where('id', $this->filter_outcome_id);
+            })
+            ->get();
 
-public function render()
-{
-    // --- PERBAIKAN DI SINI ---
-    // Daripada menggunakan $this->program->load(), kita query manual agar filter 'pasti' jalan
-    // dan tidak terganggu oleh cache relasi di object $program
-    $filteredOutcomes = $this->program->outcomes()
-        ->when($this->filter_outcome_id, function($q) {
-            $q->where('id', $this->filter_outcome_id);
-        })
-        ->get();
+        $this->kegiatan->load(['outputs' => function($q) {
+            if($this->filter_output_id) {
+                $q->where('id', $this->filter_output_id);
+            }
+        }]);
 
-    // Filter Output (Info di tengah) - Jika ini sudah benar menurut Anda, biarkan load-nya
-    $this->kegiatan->load(['outputs' => function($q) {
-        if($this->filter_output_id) {
-            $q->where('id', $this->filter_output_id);
+        $querySub = SubKegiatan::with(['indikators', 'jabatan'])
+            ->where('kegiatan_id', $this->kegiatan->id);
+
+        if ($this->filter_output_id) {
+            $querySub->where('output_kegiatan_id', $this->filter_output_id);
         }
-    }]);
 
-    // Query Sub Kegiatan
-    $querySub = SubKegiatan::with(['indikators', 'jabatan'])
-        ->where('kegiatan_id', $this->kegiatan->id);
-
-    if ($this->filter_output_id) {
-        $querySub->where('output_kegiatan_id', $this->filter_output_id);
+        return view('livewire.sub-kegiatan-renstra', [
+            'program' => $this->program,
+            'outcomes_view' => $filteredOutcomes,
+            'kegiatan' => $this->kegiatan,
+            'sub_kegiatans' => $querySub->orderBy('id', 'asc')->get(),
+            'jabatans' => Jabatan::all()
+        ]);
     }
-
-    return view('livewire.sub-kegiatan-renstra', [
-        'program' => $this->program,
-        'outcomes_view' => $filteredOutcomes, // <--- Kirim variabel baru ini ke Blade
-        'kegiatan' => $this->kegiatan,
-        'sub_kegiatans' => $querySub->orderBy('id', 'asc')->get(),
-        'jabatans' => Jabatan::all()
-    ]);
-}
 
     public function closeModal()
     {
@@ -126,10 +119,8 @@ public function render()
                 'kode' => $this->kode, 
                 'nama' => $this->nama, 
                 'output' => $this->output
-                // Note: output_kegiatan_id biasanya tidak diubah saat edit kecuali perlu dipindah
             ]);
             
-            // Notifikasi Modern Update
             $this->dispatch('alert', [
                 'type' => 'success',
                 'title' => 'Diperbarui',
@@ -137,10 +128,9 @@ public function render()
             ]);
 
         } else {
-            // --- PERBAIKAN DISINI: SIMPAN output_kegiatan_id ---
             $sub = SubKegiatan::create([
                 'kegiatan_id' => $this->kegiatan->id,
-                'output_kegiatan_id' => $this->filter_output_id, // <--- PENTING! Agar data terikat ke Output spesifik
+                'output_kegiatan_id' => $this->filter_output_id,
                 'kode' => $this->kode, 
                 'nama' => $this->nama, 
                 'output' => $this->output
@@ -154,7 +144,6 @@ public function render()
                 ]);
             }
 
-            // Notifikasi Modern Simpan
             $this->dispatch('alert', [
                 'type' => 'success',
                 'title' => 'Berhasil',
@@ -163,7 +152,6 @@ public function render()
         }
 
         $this->closeModal();
-        // return redirect(request()->header('Referer')); // Tidak perlu redirect jika pakai Livewire
     }
 
     public function edit($id) {
@@ -183,7 +171,6 @@ public function render()
         if ($data) {
             $data->delete(); 
             
-            // Notifikasi Modern Hapus
             $this->dispatch('alert', [
                 'type' => 'success',
                 'title' => 'Terhapus',
@@ -276,7 +263,8 @@ public function render()
             $this->target_satuan = $ind->satuan;
             foreach([2025,2026,2027,2028,2029,2030] as $y) {
                 $this->{'target_'.$y} = $ind->{'target_'.$y};
-                $this->{'pagu_'.$y} = $ind->{'pagu_'.$y};
+                // Format pagu saat diload agar langsung muncul titiknya untuk diedit admin
+                $this->{'pagu_'.$y} = $ind->{'pagu_'.$y} ? number_format($ind->{'pagu_'.$y}, 0, ',', '.') : '';
             }
             $this->isOpenTarget = true;
         }

@@ -116,7 +116,17 @@ class StrukturOrganisasi extends Component
             abort(403, 'Akses Ditolak! Anda bukan Administrator.');
         }
 
-        $this->validate(['jab_nama' => 'required']);
+        // VALIDASI ANTI-DOUBLE INPUT JABATAN
+        $rules = [
+            'jab_nama' => 'required|unique:jabatans,nama' . ($this->isEditMode ? ',' . $this->jab_id : ''),
+        ];
+        
+        $messages = [
+            'jab_nama.required' => 'Nama Jabatan wajib diisi.',
+            'jab_nama.unique' => 'Nama Jabatan ini sudah terdaftar! Tidak boleh ada jabatan kembar.',
+        ];
+
+        $this->validate($rules, $messages);
         
         $level = 0;
         if ($this->jab_parent_id) {
@@ -209,18 +219,24 @@ class StrukturOrganisasi extends Component
             abort(403, 'Akses Ditolak! Anda bukan Administrator.');
         }
         
-        // [KEAMANAN 3] Validasi File Super Ketat
-        $this->validate([
+        // VALIDASI ANTI-DOUBLE INPUT PEGAWAI (NIP) & FOTO
+        $rules = [
             'peg_nama' => 'required',
-            'peg_nip' => 'required', // Idealnya tambahkan unique:pegawais,nip,id_saat_edit
+            // Jika mode edit, kecualikan peg_id dari pengecekan unique
+            'peg_nip' => 'required|unique:pegawais,nip' . ($this->isEditMode ? ',' . $this->peg_id : ''),
             'peg_status' => 'required',
-            // VALIDASI FOTO:
-            // - nullable: Boleh kosong
-            // - image: Harus file gambar
-            // - mimes: Ekstensi harus jpeg, png, jpg, atau webp (TOLAK .php, .exe)
-            // - max: Ukuran maksimal 2048 KB (2MB)
             'peg_foto' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048', 
-        ]);
+        ];
+
+        $messages = [
+            'peg_nama.required' => 'Nama Pegawai wajib diisi.',
+            'peg_nip.required' => 'NIP wajib diisi.',
+            'peg_nip.unique' => 'NIP ini sudah terdaftar! Silakan gunakan NIP lain.',
+            'peg_foto.image' => 'File harus berupa gambar.',
+            'peg_foto.max' => 'Ukuran foto maksimal 2MB.',
+        ];
+
+        $this->validate($rules, $messages);
 
         $data = [
             'nama' => $this->peg_nama,

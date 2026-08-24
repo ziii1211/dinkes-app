@@ -14,6 +14,7 @@ use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\Jabatan; 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule; // <-- WAJIB DITAMBAHKAN UNTUK VALIDASI UNIK
 
 class InputData extends Component
 {
@@ -468,15 +469,9 @@ class InputData extends Component
             $jabatan = Jabatan::find($this->selectedJabatanPrint);
 
             // LOGIKA KHUSUS: KEPALA DINAS = CETAK SEMUA
-            // Jika jabatan tidak punya parent (Root/Kepala Dinas)
             if ($jabatan && $jabatan->parent_id == null) {
-                // Kita kirim parameter 'ttd_id' 
-                // Asumsinya: Controller akan menampilkan SEMUA data jika 'jabatan_id' tidak ada,
-                // tapi akan mengambil TTD dari 'ttd_id'.
                 $params['ttd_id'] = $this->selectedJabatanPrint;
             } else {
-                // Jika jabatan lain (Kabid/Kasi), kirim 'jabatan_id'
-                // Asumsinya: Controller akan memfilter data HANYA untuk jabatan ini
                 $params['jabatan_id'] = $this->selectedJabatanPrint;
             }
         }
@@ -486,9 +481,21 @@ class InputData extends Component
         return redirect()->route('laporan-konsolidasi.cetak', $params);
     }
 
+    // --- PERBAIKAN: VALIDASI ANTI DOUBLE PROGRAM ---
     public function addProgram()
     {
-        $this->validate(['selectedProgramId' => 'required']);
+        $this->validate([
+            'selectedProgramId' => [
+                'required',
+                Rule::unique('laporan_konsolidasi_anggarans', 'program_id')->where(function ($query) {
+                    return $query->where('laporan_konsolidasi_id', $this->laporan->id);
+                })
+            ]
+        ], [
+            'selectedProgramId.required' => 'Silakan pilih program terlebih dahulu.',
+            'selectedProgramId.unique' => 'Program ini sudah ada di laporan ini! Tidak bisa ditambahkan dua kali.'
+        ]);
+
         DB::beginTransaction();
         try {
             $progMaster = Program::find($this->selectedProgramId);

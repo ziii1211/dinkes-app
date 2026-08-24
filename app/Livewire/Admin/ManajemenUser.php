@@ -79,7 +79,7 @@ class ManajemenUser extends Component
             'stats' => [
                 'pimpinan' => User::where('role', 'pimpinan')->count(),
                 'pegawai' => User::where('role', 'pegawai')->count(),
-                'verifikator' => User::where('role', 'verifikator')->count(), // [BARU] Hitung Verifikator
+                'verifikator' => User::where('role', 'verifikator')->count(),
                 'admin' => User::where('role', 'admin')->count()
             ]
         ]);
@@ -91,14 +91,15 @@ class ManajemenUser extends Component
         $this->isModalOpen = true;
     }
 
-    // --- PERBAIKAN DI SINI (STORE) ---
     public function store()
     {
         $rules = [
-            // [UPDATE] Tambahkan 'verifikator' ke validasi in:
             'role' => 'required|in:admin,pegawai,pimpinan,verifikator', 
             'password' => 'required|min:6',
         ];
+
+        // Inisialisasi awal agar tidak error
+        $usernameToSave = '';
 
         if ($this->role == 'admin') {
             $rules['username'] = 'required|unique:users,username';
@@ -109,38 +110,38 @@ class ManajemenUser extends Component
             $rules['nip'] = [
                 'required',
                 'numeric',
-                // Validasi: NIP boleh sama asalkan Role-nya berbeda
+                // Validasi Anti-Double Input: Pegawai tidak boleh punya 2 akun dengan role yang sama
                 Rule::unique('users')->where(function ($query) {
                     return $query->where('role', $this->role);
                 }),
             ];
             
-            // [UPDATE] Generate Username Otomatis
             if ($this->role == 'pimpinan') {
                 $usernameToSave = $this->nip . '.pimpinan';
             } elseif ($this->role == 'verifikator') {
-                $usernameToSave = $this->nip . '.verifikator'; // Format: NIP.verifikator
+                $usernameToSave = $this->nip . '.verifikator';
             } else {
-                $usernameToSave = $this->nip; // Format: NIP
+                $usernameToSave = $this->nip;
             }
         }
 
         $this->validate($rules, [
             'selectedPegawaiId.required' => 'Silakan pilih Pegawai dari daftar.',
             'nip.unique' => 'Pegawai ini sudah memiliki akun sebagai ' . ucfirst($this->role) . '.',
+            'username.unique' => 'Username ini sudah terdaftar! Silakan gunakan username lain.'
         ]);
 
-        // [PENGECEKAN MANUAL USERNAME] Mencegah Error SQL Duplicate Entry
+        // Pengecekan ekstra untuk memastikan Username tidak bentrok di seluruh database
         if (User::where('username', $usernameToSave)->exists()) {
-            $pesanError = "Username otomatis '$usernameToSave' sudah digunakan.";
+            $pesanError = "Gagal membuat akun: Username otomatis '$usernameToSave' sudah digunakan di dalam sistem.";
             
-            // Beri saran spesifik
             if ($this->role == 'pegawai') {
-                $pesanError .= " Kemungkinan akun Pimpinan user ini masih menggunakan username NIP lama. Silakan edit akun Pimpinannya terlebih dahulu agar usernamenya terupdate menjadi berakhiran '.pimpinan'.";
+                $pesanError .= " Kemungkinan ada duplikasi. Silakan cek daftar user.";
             }
             
             $this->addError('nip', $pesanError);
-            return; // Stop proses simpan
+            $this->addError('username', $pesanError);
+            return;
         }
 
         User::create([
@@ -153,7 +154,6 @@ class ManajemenUser extends Component
             'jabatan' => $this->role == 'admin' ? null : $this->jabatan,
         ]);
 
-        // FLASH MESSAGE & RESET FILTER AGAR TABEL REFRESH
         session()->flash('message', 'User berhasil dibuat.');
         $this->reset(['search', 'filterRole']); 
         $this->closeModal();
@@ -182,13 +182,13 @@ class ManajemenUser extends Component
         $this->isModalOpen = true;
     }
 
-    // --- PERBAIKAN DI SINI (UPDATE) ---
     public function update()
     {
         $rules = [
-            // [UPDATE] Tambahkan 'verifikator'
             'role' => 'required|in:admin,pegawai,pimpinan,verifikator', 
         ];
+
+        $usernameToSave = '';
 
         if ($this->role == 'admin') {
             $rules['username'] = 'required|unique:users,username,'.$this->userId;
@@ -201,12 +201,12 @@ class ManajemenUser extends Component
             $rules['nip'] = [
                 'required',
                 'numeric',
+                // Validasi Anti-Double Input (Update): Abaikan ID milik sendiri
                 Rule::unique('users')->ignore($this->userId)->where(function ($query) {
                     return $query->where('role', $this->role);
                 }),
             ];
             
-            // [UPDATE] Generate Username Otomatis
             if ($this->role == 'pimpinan') {
                 $usernameToSave = $this->nip . '.pimpinan';
             } elseif ($this->role == 'verifikator') {
@@ -220,13 +220,16 @@ class ManajemenUser extends Component
             $rules['password'] = 'min:6';
         }
 
-        $this->validate($rules);
+        $this->validate($rules, [
+            'nip.unique' => 'Gagal mengubah peran: Pegawai ini sudah memiliki akun sebagai ' . ucfirst($this->role) . '.',
+            'username.unique' => 'Username ini sudah dipakai oleh user lain.'
+        ]);
 
-        // [PENGECEKAN MANUAL USERNAME SAAT UPDATE]
-        // Pastikan username baru tidak bentrok dengan user LAIN (kecuali diri sendiri)
+        // Pengecekan ekstra untuk update
         $cekDouble = User::where('username', $usernameToSave)->where('id', '!=', $this->userId)->first();
         if ($cekDouble) {
-             $this->addError('nip', "Gagal update: Username '$usernameToSave' sudah dipakai oleh user lain (ID: {$cekDouble->id}).");
+             $this->addError('nip', "Gagal update: Username '$usernameToSave' sudah dipakai oleh user lain.");
+             $this->addError('username', "Gagal update: Username '$usernameToSave' sudah dipakai oleh user lain.");
              return;
         }
 
@@ -236,7 +239,6 @@ class ManajemenUser extends Component
         $user->role = $this->role;
         $user->username = $usernameToSave;
         
-        // Update email agar konsisten (opsional)
         if($user->isDirty('username')) {
              $user->email = $usernameToSave . '@dinkes.local';
         }
@@ -255,7 +257,6 @@ class ManajemenUser extends Component
         $this->closeModal();
     }
 
-    // --- PERBAIKAN DI SINI (DELETE LANGSUNG) ---
     public function delete($id)
     {
         if($id == auth()->id()) {
@@ -272,7 +273,6 @@ class ManajemenUser extends Component
         }
     }
 
-    // (Opsional: Method ini bisa dihapus jika sudah pakai delete langsung di atas)
     #[On('deleteConfirmed')] 
     public function deleteConfirmed($id)
     {

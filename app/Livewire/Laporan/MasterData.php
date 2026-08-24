@@ -10,6 +10,7 @@ use App\Models\SubKegiatan;
 use App\Models\IndikatorSubKegiatan;
 use Livewire\Attributes\Title;
 use App\Models\Jabatan;
+use Illuminate\Validation\Rule; // Pastikan Rule di-import untuk validasi unique
 
 class MasterData extends Component
 {
@@ -22,7 +23,7 @@ class MasterData extends Component
     public $isEditMode = false;
 
     // Properti untuk Show Entries (Default ganti ke 10 biar lebih rapi)
-    public $perPage = 1;
+    public $perPage = 10; // Aku ubah jadi 10 biar paginasinya wajar, sebelumnya 1.
 
     // --- PROPERTI FILTER TAHUN (BARU) ---
     public $tahun; 
@@ -111,6 +112,7 @@ class MasterData extends Component
 
         // Reset Penanggung Jawab
         $this->selectedJabatanId = null;
+        $this->resetValidation(); // Bersihkan error validasi saat modal ditutup
     }
 
     public function closeModal()
@@ -210,13 +212,35 @@ class MasterData extends Component
         return (float) $clean;
     }
 
-    // Simpan Data Utama
+    // --- PERBAIKAN DI SINI: FUNGSI STORE DENGAN VALIDASI UNIK ---
     public function store()
     {
-        $this->validate([
-            'kode' => 'required',
-            'nama' => 'required'
-        ]);
+        // Tentukan tabel apa yang sedang dicek uniknya
+        $tableName = match ($this->formType) {
+            'program' => 'programs',
+            'kegiatan' => 'kegiatans',
+            'sub_kegiatan' => 'sub_kegiatans',
+        };
+
+        // Bikin rules dinamis. Cek unique berdasarkan tabel yang aktif
+        $rules = [
+            'nama' => 'required',
+            'kode' => [
+                'required',
+                Rule::unique($tableName, 'kode')->ignore($this->dataId)->where(function ($query) {
+                    // Pastikan yang dicek unik cuma di tahun yang sama
+                    return $query->where('tahun', $this->tahun); 
+                }),
+            ]
+        ];
+
+        $messages = [
+            'kode.required' => 'Kode wajib diisi.',
+            'kode.unique' => 'Kode ini sudah digunakan di Tahun ' . $this->tahun . '! Silakan gunakan kode lain.',
+            'nama.required' => 'Nama wajib diisi.'
+        ];
+
+        $this->validate($rules, $messages);
 
         $data = [
             'kode' => $this->kode,

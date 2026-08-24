@@ -177,7 +177,7 @@
                                     @endphp
 
                                     @if(auth()->user()->hasRole('admin'))
-                                    <button wire:click="pilihPenanggungJawab({{ $sub->id }})" class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] border w-fit transition-colors shadow-sm {{ $pjClass }}">
+                                    <button wire:click="pilihPenanggungJawab({{ $sub->id }})" class="mt-2 inline-flex items-center px-2 py-0.5 rounded text-[10px] border w-fit transition-colors shadow-sm {{ $pjClass }}" title="Klik untuk ubah Penanggung Jawab">
                                         <svg class="mr-1 h-3 w-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path>
                                         </svg>
@@ -586,9 +586,8 @@
                                     <span class="inline-flex items-center px-3 rounded-l-md border border-r-0 border-gray-300 bg-gray-50 text-gray-500 text-sm">
                                         Rp.
                                     </span>
-                                    <input type="text" wire:model="pagu_{{ $y }}" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="0">
+                                    <input type="text" wire:model="pagu_{{ $y }}" oninput="formatRupiah(this)" class="flex-1 min-w-0 block w-full px-3 py-2 rounded-r-md border border-gray-300 text-sm focus:ring-blue-500 focus:border-blue-500 outline-none" placeholder="0">
                                 </div>
-                                <p class="mt-1 text-xs text-gray-400">Ketik angka saja; akan diformat otomatis.</p>
                             </div>
                         </div>
                     </div>
@@ -638,4 +637,22 @@
     </div>
     @endif
     @endif
+    
+    <script>
+        function formatRupiah(obj) {
+            let value = obj.value.replace(/[^,\d]/g, '').toString();
+            let split = value.split(',');
+            let sisa = split[0].length % 3;
+            let rupiah = split[0].substr(0, sisa);
+            let ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+            if (ribuan) {
+                let separator = sisa ? '.' : '';
+                rupiah += separator + ribuan.join('.');
+            }
+
+            rupiah = split[1] != undefined ? rupiah + ',' + split[1] : rupiah;
+            obj.value = rupiah;
+        }
+    </script>
 </div>

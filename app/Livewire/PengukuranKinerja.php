@@ -16,6 +16,7 @@ use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Maatwebsite\Excel\Facades\Excel;
 use App\Exports\LaporanKinerjaBulananExport;
+use Illuminate\Validation\Rule; // Tambahkan ini untuk validasi unique
 
 class PengukuranKinerja extends Component
 {
@@ -478,9 +479,7 @@ class PengukuranKinerja extends Component
         $this->indikatorId = $selectedIndikator->id;
         $this->indikatorNama = $selectedIndikator->nama_indikator;
         
-        // PERBAIKAN: Hitung ulang target secara manual (karena properti dynamic target_tahunan bisa hilang saat re-hydrate)
         $colTarget = 'target_' . $this->tahun;
-        // Cek kolom target tahun (target_2025 dst), jika kosong ambil target default
         $this->indikatorTarget = $selectedIndikator->$colTarget ?? $selectedIndikator->target; 
         
         $this->indikatorSatuan = $selectedIndikator->satuan;
@@ -510,12 +509,17 @@ class PengukuranKinerja extends Component
     {
         if (!$this->canEdit) return;
 
-        $this->validate(['realisasiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
+        $this->validate([
+            'realisasiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']
+        ]);
+        
         $cleanRealisasi = str_replace(',', '.', $this->realisasiInput);
         $cleanCapaian = null;
         if ($this->showCapaianInput && $this->capaianInput !== '' && $this->capaianInput !== null) {
             $cleanCapaian = str_replace(',', '.', $this->capaianInput);
         }
+
+        // [PERBAIKAN ANTI DOUBLE INPUT] Pakai updateOrCreate
         RealisasiKinerja::updateOrCreate(
             ['indikator_id' => $this->indikatorId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun],
             ['realisasi' => $cleanRealisasi, 'capaian' => $cleanCapaian, 'catatan' => $this->catatanInput]
@@ -552,11 +556,15 @@ class PengukuranKinerja extends Component
     {
         if (!$this->canEdit) return;
         $this->validate(['realisasiAksiInput' => ['required', 'regex:/^\d+([.,]\d+)?$/']]);
+        
         $cleanRealisasi = str_replace(',', '.', $this->realisasiAksiInput);
+        
+        // [PERBAIKAN ANTI DOUBLE INPUT]
         RealisasiRencanaAksi::updateOrCreate(
             ['rencana_aksi_id' => $this->aksiId, 'bulan' => $this->selectedMonth, 'tahun' => $this->tahun],
             ['realisasi' => $cleanRealisasi]
         );
+        
         $this->closeRealisasiAksi();
         $this->loadData(); // REFRESH DATA INSTAN
         session()->flash('message', 'Realisasi aksi berhasil disimpan.');
@@ -579,7 +587,23 @@ class PengukuranKinerja extends Component
     {
         if (!$this->canEdit) return;
         
-        $this->validate(['formAksiNama' => 'required', 'formAksiTarget' => 'required', 'formAksiSatuan' => 'required']);
+        // [PERBAIKAN VALIDASI ANTI DOUBLE RENCANA AKSI]
+        $this->validate([
+            'formAksiNama' => [
+                'required',
+                // Mencegah nama aksi yang sama persis di bulan yang sama untuk jabatan yang sama
+                Rule::unique('rencana_aksis', 'nama_aksi')->where(function ($query) {
+                    return $query->where('jabatan_id', $this->jabatan->id)
+                                 ->where('bulan', $this->selectedMonth)
+                                 ->where('tahun', $this->tahun);
+                }),
+            ],
+            'formAksiTarget' => 'required', 
+            'formAksiSatuan' => 'required'
+        ], [
+            'formAksiNama.unique' => 'Rencana Aksi ini sudah pernah ditambahkan di bulan ini!'
+        ]);
+
         $cleanTarget = str_replace(',', '.', $this->formAksiTarget);
         
         RencanaAksi::create([
