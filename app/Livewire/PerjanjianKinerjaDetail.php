@@ -8,6 +8,7 @@ use App\Models\Jabatan;
 use App\Models\Pegawai;
 use App\Models\PerjanjianKinerja;
 use Carbon\Carbon;
+use Illuminate\Validation\Rule;
 
 class PerjanjianKinerjaDetail extends Component
 {
@@ -147,8 +148,19 @@ class PerjanjianKinerjaDetail extends Component
     {
         $this->validate([
             'tahun' => 'required',
-            'bulan' => 'required|integer|min:1|max:12', // [UPDATE] Validasi Bulan Wajib Ada
+            'bulan' => [
+                'required',
+                'integer',
+                'min:1',
+                'max:12',
+                Rule::unique('perjanjian_kinerjas')->where(function ($query) {
+                    return $query->where('jabatan_id', $this->jabatan->id)
+                                 ->where('tahun', $this->tahun);
+                })->ignore($this->pkId)
+            ],
             'keterangan' => 'required',
+        ], [
+            'bulan.unique' => 'Perjanjian Kinerja untuk Jabatan, Tahun, dan Bulan ini sudah ada.'
         ]);
 
         // Siapkan Data

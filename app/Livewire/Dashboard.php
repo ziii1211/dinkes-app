@@ -11,9 +11,13 @@ use App\Models\Jabatan;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Carbon\Carbon;
+use App\Traits\TopsisCalculator;
+
 
 class Dashboard extends Component
 {
+    use TopsisCalculator;
+
     public $periode = 'Renstra 2026-2030';
     public $perangkat_daerah = ''; 
 
@@ -521,7 +525,8 @@ class Dashboard extends Component
             'deadline' => $deadlineData,
             'sisa_hari' => $sisaHari,
             'bulan_nama' => $bulanNama,
-            'jabatans' => $jabatans 
+            'jabatans' => $jabatans,
+            'topsis' => $this->calculateTopsisCharts($rawPerformance)
         ];
 
         return view('livewire.dashboard', $data);

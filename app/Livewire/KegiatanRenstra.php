@@ -7,6 +7,7 @@ use App\Models\Jabatan;
 use App\Models\Kegiatan;
 use App\Models\OutputKegiatan;
 use App\Models\Program;
+use Illuminate\Validation\Rule;
 use Livewire\Component;
 
 class KegiatanRenstra extends Component
@@ -133,7 +134,23 @@ class KegiatanRenstra extends Component
 
     public function store()
     {
-        $this->validate(['kode' => 'required', 'nama' => 'required']);
+        $this->validate([
+            'kode' => [
+                'required',
+                Rule::unique('kegiatans')->where(function ($query) {
+                    return $query->where('program_id', $this->program->id);
+                })->ignore($this->isEditMode ? $this->kegiatan_id : null)
+            ],
+            'nama' => [
+                'required',
+                Rule::unique('kegiatans')->where(function ($query) {
+                    return $query->where('program_id', $this->program->id);
+                })->ignore($this->isEditMode ? $this->kegiatan_id : null)
+            ]
+        ], [
+            'kode.unique' => 'Kode Kegiatan ini sudah ada pada Program tersebut.',
+            'nama.unique' => 'Nama Kegiatan ini sudah ada pada Program tersebut.'
+        ]);
         
         if ($this->isEditMode) {
             // Update Data

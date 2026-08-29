@@ -245,6 +245,99 @@
             </div>
         </div>
 
+        {{-- TOPSIS CHARTS --}}
+        <div class="mt-12 mb-6 animate-entry delay-200" 
+             x-data="{
+                 init() {
+                     if (typeof ApexCharts === 'undefined') {
+                         let script = document.createElement('script');
+                         script.src = 'https://cdn.jsdelivr.net/npm/apexcharts';
+                         script.onload = () => { setTimeout(() => this.renderCharts(), 100) };
+                         document.head.appendChild(script);
+                     } else {
+                         setTimeout(() => this.renderCharts(), 100);
+                     }
+                 },
+                 renderCharts() {
+                     let topsis = JSON.parse(this.$refs.topsisData.textContent);
+                     
+                     if(this.gauge) this.gauge.destroy();
+                     this.gauge = new ApexCharts(this.$refs.gauge, { series: [topsis.gauge_indeks], chart: { type: 'radialBar', height: 250 }, plotOptions: { radialBar: { hollow: { size: '60%' }, dataLabels: { value: { fontSize: '30px', fontWeight: 'bold', formatter: (val) => val + '%' } } } }, colors: ['#4f46e5'] });
+                     this.gauge.render();
+
+                     if(this.pie) this.pie.destroy();
+                     this.pie = new ApexCharts(this.$refs.pie, { series: topsis.pie_predikat.data, labels: topsis.pie_predikat.labels, chart: { type: 'donut', height: 250 }, colors: ['#10b981', '#3b82f6', '#f59e0b', '#ef4444'], dataLabels: { enabled: false }, legend: { position: 'bottom' } });
+                     this.pie.render();
+
+                     if(this.radar) this.radar.destroy();
+                     this.radar = new ApexCharts(this.$refs.radar, { series: topsis.radar_kriteria.series, labels: topsis.radar_kriteria.labels, chart: { type: 'radar', height: 250, toolbar: { show: false } }, stroke: { width: 2 }, fill: { opacity: 0.2 }, markers: { size: 3 }, yaxis: { show: false }, xaxis: { labels: { style: { fontSize: '10px' } } }, legend: { position: 'bottom', fontSize: '10px' } });
+                     this.radar.render();
+
+                     if(this.bar) this.bar.destroy();
+                     this.bar = new ApexCharts(this.$refs.bar, { series: [{ name: 'Skor TOPSIS', data: topsis.bar_bidang.data }], chart: { type: 'bar', height: 300, toolbar: { show: false } }, plotOptions: { bar: { borderRadius: 4, horizontal: false, columnWidth: '50%' } }, xaxis: { categories: topsis.bar_bidang.labels, labels: { style: { fontSize: '10px' } } }, colors: ['#6366f1'], dataLabels: { enabled: false } });
+                     this.bar.render();
+
+                     if(this.heatmap) this.heatmap.destroy();
+                     this.heatmap = new ApexCharts(this.$refs.heatmap, { series: topsis.heatmap_matrix.series, chart: { type: 'heatmap', height: 350, toolbar: { show: false } }, dataLabels: { enabled: true, style: { fontSize: '10px' } }, colors: ['#8b5cf6'], xaxis: { labels: { style: { fontSize: '11px', fontWeight: 'bold' } } } });
+                     this.heatmap.render();
+             }
+             }"
+             x-on:livewire:morph.updated.window="renderCharts()"
+        >
+            <div x-ref="topsisData" class="hidden">{{ json_encode($topsis) }}</div>
+
+            <h2 class="text-2xl font-extrabold text-slate-800 mb-2">Analisis Kinerja Cerdas (TOPSIS)</h2>
+            <p class="text-slate-500 mb-8 font-medium">Evaluasi multi-kriteria (Capaian, Isu Kritis, Prestasi, Stabilitas) menggunakan metode Technique for Order of Preference by Similarity to Ideal Solution.</p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                <div class="glass-card rounded-[2rem] p-6 text-center" wire:ignore>
+                    <h3 class="font-bold text-slate-700 mb-2">Indeks Organisasi</h3>
+                    <div x-ref="gauge" class="flex justify-center"></div>
+                </div>
+                <div class="glass-card rounded-[2rem] p-6" wire:ignore>
+                    <h3 class="font-bold text-slate-700 mb-2 text-center">Distribusi Predikat</h3>
+                    <div x-ref="pie" class="flex justify-center mt-4"></div>
+                </div>
+                <div class="glass-card rounded-[2rem] p-6" wire:ignore>
+                    <h3 class="font-bold text-slate-700 mb-2 text-center">Profil Kriteria</h3>
+                    <div x-ref="radar" class="flex justify-center mt-4"></div>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mb-6">
+                <div class="lg:col-span-8 glass-card rounded-[2rem] p-6" wire:ignore>
+                    <h3 class="font-bold text-slate-700 mb-4">Perbandingan Skor Antar Bidang (Top 10)</h3>
+                    <div x-ref="bar"></div>
+                </div>
+                <div class="lg:col-span-4 glass-card rounded-[2rem] p-6">
+                    <h3 class="font-bold text-slate-700 mb-4 flex items-center gap-2">
+                        <svg class="w-5 h-5 text-amber-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        Leaderboard Pegawai
+                    </h3>
+                    <div class="space-y-4">
+                        @forelse($topsis['leaderboard'] as $idx => $lb)
+                        <div class="flex items-center justify-between p-3 rounded-xl {{ $idx == 0 ? 'bg-gradient-to-r from-amber-50 to-white border border-amber-200 shadow-sm' : 'bg-slate-50 border border-slate-100' }}">
+                            <div class="flex items-center gap-3">
+                                <div class="w-8 h-8 rounded-full flex items-center justify-center font-bold text-sm {{ $idx == 0 ? 'bg-amber-400 text-white shadow-md' : 'bg-slate-200 text-slate-600' }}">
+                                    {{ $idx + 1 }}
+                                </div>
+                                <span class="font-bold text-sm text-slate-800">{{ Str::limit($lb['jabatan'], 20) }}</span>
+                            </div>
+                            <span class="font-bold {{ $idx == 0 ? 'text-amber-600' : 'text-indigo-600' }}">{{ $lb['Ci'] }}</span>
+                        </div>
+                        @empty
+                        <div class="text-sm text-slate-400 text-center py-4">Belum ada data</div>
+                        @endforelse
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card rounded-[2rem] p-6 mb-12" wire:ignore>
+                <h3 class="font-bold text-slate-700 mb-4">Matriks Kinerja vs Kriteria</h3>
+                <div x-ref="heatmap"></div>
+            </div>
+        </div>
+
         {{-- BOTTOM SECTION --}}
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 animate-entry delay-200">
             

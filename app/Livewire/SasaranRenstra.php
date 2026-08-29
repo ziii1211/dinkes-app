@@ -7,6 +7,7 @@ use App\Models\Sasaran;
 use App\Models\Tujuan;
 use App\Models\Jabatan;
 use App\Models\IndikatorSasaran;
+use Illuminate\Validation\Rule;
 
 class SasaranRenstra extends Component
 {
@@ -63,7 +64,17 @@ class SasaranRenstra extends Component
     public function create() { $this->reset(['tujuan_id', 'sasaran', 'sasaran_id', 'isEditMode']); $this->openModal(); }
     
     public function store() {
-        $this->validate(['tujuan_id' => 'required', 'sasaran' => 'required']);
+        $this->validate([
+            'tujuan_id' => 'required', 
+            'sasaran' => [
+                'required',
+                Rule::unique('sasarans')->where(function ($query) {
+                    return $query->where('tujuan_id', $this->tujuan_id);
+                })->ignore($this->isEditMode ? $this->sasaran_id : null)
+            ]
+        ], [
+            'sasaran.unique' => 'Sasaran ini sudah ada pada Tujuan tersebut.'
+        ]);
         
         if ($this->isEditMode) { 
             Sasaran::find($this->sasaran_id)->update(['tujuan_id' => $this->tujuan_id, 'sasaran' => $this->sasaran]); 

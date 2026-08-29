@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use App\Models\Program;
 use App\Models\Outcome;
+use Illuminate\Validation\Rule;
 
 class ProgramKegiatan extends Component
 {
@@ -53,8 +54,19 @@ class ProgramKegiatan extends Component
     }
     
     public function store() {
-        $this->validate(['kode' => 'required', 'nama' => 'required']);
-        
+        $this->validate([
+            'kode' => [
+                'required',
+                Rule::unique('programs')->ignore($this->isEditMode ? $this->program_id : null)
+            ],
+            'nama' => [
+                'required',
+                Rule::unique('programs')->ignore($this->isEditMode ? $this->program_id : null)
+            ]
+        ], [
+            'kode.unique' => 'Kode Program ini sudah digunakan.',
+            'nama.unique' => 'Nama Program ini sudah digunakan.'
+        ]);
         if ($this->isEditMode) { 
             Program::find($this->program_id)->update([
                 'kode' => $this->kode, 

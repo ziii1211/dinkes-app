@@ -8,6 +8,7 @@ use App\Models\Kegiatan;
 use App\Models\SubKegiatan;
 use App\Models\Jabatan;
 use App\Models\IndikatorSubKegiatan;
+use Illuminate\Validation\Rule;
 
 class SubKegiatanRenstra extends Component
 {
@@ -110,8 +111,21 @@ class SubKegiatanRenstra extends Component
 
     public function store() {
         $this->validate([
-            'kode' => 'required', 
-            'nama' => 'required'
+            'kode' => [
+                'required',
+                Rule::unique('sub_kegiatans')->where(function ($query) {
+                    return $query->where('kegiatan_id', $this->kegiatan->id);
+                })->ignore($this->isEditMode ? $this->sub_kegiatan_id : null)
+            ],
+            'nama' => [
+                'required',
+                Rule::unique('sub_kegiatans')->where(function ($query) {
+                    return $query->where('kegiatan_id', $this->kegiatan->id);
+                })->ignore($this->isEditMode ? $this->sub_kegiatan_id : null)
+            ]
+        ], [
+            'kode.unique' => 'Kode Sub Kegiatan ini sudah ada pada Kegiatan tersebut.',
+            'nama.unique' => 'Nama Sub Kegiatan ini sudah ada pada Kegiatan tersebut.'
         ]);
 
         if ($this->isEditMode) {

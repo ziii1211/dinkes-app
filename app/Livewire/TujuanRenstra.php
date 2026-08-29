@@ -6,6 +6,7 @@ use Livewire\Component;
 use App\Models\Tujuan;
 use App\Models\Jabatan;
 use App\Models\IndikatorTujuan;
+use Illuminate\Validation\Rule;
 
 class TujuanRenstra extends Component
 {
@@ -66,7 +67,17 @@ class TujuanRenstra extends Component
     public function create() { $this->reset(['sasaran_rpjmd', 'tujuan', 'tujuan_id', 'isEditMode']); $this->openModal(); }
     
     public function store() {
-        $this->validate(['sasaran_rpjmd' => 'required', 'tujuan' => 'required']);
+        $this->validate([
+            'sasaran_rpjmd' => 'required', 
+            'tujuan' => [
+                'required',
+                Rule::unique('tujuans')->where(function ($query) {
+                    return $query->where('sasaran_rpjmd', $this->sasaran_rpjmd);
+                })->ignore($this->isEditMode ? $this->tujuan_id : null)
+            ]
+        ], [
+            'tujuan.unique' => 'Tujuan ini sudah ada pada Sasaran RPJMD tersebut.'
+        ]);
         
         if ($this->isEditMode) { 
             // Update data

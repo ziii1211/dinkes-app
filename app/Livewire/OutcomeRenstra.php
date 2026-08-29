@@ -7,6 +7,7 @@ use App\Models\Outcome;
 use App\Models\Sasaran; // Pastikan Model Sasaran di-import
 use App\Models\Jabatan;
 use App\Models\IndikatorOutcome;
+use Illuminate\Validation\Rule;
 use App\Models\Pegawai;
 
 class OutcomeRenstra extends Component
@@ -76,7 +77,17 @@ class OutcomeRenstra extends Component
     }
     
     public function store() {
-        $this->validate(['sasaran_id' => 'required', 'outcome' => 'required']);
+        $this->validate([
+            'sasaran_id' => 'required', 
+            'outcome' => [
+                'required',
+                Rule::unique('outcomes')->where(function ($query) {
+                    return $query->where('sasaran_id', $this->sasaran_id);
+                })->ignore($this->isEditMode ? $this->outcome_id : null)
+            ]
+        ], [
+            'outcome.unique' => 'Outcome ini sudah ada pada Sasaran tersebut.'
+        ]);
         
         if ($this->isEditMode) { 
             Outcome::find($this->outcome_id)->update([
