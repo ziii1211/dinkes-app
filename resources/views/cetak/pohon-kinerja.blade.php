@@ -2,174 +2,496 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <title>Visualisasi Pohon Kinerja</title>
+    <title>Visualisasi Pohon Kinerja - Dinas Kesehatan</title>
     <style>
-        @page { margin: 30px 40px; }
+        @page { 
+            size: a4 landscape;
+            margin: 8mm 10mm 8mm 10mm; 
+        }
         body { 
-            font-family: 'Helvetica Neue', Helvetica, Arial, sans-serif; 
-            font-size: 10pt; 
+            font-family: Arial, Helvetica, sans-serif; 
+            font-size: 7.5pt; 
             color: #1f2937; 
+            line-height: 1.25;
         }
         
-        /* Kop Surat */
-        .kop-surat { width: 100%; border-bottom: 3px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-        .kop-surat td { border: none; vertical-align: middle; }
-        .kop-surat .logo { width: 80px; height: auto; }
-        .kop-surat .judul-dokumen { text-align: center; }
-        .kop-surat h1 { font-size: 15pt; font-weight: bold; margin: 0 0 5px 0; letter-spacing: 1px; }
-        .kop-surat h2 { font-size: 12pt; font-weight: bold; margin: 0 0 3px 0; }
-        .kop-surat h3 { font-size: 11pt; font-weight: normal; margin: 0; }
-        
-        /* Bagan Pohon Vertikal (CSS) */
-        .tree-wrapper { margin-top: 20px; }
-        
-        .node-container { position: relative; margin-bottom: 10px; }
-        
-        /* Kotak Kinerja */
-        .node-box {
-            width: 85%; /* Lebar kotak memanjang agar muat text */
-            border: 2px solid #2563eb; 
-            border-radius: 8px; 
-            background-color: #ffffff;
+        /* Kop Surat Resmi */
+        .table-kop { 
+            width: 100%; 
+            border-bottom: 2px solid #000; 
+            padding-bottom: 4px; 
+            margin-bottom: 6px; 
+            border-collapse: collapse;
+        }
+        .table-kop td { 
+            border: none; 
+            vertical-align: middle; 
+        }
+        .table-kop .logo-col {
+            width: 55px;
+            text-align: center;
+        }
+        .table-kop .logo-img { 
+            width: 45px; 
+            height: auto; 
+        }
+        .table-kop .header-title { 
+            text-align: center; 
+        }
+        .table-kop .header-title h1 { 
+            font-size: 11pt; 
+            font-weight: bold; 
+            margin: 0 0 2px 0; 
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #111827;
+        }
+        .table-kop .header-title h2 { 
+            font-size: 9pt; 
+            font-weight: bold; 
+            margin: 0 0 1px 0; 
+            color: #1f2937;
+        }
+        .table-kop .header-title h3 { 
+            font-size: 8pt; 
+            font-weight: normal; 
+            margin: 0; 
+            color: #4b5563;
+        }
+
+        /* Line Connectors */
+        .stem-vertical { 
+            width: 2px; 
+            height: 10px; 
+            background-color: #64748b; 
+            margin: 0 auto; 
+        }
+
+        /* Kartu Kinerja (Sesuai Desain Menu Visualisasi) */
+        .card-root { 
+            border: 2px solid #dc3545; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            background: #ffffff; 
+            width: 82%; 
+            margin: 0 auto; 
             page-break-inside: avoid;
         }
-        
-        /* Judul Jabatan (Header Kotak) */
-        .node-header {
-            background-color: #2563eb;
-            color: #ffffff;
-            font-weight: bold;
-            padding: 8px 12px;
-            font-size: 11pt;
-            border-top-left-radius: 5px;
-            border-top-right-radius: 5px;
+        .card-root .header { 
+            background-color: #dc3545; 
+            color: #ffffff; 
+            font-weight: bold; 
+            padding: 4px 8px; 
+            text-transform: uppercase; 
+            font-size: 8.5pt; 
+            text-align: center;
         }
 
-        /* Isi Kinerja dan Indikator */
-        .node-body { padding: 10px 12px; }
-        .kinerja-item { margin-bottom: 8px; padding-bottom: 8px; border-bottom: 1px dashed #e5e7eb; }
-        .kinerja-item:last-child { margin-bottom: 0; padding-bottom: 0; border-bottom: none; }
-        .kinerja-title { font-weight: bold; color: #111827; margin-bottom: 4px; }
-        
-        .indikator-list { margin: 0; padding-left: 20px; font-size: 9.5pt; color: #4b5563; }
-        .indikator-list li { margin-bottom: 3px; }
+        .card-l1 { 
+            border: 1.5px solid #0d6efd; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            background: #ffffff; 
+            width: 96%; 
+            margin: 0 auto; 
+            page-break-inside: avoid;
+        }
+        .card-l1 .header { 
+            background-color: #0d6efd; 
+            color: #ffffff; 
+            font-weight: bold; 
+            padding: 3px 5px; 
+            text-transform: uppercase; 
+            font-size: 7.5pt; 
+            text-align: center;
+        }
 
-        /* Garis Vertikal dan Horizontal (Connecting Lines) */
-        .children-container {
-            border-left: 2px solid #93c5fd; /* Garis vertikal ke bawah */
-            margin-left: 30px;              /* Jarak indentasi */
-            padding-left: 20px;             /* Jarak dari garis ke kotak anak */
-            padding-top: 10px;
+        .card-l1-single { 
+            border: 2px solid #0d6efd; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            background: #ffffff; 
+            margin: 0 auto; 
+            page-break-inside: avoid;
         }
-        
-        .connector-horizontal {
-            position: absolute;
-            left: -22px; 
-            top: 20px;   
-            width: 20px; 
-            border-top: 2px solid #93c5fd; /* Garis horizontal ke kotak */
+        .card-l1-single .header { 
+            background-color: #0d6efd; 
+            color: #ffffff; 
+            font-weight: bold; 
+            padding: 4px 8px; 
+            text-transform: uppercase; 
+            font-size: 8pt; 
+            text-align: center;
         }
-        
-        /* Level 0 khusus (Root) */
-        .root-box { border-color: #1e3a8a; }
-        .root-header { background-color: #1e3a8a; }
+
+        .card-l2 { 
+            border: 1.5px solid #f59e0b; 
+            border-radius: 4px; 
+            overflow: hidden; 
+            background: #ffffff; 
+            width: 96%; 
+            margin: 0 auto; 
+            page-break-inside: avoid;
+        }
+        .card-l2 .header { 
+            background-color: #f59e0b; 
+            color: #111827; 
+            font-weight: bold; 
+            padding: 3px 6px; 
+            text-transform: uppercase; 
+            font-size: 7.5pt; 
+            text-align: center;
+        }
+
+        /* Tabel Isi Kinerja */
+        .table-content { 
+            width: 100%; 
+            border-collapse: collapse; 
+            font-size: 7pt; 
+            text-align: left; 
+        }
+        .table-content th { 
+            background-color: #f1f5f9; 
+            color: #334155; 
+            padding: 2.5px 4px; 
+            border: 1px solid #cbd5e1; 
+            font-weight: bold; 
+            text-align: center; 
+            font-size: 7pt;
+            text-transform: uppercase;
+        }
+        .table-content td { 
+            padding: 2.5px 4px; 
+            border: 1px solid #e2e8f0; 
+            vertical-align: top; 
+            color: #1e293b;
+        }
+
+        .page-break { 
+            page-break-after: always; 
+        }
     </style>
 </head>
 <body>
 
-    <table class="kop-surat">
-        <tr>
-            <td width="15%" class="text-center">
-                <img src="{{ public_path('logo pemprov.png') }}" class="logo" alt="Logo Pemprov">
-            </td>
-            <td width="70%" class="judul-dokumen">
-                <h1>LAPORAN VISUALISASI POHON KINERJA</h1>
-                <h2>{{ strtoupper($header['unit_kerja'] ?? 'DINAS KESEHATAN') }}</h2>
-                <h3>PERIODE TAHUN {{ $header['periode'] ?? '2025 - 2029' }}</h3>
-            </td>
-            <td width="15%"></td>
-        </tr>
-    </table>
+    @php
+        $root = $tree->first();
+        $level1 = $root ? $root->children->values() : collect([]);
+    @endphp
 
-    <div class="tree-wrapper">
-        {{-- FUNGSI REKURSIF RENDER BAGAN KOTAK DI DALAM BLADE --}}
-        @php
-            $renderTree = function($nodes, $level = 0) use (&$renderTree) {
-                $html = '';
-                foreach($nodes as $node) {
-                    // Penentuan warna berdasarkan level (Root lebih gelap)
-                    $isRoot = ($level === 0);
-                    $boxClass = $isRoot ? 'node-box root-box' : 'node-box';
-                    $headerClass = $isRoot ? 'node-header root-header' : 'node-header';
-                    
-                    // Container Node
-                    $html .= '<div class="node-container">';
-                    
-                    // Tambahkan garis horizontal menyamping jika ini adalah anak (bukan root)
-                    if(!$isRoot) {
-                        $html .= '<div class="connector-horizontal"></div>';
-                    }
+    @if($root)
+        {{-- ========================================================= --}}
+        {{-- HALAMAN 1: BAGAN UTAMA LANDSCAPE (LEVEL 0 KE LEVEL 1)     --}}
+        {{-- ========================================================= --}}
+        <table class="table-kop">
+            <tr>
+                <td class="logo-col">
+                    <img src="{{ public_path('logo pemprov.png') }}" class="logo-img" alt="Logo Pemprov">
+                </td>
+                <td class="header-title">
+                    <h1>LAPORAN VISUALISASI POHON KINERJA</h1>
+                    <h2>{{ strtoupper($header['unit_kerja'] ?? 'DINAS KESEHATAN PROVINSI KALIMANTAN SELATAN') }}</h2>
+                    <h3>BAGAN UTAMA EKSEKUTIF (LEVEL 0 &bull; KEPALA DINAS KE LEVEL 1 &bull; SEKRETARIS &amp; KEPALA BIDANG)</h3>
+                </td>
+                <td style="width: 55px;"></td>
+            </tr>
+        </table>
 
-                    // Render Kotaknya
-                    $html .= '<div class="'.$boxClass.'">';
-                    
-                    // Header Jabatan
-                    $jabatanText = $node->jabatan ?: 'Tanpa Jabatan / Jabatan Kosong';
-                    $html .= '<div class="'.$headerClass.'">'.$jabatanText.'</div>';
-                    
-                    // Body / Kinerja & Indikator
-                    $html .= '<div class="node-body">';
-                    
-                    if(is_array($node->kinerja_items) && count($node->kinerja_items) > 0) {
-                        foreach($node->kinerja_items as $k) {
-                            $html .= '<div class="kinerja-item">';
-                            $html .= '<div class="kinerja-title">🎯 '.($k['kinerja_utama'] ?: 'Kinerja belum diisi').'</div>';
-                            
-                            // Render Indikatornya
-                            if(isset($k['indikators']) && is_array($k['indikators']) && count($k['indikators']) > 0) {
-                                $html .= '<ul class="indikator-list">';
-                                foreach($k['indikators'] as $ind) {
-                                    $nama = $ind['nama'] ?? '-';
-                                    $nilai = $ind['nilai'] ?? '-';
-                                    $satuan = $ind['satuan'] ?? '';
-                                    $html .= '<li>Indikator: '.$nama.' <strong>(Target: '.$nilai.' '.$satuan.')</strong></li>';
-                                }
-                                $html .= '</ul>';
-                            } else {
-                                $html .= '<div style="font-size:9pt; color:#9ca3af; margin-left:20px;">Belum ada indikator</div>';
-                            }
-                            $html .= '</div>';
-                        }
-                    } else {
-                        $html .= '<div style="font-size:9.5pt; color:#6b7280; font-style:italic;">Data kinerja kosong...</div>';
-                    }
+        {{-- KARTU LEVEL 0 (ROOT - KEPALA DINAS) DI TENGAH ATAS --}}
+        <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+                <td align="center">
+                    <div class="card-root">
+                        <div class="header">{{ $root->jabatan ?: 'Kepala Dinas' }} &bull; LEVEL 0 (ULTIMATE OUTCOME)</div>
+                        <table class="table-content">
+                            <thead>
+                                <tr>
+                                    <th style="width: 44%;">Kinerja Utama</th>
+                                    <th style="width: 40%;">Indikator Kinerja</th>
+                                    <th style="width: 16%;">Target</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @php
+                                    $rootItems = is_array($root->kinerja_items) ? $root->kinerja_items : [];
+                                @endphp
+                                @forelse($rootItems as $k)
+                                    @php
+                                        $inds = $k['indikators'] ?? [];
+                                        $rs = max(1, count($inds));
+                                    @endphp
+                                    @if(count($inds) > 0)
+                                        @foreach($inds as $i => $ind)
+                                            <tr>
+                                                @if($i === 0)
+                                                    <td rowspan="{{ $rs }}" style="font-weight: bold; background-color: #fafafa;">{{ $k['kinerja_utama'] }}</td>
+                                                @endif
+                                                <td>&bull; {{ $ind['nama'] ?? '-' }}</td>
+                                                <td style="text-align: center; font-weight: bold; color: #1e3a8a;">{{ ($ind['nilai'] ?? '-') . ' ' . ($ind['satuan'] ?? '') }}</td>
+                                            </tr>
+                                        @endforeach
+                                    @else
+                                        <tr>
+                                            <td style="font-weight: bold;">{{ $k['kinerja_utama'] }}</td>
+                                            <td style="color: #9ca3af; font-style: italic;">Belum ada indikator</td>
+                                            <td style="text-align: center;">-</td>
+                                        </tr>
+                                    @endif
+                                @empty
+                                    <tr>
+                                        <td colspan="3" style="text-align: center; color: #9ca3af; font-style: italic;">Belum ada data kinerja</td>
+                                    </tr>
+                                @endforelse
+                            </tbody>
+                        </table>
+                    </div>
+                </td>
+            </tr>
+            <tr>
+                <td align="center">
+                    <div class="stem-vertical"></div>
+                </td>
+            </tr>
+        </table>
 
-                    $html .= '</div>'; // End node-body
-                    $html .= '</div>'; // End node-box
-
-                    // Jika Node ini punya anak, panggil fungsi lagi (Rekursif) dan masukkan ke dalam Container Garis
-                    if($node->children->count() > 0) {
-                        $html .= '<div class="children-container">';
-                        $html .= $renderTree($node->children, $level + 1);
-                        $html .= '</div>';
-                    }
-
-                    $html .= '</div>'; // End node-container
-                }
-                return $html;
-            };
-        @endphp
-
-        {{-- JALANKAN FUNGSINYA DI SINI --}}
-        @if($tree->count() > 0)
-            {!! $renderTree($tree) !!}
-        @else
-            <div style="text-align: center; color: #6b7280; font-style: italic; margin-top: 50px;">
-                Belum ada data Visualisasi Pohon Kinerja yang dibuat.
-            </div>
+        {{-- CABANG LEVEL 1 SEJAJAR MENDATAR (HORIZONTAL LANDSCAPE COLUMNS) --}}
+        @if($level1->count() > 0)
+            <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                <tr>
+                    @php $colWidth = 100 / $level1->count(); @endphp
+                    @foreach($level1 as $l1)
+                        <td style="width: {{ $colWidth }}%; vertical-align: top; padding: 0 2px;">
+                            <div class="card-l1">
+                                <div class="header">{{ $l1->jabatan }}</div>
+                                <table class="table-content">
+                                    <thead>
+                                        <tr>
+                                            <th style="width: 50%;">Kinerja Utama</th>
+                                            <th style="width: 50%;">Indikator &amp; Target</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @php
+                                            $l1Items = is_array($l1->kinerja_items) ? $l1->kinerja_items : [];
+                                        @endphp
+                                        @forelse($l1Items as $k)
+                                            @php
+                                                $inds = $k['indikators'] ?? [];
+                                                $rs = max(1, count($inds));
+                                            @endphp
+                                            @if(count($inds) > 0)
+                                                @foreach($inds as $i => $ind)
+                                                    <tr>
+                                                        @if($i === 0)
+                                                            <td rowspan="{{ $rs }}" style="font-weight: 600;">{{ $k['kinerja_utama'] }}</td>
+                                                        @endif
+                                                        <td>
+                                                            &bull; {{ $ind['nama'] ?? '-' }}<br>
+                                                            <strong style="color: #1e3a8a;">({{ ($ind['nilai'] ?? '-') . ' ' . ($ind['satuan'] ?? '') }})</strong>
+                                                        </td>
+                                                    </tr>
+                                                @endforeach
+                                            @else
+                                                <tr>
+                                                    <td style="font-weight: 600;">{{ $k['kinerja_utama'] }}</td>
+                                                    <td style="color: #9ca3af; font-style: italic;">-</td>
+                                                </tr>
+                                            @endif
+                                        @empty
+                                            <tr>
+                                                <td colspan="2" style="text-align: center; color: #9ca3af; font-style: italic;">Data kinerja kosong</td>
+                                            </tr>
+                                        @endforelse
+                                    </tbody>
+                                </table>
+                            </div>
+                        </td>
+                    @endforeach
+                </tr>
+            </table>
         @endif
 
-    </div>
+        {{-- ========================================================= --}}
+        {{-- HALAMAN BERIKUTNYA: PENJABARAN CASCADING PER BIDANG       --}}
+        {{-- ========================================================= --}}
+        @php
+            // Filter hanya Bidang yang memiliki turunan (anak)
+            $bidangsWithChildren = $level1->filter(function($b) {
+                return isset($b->children) && $b->children->count() > 0;
+            })->values();
+
+            // Kelompokkan 1 atau 2 bidang per halaman agar muat lapang & mendatar
+            $pagedGroups = [];
+            $tempGroup = [];
+            $tempSubCount = 0;
+
+            foreach($bidangsWithChildren as $bidang) {
+                $subCount = $bidang->children->count();
+                // Jika sudah ada bidang lain dan ditambah bidang ini jadi > 4 sub-kegiatan, buat halaman baru
+                if(!empty($tempGroup) && ($tempSubCount + $subCount > 4 || $subCount >= 3)) {
+                    $pagedGroups[] = $tempGroup;
+                    $tempGroup = [$bidang];
+                    $tempSubCount = $subCount;
+                } else {
+                    $tempGroup[] = $bidang;
+                    $tempSubCount += $subCount;
+                    if($subCount >= 3) {
+                        $pagedGroups[] = $tempGroup;
+                        $tempGroup = [];
+                        $tempSubCount = 0;
+                    }
+                }
+            }
+            if(!empty($tempGroup)) {
+                $pagedGroups[] = $tempGroup;
+            }
+        @endphp
+
+        @foreach($pagedGroups as $pageIndex => $group)
+            <div class="page-break"></div>
+
+            <table class="table-kop">
+                <tr>
+                    <td class="logo-col">
+                        <img src="{{ public_path('logo pemprov.png') }}" class="logo-img" alt="Logo Pemprov">
+                    </td>
+                    <td class="header-title">
+                        <h1>LAPORAN VISUALISASI POHON KINERJA</h1>
+                        <h2>{{ strtoupper($header['unit_kerja'] ?? 'DINAS KESEHATAN PROVINSI KALIMANTAN SELATAN') }}</h2>
+                        <h3>PENJABARAN CASCADING BIDANG (LEVEL 1 &bull; KEPALA BIDANG KE LEVEL 2 &bull; SEKSI / SUBBAG)</h3>
+                    </td>
+                    <td style="width: 55px;"></td>
+                </tr>
+            </table>
+
+            @foreach($group as $bIndex => $bidang)
+                @php
+                    $subNodes = $bidang->children->values();
+                    $subCount = max(1, $subNodes->count());
+                    $singleCardWidth = (count($group) > 1) ? '82%' : '65%';
+                @endphp
+
+                <div style="margin-bottom: {{ count($group) > 1 ? '12px' : '0' }};">
+                    {{-- KARTU BIDANG (PARENT LEVEL 1) --}}
+                    <table style="width: 100%; border-collapse: collapse;">
+                        <tr>
+                            <td align="center">
+                                <div class="card-l1-single" style="width: {{ $singleCardWidth }};">
+                                    <div class="header">{{ $bidang->jabatan }} &bull; LEVEL 1 (INTERMEDIATE OUTCOME)</div>
+                                    <table class="table-content">
+                                        <thead>
+                                            <tr>
+                                                <th style="width: 44%;">Kinerja Utama</th>
+                                                <th style="width: 40%;">Indikator Kinerja</th>
+                                                <th style="width: 16%;">Target</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            @php
+                                                $bItems = is_array($bidang->kinerja_items) ? $bidang->kinerja_items : [];
+                                            @endphp
+                                            @forelse($bItems as $k)
+                                                @php
+                                                    $inds = $k['indikators'] ?? [];
+                                                    $rs = max(1, count($inds));
+                                                @endphp
+                                                @if(count($inds) > 0)
+                                                    @foreach($inds as $i => $ind)
+                                                        <tr>
+                                                            @if($i === 0)
+                                                                <td rowspan="{{ $rs }}" style="font-weight: 600; background-color: #fafafa;">{{ $k['kinerja_utama'] }}</td>
+                                                            @endif
+                                                            <td>&bull; {{ $ind['nama'] ?? '-' }}</td>
+                                                            <td style="text-align: center; font-weight: bold; color: #1e3a8a;">{{ ($ind['nilai'] ?? '-') . ' ' . ($ind['satuan'] ?? '') }}</td>
+                                                        </tr>
+                                                    @endforeach
+                                                @else
+                                                    <tr>
+                                                        <td style="font-weight: 600;">{{ $k['kinerja_utama'] }}</td>
+                                                        <td style="color: #9ca3af; font-style: italic;">Belum ada indikator</td>
+                                                        <td style="text-align: center;">-</td>
+                                                    </tr>
+                                                @endif
+                                            @empty
+                                                <tr>
+                                                    <td colspan="3" style="text-align: center; color: #9ca3af; font-style: italic;">Data kinerja kosong</td>
+                                                </tr>
+                                            @endforelse
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td align="center">
+                                <div class="stem-vertical"></div>
+                            </td>
+                        </tr>
+                    </table>
+
+                    {{-- KARTU-KARTU SEKSI/SUBBAG (ANAK LEVEL 2) SEJAJAR MENDATAR --}}
+                    <table style="width: 100%; border-collapse: collapse; table-layout: fixed;">
+                        <tr>
+                            @php $subColWidth = 100 / $subCount; @endphp
+                            @foreach($subNodes as $sub)
+                                <td style="width: {{ $subColWidth }}%; vertical-align: top; padding: 0 4px;">
+                                    <div class="card-l2">
+                                        <div class="header">{{ $sub->jabatan }} &bull; LEVEL 2 (OUTPUT)</div>
+                                        <table class="table-content">
+                                            <thead>
+                                                <tr>
+                                                    <th style="width: 44%;">Kinerja Utama</th>
+                                                    <th style="width: 40%;">Indikator</th>
+                                                    <th style="width: 16%;">Target</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                @php
+                                                    $sItems = is_array($sub->kinerja_items) ? $sub->kinerja_items : [];
+                                                @endphp
+                                                @forelse($sItems as $k)
+                                                    @php
+                                                        $inds = $k['indikators'] ?? [];
+                                                        $rs = max(1, count($inds));
+                                                    @endphp
+                                                    @if(count($inds) > 0)
+                                                        @foreach($inds as $i => $ind)
+                                                            <tr>
+                                                                @if($i === 0)
+                                                                    <td rowspan="{{ $rs }}" style="font-weight: 600; background-color: #fafafa;">{{ $k['kinerja_utama'] }}</td>
+                                                                @endif
+                                                                <td>&bull; {{ $ind['nama'] ?? '-' }}</td>
+                                                                <td style="text-align: center; font-weight: bold; color: #1e3a8a;">{{ ($ind['nilai'] ?? '-') . ' ' . ($ind['satuan'] ?? '') }}</td>
+                                                            </tr>
+                                                        @endforeach
+                                                    @else
+                                                        <tr>
+                                                            <td style="font-weight: 600;">{{ $k['kinerja_utama'] }}</td>
+                                                            <td style="color: #9ca3af; font-style: italic;">-</td>
+                                                            <td style="text-align: center;">-</td>
+                                                        </tr>
+                                                    @endif
+                                                @empty
+                                                    <tr>
+                                                        <td colspan="3" style="text-align: center; color: #9ca3af; font-style: italic;">Data kinerja kosong</td>
+                                                    </tr>
+                                                @endforelse
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </td>
+                            @endforeach
+                        </tr>
+                    </table>
+                </div>
+            @endforeach
+        @endforeach
+
+    @else
+        <div style="text-align: center; color: #6b7280; font-style: italic; margin-top: 40px; padding: 20px; border: 1px dashed #d1d5db; border-radius: 8px;">
+            Belum ada data Visualisasi Pohon Kinerja yang dibuat.
+        </div>
+    @endif
 
 </body>
 </html>

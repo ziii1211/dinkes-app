@@ -53,5 +53,11 @@ class DatabaseSeeder extends Seeder
             'nip' => '199001012022031001',
             'jabatan' => 'Staf Pelaksana'
         ]);
+
+        // 3. Panggil Seeder Laporan Konsolidasi (E-Monev)
+        $this->call(LaporanKonsolidasiSeeder::class);
+
+        // 4. Panggil Seeder Visualisasi Pohon Kinerja & Cascading Renstra
+        $this->call(VisualisasiPohonKinerjaSeeder::class);
     }
 }

@@ -12,4 +12,9 @@ class LaporanKonsolidasi extends Model
     {
         return $this->hasMany(DetailLaporanKonsolidasi::class);
     }
+
+    public function anggarans()
+    {
+        return $this->hasMany(LaporanKonsolidasiAnggaran::class);
+    }
 }
